@@ -30,6 +30,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Exposed changelog parser, serialiser, reader, linter, fixer, updater and detector services (previously internal) as public API, along with related helper types, so tests exercise them directly instead of via InternalsVisibleTo
 - Dependencies - Updated FunFair.Test to 6.3.6.2484
 - Dependencies - Updated Meziantou.Analyzer to 3.0.124
+- Dropped net9.0 support - now targets net10.0 only
 ### Deprecated
 ### Removed
 ### Deployment Changes
