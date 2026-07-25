@@ -247,9 +247,17 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         }
     }
 
+    private const string PendingReleaseDate = "TBD";
+    private const string ProjectCreatedDate = "Project created";
+
     private static void CheckReleaseDate(ChangeLogRelease release, ChangeLogLanguage language, List<LintError> errors)
     {
         if (string.IsNullOrWhiteSpace(release.Date))
+        {
+            return;
+        }
+
+        if (release.Date.EqualsOrdinal(PendingReleaseDate) || release.Date.EqualsOrdinal(ProjectCreatedDate))
         {
             return;
         }
@@ -267,14 +275,11 @@ public sealed class ChangeLogLinter : IChangeLogLinter
             return;
         }
 
-        if (DateTime.TryParse(release.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
-        {
-            errors.Add(
-                new(
-                    LineNumber: release.LineNumber,
-                    Message: $"Release date '{release.Date}' for version '{release.Version}' is not in the expected format '{language.DateFormat}'"
-                )
-            );
-        }
+        errors.Add(
+            new(
+                LineNumber: release.LineNumber,
+                Message: $"Release date '{release.Date}' for version '{release.Version}' is not in the expected format '{language.DateFormat}'"
+            )
+        );
     }
 }

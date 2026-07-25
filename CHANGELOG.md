@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+- Changelog linter now rejects release dates that don't match the configured language format, including previously-accepted garbage values
 ### Changed
 - Dependencies - Updated AsyncFixer to 2.1.0
 - Dependencies - Updated Credfeto.Enumeration to 1.2.151.2192

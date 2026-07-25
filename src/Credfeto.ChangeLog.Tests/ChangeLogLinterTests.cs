@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Credfeto.ChangeLog.Constants;
@@ -502,6 +502,38 @@ public sealed class ChangeLogLinterTests : TestBase
         Assert.DoesNotContain(
             errors,
             e => e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
+        );
+    }
+
+    [Fact]
+    public void UnparseableGarbageDateInRelease_ReturnsDateFormatError()
+    {
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+            ### Security
+            ### Added
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+
+            ## [1.0.0] - banana
+            ### Added
+            - Initial release
+
+            ## [0.0.0] - Project created
+            """;
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+
+        Assert.Contains(
+            errors,
+            e =>
+                e.Message.Contains(value: "banana", comparisonType: StringComparison.Ordinal)
+                && e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
         );
     }
 }
