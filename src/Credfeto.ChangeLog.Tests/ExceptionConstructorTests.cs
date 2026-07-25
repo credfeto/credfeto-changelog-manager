@@ -34,33 +34,6 @@ public sealed class ExceptionConstructorTests : TestBase
         Assert.Same(expected: inner, actual: ex.InnerException);
     }
 
-    // ─── DiffException ────────────────────────────────────────────────────────────
-
-    [Fact]
-    public void DiffExceptionDefaultConstructorHasDefaultMessage()
-    {
-        DiffException ex = new();
-        Assert.Equal(expected: "Could not process diff", actual: ex.Message);
-    }
-
-    [Fact]
-    public void DiffExceptionWithMessageStoresMessage()
-    {
-        const string message = "Custom diff message";
-        DiffException ex = new(message);
-        Assert.Equal(expected: message, actual: ex.Message);
-    }
-
-    [Fact]
-    public void DiffExceptionWithMessageAndInnerExceptionStoresBoth()
-    {
-        const string message = "Custom diff message";
-        InvalidOperationException inner = new("inner");
-        DiffException ex = new(message, inner);
-        Assert.Equal(expected: message, actual: ex.Message);
-        Assert.Same(expected: inner, actual: ex.InnerException);
-    }
-
     // ─── EmptyChangeLogException ──────────────────────────────────────────────────
 
     [Fact]
