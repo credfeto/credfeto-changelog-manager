@@ -37,18 +37,6 @@ public static class ChangeLogHeadingExtensions
         return CHANGE_TYPE_HEADING_PREFIX + name;
     }
 
-    public static string? GetVersionString(this string line)
-    {
-        int closeBracket = line.IndexOf(value: ']', startIndex: VERSION_HEADER_PREFIX.Length);
-
-        if (closeBracket == -1)
-        {
-            return null;
-        }
-
-        return line[VERSION_HEADER_PREFIX.Length..closeBracket];
-    }
-
     public static int FindUnreleasedStart(this IReadOnlyList<string> lines)
     {
         for (int i = 0; i < lines.Count; i++)
@@ -73,16 +61,6 @@ public static class ChangeLogHeadingExtensions
         }
 
         return lines.Count;
-    }
-
-    public static bool ContainsHtmlCommentStart(this string line)
-    {
-        return line.Contains(value: "<!--", comparisonType: StringComparison.Ordinal);
-    }
-
-    public static bool ContainsHtmlCommentEnd(this string line)
-    {
-        return line.Contains(value: "-->", comparisonType: StringComparison.Ordinal);
     }
 
     public static bool StartsWithHtmlComment(this string line)
