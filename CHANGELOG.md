@@ -32,6 +32,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated FunFair.Test to 6.3.6.2484
 - Dependencies - Updated Meziantou.Analyzer to 3.0.124
 - Dropped net9.0 support - now targets net10.0 only
+- Reduce allocations in TextBlockToLines.SplitToLines by using a single multi-separator split (#329)
 ### Deprecated
 ### Removed
 - Dead code left behind by the ChangeLogDocument refactor (unused Throws helpers, regexes, extensions, net7 conditional)
