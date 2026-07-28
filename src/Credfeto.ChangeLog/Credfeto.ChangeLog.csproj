@@ -39,7 +39,7 @@
     <PackageTags>Changelog</PackageTags>
     <Product>Changelog management tool</Product>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/credfeto/changelog-manager</RepositoryUrl>
+    <RepositoryUrl>https://github.com/credfeto/credfeto-changelog-manager</RepositoryUrl>
     <RunAOTCompilation>false</RunAOTCompilation>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <TargetFramework>net10.0</TargetFramework>
