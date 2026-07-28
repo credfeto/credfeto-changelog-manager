@@ -1,19 +1,15 @@
 using System;
 using System.Collections.Generic;
-using ZLinq;
 
 namespace Credfeto.ChangeLog.Extensions;
 
 public static class TextBlockToLines
 {
+    private static readonly string[] LineSeparators = ["\r\n", "\n\r", "\n", "\r"];
+
     public static IReadOnlyList<string> SplitToLines(this string value)
     {
-        return
-        [
-            .. value
-                .Split("\r\n")
-                .SelectMany(x => x.Split("\n\r").SelectMany(y => y.Split("\n").SelectMany(z => z.Split("\r")))),
-        ];
+        return value.Split(separator: LineSeparators, options: StringSplitOptions.None);
     }
 
     public static string LinesToText(this IEnumerable<string> lines)
