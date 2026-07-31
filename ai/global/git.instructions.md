@@ -93,6 +93,10 @@ For full `GH_HOST` proxy behaviour and the required `gh pr create` flags, see [g
 - In Claude Code the `cd` form also triggers an unnecessary permission prompt for the directory change itself.
 - This applies to all git subcommands: `git -C /path status`, `git -C /path add`, `git -C /path commit`, etc.
 
+## Destructive Commands (MANDATORY)
+
+Before any command that can discard uncommitted work (`git reset --hard`, `git checkout`/`restore` over tracked files, `git clean`), run `git status` first. If it shows uncommitted changes you did not just create and intend to discard, stash them (`git stash -u`, `-u` to include untracked files) or commit them before proceeding. Running the destructive command directly on the assumption the tree is clean, without checking, has silently discarded real work in practice; the check costs one command and is never skippable "because it should be clean".
+
 ## Avoid `git worktree`
 
 - Do not use `git worktree` to create additional working trees for a repo.
