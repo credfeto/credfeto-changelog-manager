@@ -42,32 +42,8 @@ runs:
         NUGET_ADDITIONAL_RESTORE_FEED_RELEASE: ${{inputs.NUGET_ADDITIONAL_RESTORE_FEED_RELEASE}}
         NUGET_ADDITIONAL_RESTORE_FEED_PRERELEASE: ${{inputs.NUGET_ADDITIONAL_RESTORE_FEED_PRERELEASE}}
 
-    - name: "Install Sleet package management tool"
-      uses: ./.github/actions/dotnet-tool
-      with:
-        TOOL_NAME: "sleet"
-        TOOL_VERSION: "latest"
-
     - name: "Install Build Version Tool"
       uses: ./.github/actions/dotnet-tool
       with:
         TOOL_NAME: "FunFair.BuildVersion"
-        TOOL_VERSION: "latest"
-
-    - name: "Install Changelog Tool"
-      uses: ./.github/actions/dotnet-tool
-      with:
-        TOOL_NAME: "Credfeto.Changelog.Cmd"
-        TOOL_VERSION: "latest"
-
-    - name: "Install Dotnet code analysis overrides tool"
-      uses: ./.github/actions/dotnet-tool
-      with:
-        TOOL_NAME: "Credfeto.DotNet.Code.Analysis.Overrides.Cmd"
-        TOOL_VERSION: "latest"
-
-    - name: "Install Dotnet Build Check tool"
-      uses: ./.github/actions/dotnet-tool
-      with:
-        TOOL_NAME: "FunFair.BuildCheck"
         TOOL_VERSION: "latest"
