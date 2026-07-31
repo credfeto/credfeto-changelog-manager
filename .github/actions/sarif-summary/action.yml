@@ -1,0 +1,70 @@
+--- # Summarise SARIF findings as a markdown table in the job summary
+# Maintain in repo: funfair-server-template
+name: 'Summarise SARIF findings'
+description: 'Extracts SARIF results into a markdown table on the job summary, and fails if any error-level findings exist'
+inputs:
+  TITLE:
+    description: 'Heading for the summary table'
+    required: true
+  GLOB:
+    description: 'Glob (relative to the results folder) matching the SARIF files to summarise'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Summarise SARIF findings"
+      working-directory: ${{github.workspace}}/results
+      shell: bash
+      env:
+        TITLE: ${{inputs.TITLE}}
+        GLOB_PATTERN: ${{inputs.GLOB}}
+      run: |
+        shopt -s nullglob
+        # shellcheck disable=SC2206  # GLOB_PATTERN is a glob; word-splitting/expansion is intentional.
+        FILES=(${GLOB_PATTERN})
+
+        if [ "${#FILES[@]}" -eq 0 ]; then
+          echo "::error::${TITLE}: no SARIF files matched '${GLOB_PATTERN}' in results/"
+          exit 1
+        fi
+
+        {
+          echo "## ${TITLE}"
+          echo
+          echo "| Source | Rule | Level | File | Line | Message |"
+          echo "| --- | --- | --- | --- | --- | --- |"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+        TOTAL_ERRORS=0
+        for f in "${FILES[@]}"; do
+          if [ ! -f "$f" ]; then
+            echo "::error::${TITLE}: expected SARIF file '$f' not found"
+            exit 1
+          fi
+
+          SOURCE="${f%.sarif}"
+          ROWS="$(jq -r '
+            .runs[].results[] |
+            [
+              (.level == "error" | tostring),
+              (.ruleId // "-"),
+              (.level // "-"),
+              (.locations[0].physicalLocation.artifactLocation.uri // "-"),
+              (.locations[0].physicalLocation.region.startLine // "-" | tostring),
+              (.message.text // "-" | gsub("\\r?\\n|\\t"; " ") | gsub("\\|"; "\\|"))
+            ] | @tsv
+          ' "$f")" || { echo "::error::${TITLE}: failed to parse $f"; exit 1; }
+
+          if [ -n "$ROWS" ]; then
+            while IFS=$'\t' read -r is_error rule level uri line message; do
+              echo "| ${SOURCE} | ${rule} | ${level} | ${uri} | ${line} | ${message} |" >> "$GITHUB_STEP_SUMMARY"
+              [ "$is_error" = "true" ] && TOTAL_ERRORS=$((TOTAL_ERRORS + 1))
+            done <<< "$ROWS"
+          fi
+        done
+
+        if [ "$TOTAL_ERRORS" -gt 0 ]; then
+          echo "::error::${TITLE}: found ${TOTAL_ERRORS} error-level finding(s); see job summary for details."
+          exit 1
+        fi
