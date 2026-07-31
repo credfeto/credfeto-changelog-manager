@@ -12,6 +12,15 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+### Changed
+### Deprecated
+### Removed
+### Deployment Changes
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+## [1.10.196] - 2026-07-31
+### Fixed
 - Changelog linter now rejects release dates that don't match the configured language format, including previously-accepted garbage values
 - Correct repository URL references to the canonical credfeto-changelog-manager repo name
 ### Changed
@@ -34,13 +43,9 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Meziantou.Analyzer to 3.0.124
 - Dropped net9.0 support - now targets net10.0 only
 - Reduce allocations in TextBlockToLines.SplitToLines by using a single multi-separator split (#329)
-### Deprecated
 ### Removed
 - Dead code left behind by the ChangeLogDocument refactor (unused Throws helpers, regexes, extensions, net7 conditional)
-### Deployment Changes
-<!--
-Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
--->
+
 ## [1.10.195] - 2026-07-19
 ### Added
 - add DI registration extension AddChangeLog to configure IChangeLogLoader
