@@ -65,13 +65,17 @@ When picking up an **Issue** that has no existing PR:
 
 After all code changes are pushed and all required CI checks pass, **before** enabling auto-merge:
 
-#### Phase A: Simplify (up to `MAX_REVIEW_ITERATIONS` rounds)
+#### Phase A: Simplify (up to `MAX_SIMPLIFY_ITERATIONS` rounds)
 
 1. Update Workflow board to **AI Simplify** (if board data is present in your CLAUDE.md).
 2. Run: `/simplify` against the diff. It applies reuse, simplification, efficiency, and altitude cleanups directly rather than just reporting them.
 3. If `/simplify` changed any files: run Changelog (correction) against the resulting diff; commit the code changes and, if the entry changed, `CHANGELOG.md` as a separate commit; push; then return to step 2 to re-run against the resulting diff.
 4. Once `/simplify` makes no further changes: proceed to Phase B.
-5. After `MAX_REVIEW_ITERATIONS` rounds where `/simplify` still keeps changing files (not converging): post a PR comment explaining that simplify is not converging, add `Blocked` label, and **STOP**.
+5. `/simplify` has its own iteration budget, separate from `MAX_REVIEW_ITERATIONS`, because it is expected to run more rounds and give up without blocking:
+   - Track each round's diff size (lines changed by that round's `/simplify` commit) against the previous round's.
+   - Once `SIMPLIFY_THRASH_LIMIT` rounds have run, if the current round is thrashing (its diff is flat or larger than the previous round's, i.e. not shrinking): give up immediately, even though `MAX_SIMPLIFY_ITERATIONS` has not been reached.
+   - Otherwise, keep re-running up to `MAX_SIMPLIFY_ITERATIONS` rounds total; once that hard cap is reached without converging to no changes, give up regardless of whether the diff was still shrinking.
+   - Either way, giving up means: post a PR comment noting that simplify did not converge, then proceed to Phase B with the diff as it currently stands. Do not add `Blocked` and do not `STOP` — unlike Phases B-D below, non-convergence in Phase A never blocks the PR, because `/code-review` in Phase B re-covers the same reuse/simplification/efficiency categories as a safety net (see Conflict Resolution below).
 
 #### Phase B: Code review (up to `MAX_REVIEW_ITERATIONS` rounds)
 
@@ -155,9 +159,22 @@ gh api graphql \
   -f query='mutation($p:ID!,$i:ID!,$f:ID!,$v:String!){updateProjectV2ItemFieldValue(input:{projectId:$p,itemId:$i,fieldId:$f,value:{singleSelectOptionId:$v}}){projectV2Item{id}}}' \
   -f p="${WF_PROJECT_ID}" -f i="${PROJECT_ITEM_ID}" \
   -f f="${WF_STATUS_FIELD_ID}" -f v="<STATUS_OPTION_ID>" > /dev/null
+
+# Step 4: verify the write actually persisted; retry up to 3 times with backoff if not
+for attempt in 1 2 3; do
+  ACTUAL=$(gh api graphql \
+    -f query='query($i:ID!){node(id:$i){... on ProjectV2Item{fieldValues(first:50){nodes{... on ProjectV2ItemFieldSingleSelectValue{optionId field{... on ProjectV2SingleSelectField{id}}}}}}}}' \
+    -f i="${PROJECT_ITEM_ID}" \
+    --jq ".data.node.fieldValues.nodes[] | select(.field.id==\"${WF_STATUS_FIELD_ID}\") | .optionId")
+  [ "$ACTUAL" = "<STATUS_OPTION_ID>" ] && break
+  sleep "$attempt"
+done
+[ "$ACTUAL" = "<STATUS_OPTION_ID>" ] || echo "::warning::Workflow board write did not persist after 3 attempts"
 ```
 
 `addProjectV2ItemById` is idempotent: calling it again for an item already in the project just returns the existing item ID.
+
+**Step 4 is MANDATORY, not optional.** `updateProjectV2ItemFieldValue` can return success (no GraphQL error) on an item that was just added by `addProjectV2ItemById` in Step 2, without the field write actually persisting: a known eventual-consistency race in the Projects v2 API on freshly-added items. Reporting success (a log line, a `core.notice`, a status comment) without this read-back verification is a real bug that shipped and went unnoticed because nothing threw (see `funfair-tech/funfair-server-template` issue #918, fixed in PR #920, for the incident this rule is drawn from). Never skip the verification step to save a round-trip.
 
 ### On-Hold Label
 
@@ -474,3 +491,4 @@ Runs in two modes; both use `dotnet changelog` (see [changelog.instructions.md](
 
 - Review Dependabot PRs: auto-merge safe patch/minor bumps with no advisories and passing CI.
 - Flag major version bumps and breaking changes to the user. Never merge on CI failure or major bump without confirmation.
+- If you take over or push any commit to a Dependabot (or other bot) PR and its changelog-check CI job then fails, see [Dependabot and Other Bot PRs](changelog.instructions.md#dependabot-and-other-bot-prs): add the missing changelog entry yourself rather than assuming the bot's `Changelog Not Required` label still applies.
