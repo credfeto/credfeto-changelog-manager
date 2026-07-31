@@ -39,6 +39,7 @@ Load these only when the work involves the relevant technology or context.
 | [shell.firewall.instructions.md](shell.firewall.instructions.md) | Firewall rule management is needed | `firewall-cmd` rules, private network constants |
 | [github-workflows.instructions.md](github-workflows.instructions.md) | Any `.github/workflows/*.yml` file is present or being created | Action policy, composite actions, step ordering, permissions, version pinning |
 | [npm.instructions.md](npm.instructions.md) | Any `package.json` is present or npm packages are being added/updated | Exact version pinning, `--save-exact`, no semver ranges, explicit updates |
+| [python.instructions.md](python.instructions.md) | Any `pyproject.toml`, `requirements.txt`, `setup.py`, `setup.cfg`, or `.py` file is present, or Python work is needed | Virtual environment requirement, Python 2 prohibition, latest stable Python 3, idiomatic/modular/testable code style |
 | [learnings.instructions.md](learnings.instructions.md) | A memory file (`ai/global` or `ai/local`) is created or updated to record a new learning | Filing a matching human-readable issue in `credfeto/credfeto-notes` |
 | [api.instructions.md](api.instructions.md) | An HTTP API is being created or modified | `.http` test file requirements |
 | [performance.instructions.md](performance.instructions.md) | Performance-critical code is being written or optimised | Design principles, benchmarks, optimisation workflow |
