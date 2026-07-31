@@ -1,0 +1,63 @@
+--- # Log Cloud Formation deployment parameters
+# Maintain in repo: funfair-server-template
+name: "Log Deploy Parameters"
+description: "Logs Cloud Formation deployment parameters"
+inputs:
+  CLOUD_FORMATION_STACK:
+    description: 'The Cloud Formation stack to deploy as'
+    required: true
+  CLOUD_FORMATION_TEMPLATE_FILE:
+    description: 'The Cloud Formation file to deploy'
+    required: true
+  DOCKER_APP_OWNER:
+    description: 'docker app owner'
+    required: true
+  DOCKER_APP_NAME:
+    description: 'docker app name'
+    required: true
+  BUILD_VERSION:
+    description: "Build Version"
+    required: true
+  API_HOST:
+    description: 'Api Host'
+    required: false
+  API_PREFIX:
+    description: 'API Prefix'
+    required: false
+  AWS_LOAD_BALANCER_HOSTNAME:
+    description: "AWS Load Balancer match hostname"
+    required: false
+  DOCKER_CONTAINER_REGISTRY:
+    description: "AWS container registry to retrieve package from"
+    required: true
+  AWS_LOAD_BALANCER_PRIORITY:
+    description: "AWS Load Balancer match priority"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Log parameters"
+      shell: bash
+      env:
+        CLOUD_FORMATION_STACK: ${{inputs.CLOUD_FORMATION_STACK}}
+        CLOUD_FORMATION_TEMPLATE_FILE: ${{inputs.CLOUD_FORMATION_TEMPLATE_FILE}}
+        DOCKER_APP_OWNER: ${{inputs.DOCKER_APP_OWNER}}
+        DOCKER_APP_NAME: ${{inputs.DOCKER_APP_NAME}}
+        BUILD_VERSION: ${{inputs.BUILD_VERSION}}
+        API_HOST: ${{inputs.API_HOST}}
+        API_PREFIX: ${{inputs.API_PREFIX}}
+        AWS_LOAD_BALANCER_HOSTNAME: ${{inputs.AWS_LOAD_BALANCER_HOSTNAME}}
+        DOCKER_CONTAINER_REGISTRY: ${{inputs.DOCKER_CONTAINER_REGISTRY}}
+        AWS_LOAD_BALANCER_PRIORITY: ${{inputs.AWS_LOAD_BALANCER_PRIORITY}}
+      run: |
+        echo "CLOUD_FORMATION_STACK: $CLOUD_FORMATION_STACK"
+        echo "CLOUD_FORMATION_TEMPLATE_FILE: $CLOUD_FORMATION_TEMPLATE_FILE"
+        echo "DOCKER_APP_OWNER: $DOCKER_APP_OWNER"
+        echo "DOCKER_APP_NAME: $DOCKER_APP_NAME"
+        echo "BUILD_VERSION: $BUILD_VERSION"
+        echo "API_HOST: $API_HOST"
+        echo "API_PREFIX: $API_PREFIX"
+        echo "AWS_LOAD_BALANCER_HOSTNAME: $AWS_LOAD_BALANCER_HOSTNAME"
+        echo "DOCKER_CONTAINER_REGISTRY: $DOCKER_CONTAINER_REGISTRY"
+        echo "AWS_LOAD_BALANCER_PRIORITY: $AWS_LOAD_BALANCER_PRIORITY"
