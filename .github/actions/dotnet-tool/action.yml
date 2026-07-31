@@ -19,7 +19,9 @@ runs:
       if: inputs.TOOL_VERSION == 'latest'
       shell: bash
       working-directory: ${{ github.workspace }}
-      run: (r=5;while ! dotnet tool install --local ${{inputs.TOOL_NAME}} --create-manifest-if-needed --ignore-failed-sources --verbosity diag ; do ((--r))||exit 1;sleep 30;done)
+      env:
+        TOOL_NAME: ${{inputs.TOOL_NAME}}
+      run: (r=5;while ! dotnet tool install --local "$TOOL_NAME" --create-manifest-if-needed --ignore-failed-sources --verbosity diag ; do ((--r))||exit 1;sleep 30;done)
 # yamllint enable rule:line-length
 
 # yamllint disable rule:line-length
@@ -27,5 +29,8 @@ runs:
       if: inputs.TOOL_VERSION != 'latest'
       shell: bash
       working-directory: ${{ github.workspace }}
-      run: (r=5;while ! dotnet tool install --local ${{inputs.TOOL_NAME}} --version ${{inputs.TOOL_VERSION}} --create-manifest-if-needed --ignore-failed-sources --verbosity diag ; do ((--r))||exit 1;sleep 30;done)
+      env:
+        TOOL_NAME: ${{inputs.TOOL_NAME}}
+        TOOL_VERSION: ${{inputs.TOOL_VERSION}}
+      run: (r=5;while ! dotnet tool install --local "$TOOL_NAME" --version "$TOOL_VERSION" --create-manifest-if-needed --ignore-failed-sources --verbosity diag ; do ((--r))||exit 1;sleep 30;done)
 # yamllint enable rule:line-length
