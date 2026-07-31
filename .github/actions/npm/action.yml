@@ -126,10 +126,12 @@ runs:
       if: inputs.NPM_REGISTRY != ''
       working-directory: ${{steps.build_context.outputs.WORK_DIR}}
       shell: bash
+      env:
+        NPM_REGISTRY: ${{inputs.NPM_REGISTRY}}
       run: |
-        sed -i "s|https://registry.npmjs.org/|${{inputs.NPM_REGISTRY}}|g" package-lock.json
-        sed -i "s|http://npm.local:5554/|${{inputs.NPM_REGISTRY}}|g" package-lock.json
-        sed -i "s|https://npm.local:5555/|${{inputs.NPM_REGISTRY}}|g" package-lock.json
+        sed -i "s|https://registry.npmjs.org/|${NPM_REGISTRY}|g" package-lock.json
+        sed -i "s|http://npm.local:5554/|${NPM_REGISTRY}|g" package-lock.json
+        sed -i "s|https://npm.local:5555/|${NPM_REGISTRY}|g" package-lock.json
 
 # Note that NPM will gladly tell you to add --use-system-ca to use the certs in the system store
 # but it doesn't actually work...  So instead we have to add the cert to the npm config above
@@ -228,3 +230,14 @@ runs:
             --wallet \"${{steps.store-signing-wallet.outputs.file}}\" \
             --wallet-password \"${{inputs.NPM_PACKAGE_STORE_SIGNING_WALLET_PASSWORD}}\" \
             --warnings-as-error"
+
+    - name: "NPM: Clean Up Store Signing Wallet"
+      if: |
+          always() &&
+          inputs.NPM_SIGNING == 'true' &&
+          inputs.PROJECT_TO_PUBLISH != ''
+      shell: bash
+      run: |
+        rm -f "${FILE}"
+      env:
+        FILE: "${{steps.store-signing-wallet.outputs.file}}"
