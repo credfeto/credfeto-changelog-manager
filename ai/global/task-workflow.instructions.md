@@ -73,6 +73,14 @@ Once a request is already tracked by an issue or PR (including one just created 
 - Post this before or immediately after acting on the prompt; do not let several prompts accumulate unrecorded.
 - This applies whether the prompt arrived as a live chat message or as a GitHub comment (GitHub comments are already covered by [Comment Replies](agent-roles.instructions.md#comment-replies-mandatory)).
 
+## Correcting a Prior Claim (MANDATORY)
+
+If a factual claim or finding you previously posted in an issue/PR body or comment turns out to be wrong (e.g. a root-cause statement, an evidence point, a "this is a deviation from process" assertion), post a new comment stating the correction and briefly why, quoting or referencing the original claim being corrected. Editing the body to also fix it is fine, but the comment is the mandatory part: a silent in-place body edit is not sufficient on its own, because GitHub only surfaces it as a small "edited" marker that a human reviewer can easily miss, unlike a comment which appears in the normal timeline.
+
+This is distinct from [PR Title, Body, and Label Sync](#pr-title-body-and-label-sync-mandatory) below, which requires routine in-place edits to keep a PR's title/body/labels synced with its linked issues; that is not a correction and needs no comment. This rule is about retracting or fixing something substantive that was previously asserted as true.
+
+(Background: `credfeto/credfeto-orchestrator#1262` — an agent session silently edited its own issue body ten minutes after posting it to fix a wrong claim; the fix was accurate and nothing was destroyed since GitHub retains full edit history, but the silent edit alone made it look, at a glance, like evidence had been suppressed.)
+
 ## PR Lifecycle
 
 - Only one active branch or open PR per repository at a time; do not create another until the current one is merged and closed.
