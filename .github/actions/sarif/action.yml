@@ -28,13 +28,17 @@ runs:
       with:
         sarif_file: ${{github.workspace}}/results
         token: ${{github.token}}
-        wait-for-processing: true
+        # Upload is fire-and-forget: nothing later in the job consumes processing results,
+        # and continue-on-error above already absorbs any processing failure.
+        wait-for-processing: false
 
     - if: inputs.REPO_VISIBILITY == 'public' && env.SARIF_HASH != ''
       name: "Sarif Upload Summary"
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       continue-on-error: true
+      env:
+        SARIF_ID: ${{steps.sarif.outputs.sarif-id}}
       with:
         script: |
           core.info('Sarif Upload Completed');
-          core.notice('sarifId: ${{steps.sarif.outputs.sarif-id}}');
+          core.notice(`sarifId: ${process.env.SARIF_ID}`);
