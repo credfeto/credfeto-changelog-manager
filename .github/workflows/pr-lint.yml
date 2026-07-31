@@ -59,7 +59,9 @@ jobs:
               .write();
   # @@required: merge
   include-changelog-entry:
-    if: github.event.pull_request.draft == false
+    if: |-
+      github.event.pull_request.draft == false &&
+      !contains(github.event.pull_request.labels.*.name, 'Changelog Not Required')
     runs-on: ubuntu-latest
     steps:
       - name: "Initialise Workspace"
@@ -127,12 +129,10 @@ jobs:
 
       - name: "Check Required Secrets"
         if: (github.actor != 'dependabot[bot]' && !endsWith(github.repository , '-template'))
-        shell: bash
-        run: |
-          if [ -z "${{secrets.SOURCE_PUSH_TOKEN}}" ]; then
-            echo "::error::SOURCE_PUSH_TOKEN is required but not set"
-            exit 1
-          fi
+        uses: ./.github/actions/check-required-secret
+        with:
+          secret-name: "SOURCE_PUSH_TOKEN"
+          secret-value: ${{secrets.SOURCE_PUSH_TOKEN}}
 
       - name: "Install dotnet"
         if: (github.actor != 'dependabot[bot]' && !endsWith(github.repository , '-template'))
@@ -187,7 +187,7 @@ jobs:
           fetch-depth: 0
 
       - name: "Check for leaks"
-        uses: trufflesecurity/trufflehog@27b0417c16317ca9a472a9a8092acce143b49c55 # v3.95.9
+        uses: trufflesecurity/trufflehog@6f3c981e7b77f235fd2702dd74af25fc4b72bf11 # v3.96.0
         id: trufflehog
         with:
           path: "${{ github.workspace }}"
@@ -307,8 +307,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           clean: true
-          fetch-depth: 0
-          fetch-tags: true
+          fetch-depth: 1
 
       - name: "Check repo visibility"
         uses: ./.github/actions/check-repo-visibility
@@ -425,12 +424,10 @@ jobs:
           fetch-depth: 0
 
       - name: "Check Required Secrets"
-        shell: bash
-        run: |
-          if [ -z "${{secrets.SOURCE_PUSH_TOKEN}}" ]; then
-            echo "::error::SOURCE_PUSH_TOKEN is required but not set"
-            exit 1
-          fi
+        uses: ./.github/actions/check-required-secret
+        with:
+          secret-name: "SOURCE_PUSH_TOKEN"
+          secret-value: ${{secrets.SOURCE_PUSH_TOKEN}}
 
       - name: "Run Linter"
         uses: super-linter/super-linter@4ce20838b8ab83717e78138c5b3a1407148e0918 # v8.7.0
@@ -461,3 +458,49 @@ jobs:
           VALIDATE_TYPESCRIPT_ES: true
           VALIDATE_XML: true
           VALIDATE_YAML: true
+
+  # @@required: main
+  poutine:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - name: "Initialise Workspace"
+        if: runner.environment == 'self-hosted'
+        shell: bash
+        run: sudo chown -R "$USER:$USER" "$GITHUB_WORKSPACE"
+
+      - name: "Checkout Source"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: "Check repo visibility"
+        uses: ./.github/actions/check-repo-visibility
+        id: visibility
+
+      - name: "Ensure Results folder exists"
+        working-directory: ${{github.workspace}}
+        shell: bash
+        run: |
+          [ ! -d "${{github.workspace}}/results" ] && mkdir "${{github.workspace}}/results" || echo "Results created"
+
+      - name: "Poutine"
+        uses: boostsecurityio/poutine-action@e240ebd3eff8b2db5a8e5f6b28f58739d7db2247 # v1.1.4
+        with:
+          format: 'sarif'
+          output: "${{github.workspace}}/results/poutine.sarif"
+
+      - name: "Summarise Poutine findings"
+        uses: ./.github/actions/sarif-summary
+        with:
+          TITLE: "Poutine findings"
+          GLOB: "poutine.sarif"
+
+      ############################################################################################################
+      # Upload Sarif files to GitHub
+      ############################################################################################################
+      - name: "Upload SARIF file for diagnostics"
+        if: always()
+        uses: ./.github/actions/sarif
+        with:
+          REPO_VISIBILITY: ${{steps.visibility.outputs.is_public == 'true' && 'public' || 'private'}}
