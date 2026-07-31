@@ -11,6 +11,12 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: "Install Dotnet code analysis overrides tool"
+      uses: ./.github/actions/dotnet-tool
+      with:
+        TOOL_NAME: "Credfeto.DotNet.Code.Analysis.Overrides.Cmd"
+        TOOL_VERSION: "latest"
+
     - name: "Dotnet: Override code analysis settings (Pre-Release)"
       if: inputs.RELEASE == 'false'
       uses: ./.github/actions/dotnet-tool-run
