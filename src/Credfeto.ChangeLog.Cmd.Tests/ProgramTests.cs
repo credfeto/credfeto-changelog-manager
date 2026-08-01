@@ -186,9 +186,14 @@ public sealed class ProgramTests : TestBase
 
         try
         {
-            int result = await Credfeto.ChangeLog.Cmd.Program.Main(
-                ["--changelog", tempFile, "--add", "Added", "--message", "Test entry"]
-            );
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main([
+                "--changelog",
+                tempFile,
+                "--add",
+                "Added",
+                "--message",
+                "Test entry",
+            ]);
             Assert.Equal(expected: 0, actual: result);
         }
         finally
@@ -204,13 +209,23 @@ public sealed class ProgramTests : TestBase
 
         try
         {
-            await Credfeto.ChangeLog.Cmd.Program.Main(
-                ["--changelog", tempFile, "--add", "Added", "--message", "Test entry to remove"]
-            );
+            await Credfeto.ChangeLog.Cmd.Program.Main([
+                "--changelog",
+                tempFile,
+                "--add",
+                "Added",
+                "--message",
+                "Test entry to remove",
+            ]);
 
-            int result = await Credfeto.ChangeLog.Cmd.Program.Main(
-                ["--changelog", tempFile, "--remove", "Added", "--message", "Test entry to remove"]
-            );
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main([
+                "--changelog",
+                tempFile,
+                "--remove",
+                "Added",
+                "--message",
+                "Test entry to remove",
+            ]);
             Assert.Equal(expected: 0, actual: result);
         }
         finally
@@ -227,9 +242,14 @@ public sealed class ProgramTests : TestBase
 
         try
         {
-            int result = await Credfeto.ChangeLog.Cmd.Program.Main(
-                ["--changelog", tempFile, "--extract", outputFile, "--version", "1.0.0"]
-            );
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main([
+                "--changelog",
+                tempFile,
+                "--extract",
+                outputFile,
+                "--version",
+                "1.0.0",
+            ]);
             Assert.Equal(expected: 0, actual: result);
             Assert.True(File.Exists(outputFile), userMessage: "Expected output file to exist after extract");
         }
@@ -315,9 +335,13 @@ public sealed class ProgramTests : TestBase
 
         try
         {
-            int result = await Credfeto.ChangeLog.Cmd.Program.Main(
-                ["--changelog", tempFile, "--lint", "--additional-sections", "Custom"]
-            );
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main([
+                "--changelog",
+                tempFile,
+                "--lint",
+                "--additional-sections",
+                "Custom",
+            ]);
             Assert.Equal(expected: 0, actual: result);
         }
         finally
@@ -333,9 +357,12 @@ public sealed class ProgramTests : TestBase
 
         try
         {
-            int result = await Credfeto.ChangeLog.Cmd.Program.Main(
-                ["--changelog", tempFile, "--create-release", "2.0.0"]
-            );
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main([
+                "--changelog",
+                tempFile,
+                "--create-release",
+                "2.0.0",
+            ]);
             Assert.Equal(expected: 0, actual: result);
         }
         finally
@@ -350,9 +377,12 @@ public sealed class ProgramTests : TestBase
         string repoDir = RepoLocator.FindRepoRoot();
         string changelogPath = Path.Combine(repoDir, "CHANGELOG.md");
 
-        int result = await Credfeto.ChangeLog.Cmd.Program.Main(
-            ["--changelog", changelogPath, "--check-insert", "origin/main"]
-        );
+        int result = await Credfeto.ChangeLog.Cmd.Program.Main([
+            "--changelog",
+            changelogPath,
+            "--check-insert",
+            "origin/main",
+        ]);
 
         Assert.True(result is 0 or 1, userMessage: "Expected result to be 0 (valid) or 1 (error)");
     }
@@ -511,9 +541,12 @@ public sealed class ProgramTests : TestBase
         {
             Environment.CurrentDirectory = repoDir;
 
-            int result = await Credfeto.ChangeLog.Cmd.Program.Main(
-                ["--changelog", tempFile, "--check-insert", "origin/main"]
-            );
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main([
+                "--changelog",
+                tempFile,
+                "--check-insert",
+                "origin/main",
+            ]);
             Assert.Equal(expected: 1, actual: result);
         }
         finally
