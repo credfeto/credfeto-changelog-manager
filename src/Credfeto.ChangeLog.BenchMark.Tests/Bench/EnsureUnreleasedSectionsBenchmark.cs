@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using BenchmarkDotNet.Attributes;
 using Credfeto.ChangeLog.Models;
