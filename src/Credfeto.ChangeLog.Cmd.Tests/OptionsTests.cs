@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using FunFair.Test.Common;
 using Xunit;
@@ -95,6 +96,6 @@ public sealed class OptionsTests : TestBase
     {
         IEnumerable<string> sections = ["Custom", "Experimental"];
         Options options = new() { AdditionalSections = sections };
-        Assert.Equal(expected: sections, actual: options.AdditionalSections);
+        Assert.Equal(expected: sections, actual: options.AdditionalSections, comparer: StringComparer.Ordinal);
     }
 }
