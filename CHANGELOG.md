@@ -14,6 +14,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Fixed
 ### Changed
 - Dependencies - Updated SonarAnalyzer.CSharp to 10.31.0.145097
+- Dependencies - Updated LibGit2Sharp to 0.32.0
 ### Deprecated
 ### Removed
 ### Deployment Changes
