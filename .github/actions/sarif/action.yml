@@ -23,7 +23,7 @@ runs:
     - if: inputs.REPO_VISIBILITY == 'public' && env.SARIF_HASH != ''
       name: "Upload SARIF file for diagnostics"
       id: sarif
-      uses: github/codeql-action/upload-sarif@b7351df727350dca84cb9d725d57dcf5bc82ba26 # v3.37.1
+      uses: github/codeql-action/upload-sarif@a2983b8bed1923f44751c5c43237f479442827b3 # v3.37.4
       continue-on-error: true
       with:
         sarif_file: ${{github.workspace}}/results
