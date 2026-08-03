@@ -1,7 +1,7 @@
 --- # Build and deploy packages
 # Maintain in repo: funfair-server-template
-name: 'Publish to nuget using multi-push (wit symbols)'
-description: 'Publishes Nuget packages with multi-push (wit symbols)'
+name: 'Publish to nuget using multi-push (with symbols)'
+description: 'Publishes Nuget packages with multi-push (with symbols)'
 inputs:
   NUGET_FEED:
     description: 'Nuget feed to push packages to'
@@ -18,8 +18,7 @@ runs:
   steps:
 
 # yamllint disable rule:line-length
-    - name: "NuGet Push without Symbols"
-      if: always()
+    - name: "NuGet Push with Separate Symbol Feed"
       uses: ./.github/actions/dotnet-tool-run
       with:
         WORKING_DIRECTORY: "${{github.workspace}}"
