@@ -53,9 +53,10 @@ runs:
               for (const line of content.split('\n')) {
                 const trimmed = line.trim();
                 if (trimmed.startsWith('#')) continue;
-                // SHA-pinned form: `uses: owner/repo@<sha> # vX.Y.Z` - the trailing comment holds the
-                // human-readable version; the ref itself only carries a commit SHA.
-                const m = trimmed.match(/^uses:\s+(\S+)(?:\s+#\s*(v\S+))?/);
+                // SHA-pinned form: `uses: owner/repo@<sha> # vX.Y.Z` (or the `- uses:` step-list
+                // form) - the trailing comment holds the human-readable version; the ref itself
+                // only carries a commit SHA.
+                const m = trimmed.match(/^(?:-\s+)?uses:\s+(\S+)(?:\s+#\s*(v\S+))?/);
                 if (!m) continue;
                 const ref = m[1];
                 if (ref.startsWith('.')) continue;
@@ -65,30 +66,69 @@ runs:
                 if (parts.length < 2) continue;
                 const key = `${parts[0]}/${parts[1]}`;
                 const version = m[2] ?? ref.slice(at + 1);
-                if (!map.has(key)) map.set(key, { owner: parts[0], repo: parts[1], version, files: [] });
+                if (!map.has(key)) map.set(key, { owner: parts[0], repo: parts[1], versions: new Map() });
                 const entry = map.get(key);
-                if (!entry.files.includes(file)) entry.files.push(file);
+                if (!entry.versions.has(version)) entry.versions.set(version, []);
+                const versionFiles = entry.versions.get(version);
+                if (!versionFiles.includes(file)) versionFiles.push(file);
               }
             }
             return map;
           }
 
-          async function latestMatchingTag(owner, repo, current) {
+          function majorVersion(tag) {
+            return tag.match(/^v?(\d+)\./)?.[1] ?? null;
+          }
+
+          // Both caches are keyed per owner/repo (the `key` from the outer loop) so multiple
+          // pinned versions of the same action (the case this check exists to catch) don't each
+          // re-fetch the same latest-release lookup or re-paginate the same release list.
+          function memoize(cache, key, fn) {
+            if (!cache.has(key)) cache.set(key, fn());
+            return cache.get(key);
+          }
+
+          const latestReleaseCache = new Map();
+          function getLatestRelease(key, owner, repo) {
+            return memoize(latestReleaseCache, key, () =>
+              github.rest.repos.getLatestRelease({ owner, repo }).then(({ data }) => data.tag_name)
+            );
+          }
+
+          const releasesByMajorCache = new Map();
+          function getReleasesByMajor(key, owner, repo) {
+            return memoize(releasesByMajorCache, key, async () => {
+              const byMajor = new Map();
+              for await (const page of github.paginate.iterator(
+                github.rest.repos.listReleases, { owner, repo, per_page: 50 }
+              )) {
+                for (const r of page.data) {
+                  if (r.prerelease) continue;
+                  const major = majorVersion(r.tag_name);
+                  if (major === null) continue;
+                  const existing = byMajor.get(major);
+                  if (!existing || new Date(r.published_at) > new Date(existing.published_at)) {
+                    byMajor.set(major, r);
+                  }
+                }
+              }
+              return byMajor;
+            });
+          }
+
+          async function latestMatchingTag(key, owner, repo, current) {
+            const currentMajor = majorVersion(current);
+            if (currentMajor === null) return null;
             try {
-              const { data } = await github.rest.repos.getLatestRelease({ owner, repo });
-              if (/^v\d+/.test(current) && /^v\d+/.test(data.tag_name)) return data.tag_name;
-            } catch {}
-            const prefix = current.match(/^(v\d+)\./)?.[1];
-            if (!prefix) return null;
-            for await (const page of github.paginate.iterator(
-              github.rest.repos.listReleases, { owner, repo, per_page: 50 }
-            )) {
-              const match = page.data
-                .filter(r => !r.prerelease && r.tag_name.startsWith(`${prefix}.`))
-                .sort((a, b) => new Date(b.published_at) - new Date(a.published_at))[0];
-              if (match) return match.tag_name;
+              const tag = await getLatestRelease(key, owner, repo);
+              if (majorVersion(tag) === currentMajor) return tag;
+            } catch (e) {
+              if (e.status !== 404) {
+                core.warning(`⚠️ ${key}: getLatestRelease failed (status ${e.status ?? 'unknown'}): ${e.message}`);
+              }
             }
-            return null;
+            const byMajor = await getReleasesByMajor(key, owner, repo);
+            return byMajor.get(currentMajor)?.tag_name ?? null;
           }
 
           const githubDir = path.join(process.env.GITHUB_WORKSPACE, '.github');
@@ -103,21 +143,23 @@ runs:
           core.info(`ℹ️ Checking ${refs.size} unique external actions across ${files.length} files`);
 
           const outdated = [];
-          for (const [key, { owner, repo, version, files: refFiles }] of refs) {
-            try {
-              const latest = await latestMatchingTag(owner, repo, version);
-              if (!latest) {
-                core.warning(`⚠️ No matching release found for ${key}`);
-                continue;
+          for (const [key, { owner, repo, versions }] of refs) {
+            for (const [version, refFiles] of versions) {
+              try {
+                const latest = await latestMatchingTag(key, owner, repo, version);
+                if (!latest) {
+                  core.warning(`⚠️ No matching release found for ${key}@${version}`);
+                  continue;
+                }
+                if (latest !== version) {
+                  core.info(`❌ ${key}: ${version} -> ${latest}`);
+                  outdated.push({ action: key, current: version, latest, files: refFiles });
+                } else {
+                  core.info(`✅ ${key}: ${version}`);
+                }
+              } catch (e) {
+                core.warning(`⚠️ ${key}@${version}: ${e.message}`);
               }
-              if (latest !== version) {
-                core.info(`❌ ${key}: ${version} -> ${latest}`);
-                outdated.push({ action: key, current: version, latest, files: refFiles });
-              } else {
-                core.info(`✅ ${key}: ${version}`);
-              }
-            } catch (e) {
-              core.warning(`⚠️ ${key}: ${e.message}`);
             }
           }
 
@@ -152,7 +194,7 @@ runs:
             ...rows,
             '',
             'Note: workflow-file pins should be updated by Dependabot automatically.',
-            'Composite action file pins (`github/actions/`) are not updated by Dependabot because this',
+            'Composite action file pins (`.github/actions/`) are not updated by Dependabot because this',
             'repository is marked as a template (`is_template: true`).',
             '',
             'Update the version pins in the relevant files.',
