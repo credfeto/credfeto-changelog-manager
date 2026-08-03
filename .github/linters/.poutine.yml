@@ -39,3 +39,4 @@ skip:
       - pkg:githubactions/super-linter/super-linter
       - pkg:githubactions/stefanzweifel/git-auto-commit-action
       - pkg:githubactions/crazy-max/ghaction-github-labeler
+      - pkg:githubactions/peace-iris/actions-gh-pages
