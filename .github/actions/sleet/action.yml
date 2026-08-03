@@ -32,7 +32,6 @@ runs:
         secret: ${{inputs.SLEET_CONFIG}}
 
     - name: "Sleet: Publish Packages to Nuget (Using Sleet)"
-      if: always()
       uses: ./.github/actions/dotnet-tool-run
       with:
         WORKING_DIRECTORY: "${{github.workspace}}"
