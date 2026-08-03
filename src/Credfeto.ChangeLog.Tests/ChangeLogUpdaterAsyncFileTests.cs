@@ -70,7 +70,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         // A non-pending release should have a date that is a valid date string (not "TBD")
         Assert.False(result.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
-        Assert.NotEqual(expected: "TBD", actual: result.Releases[0].Date);
+        Assert.NotEqual(expected: "TBD", actual: result.Releases[0].Date, comparer: StringComparer.Ordinal);
         Assert.False(
             string.IsNullOrEmpty(result.Releases[0].Date),
             userMessage: "Expected a date to be set on the release"
@@ -249,8 +249,8 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         string content = await File.ReadAllTextAsync(fileName, Encoding.UTF8, cancellationTokenSource.Token);
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(content);
 
-        Assert.Contains("# Changelog", document.HeaderLines);
-        Assert.Contains(TemplateFile.PreambleLine1, document.HeaderLines);
+        Assert.Contains("# Changelog", document.HeaderLines, comparer: StringComparer.Ordinal);
+        Assert.Contains(TemplateFile.PreambleLine1, document.HeaderLines, comparer: StringComparer.Ordinal);
     }
 
     [Fact]
