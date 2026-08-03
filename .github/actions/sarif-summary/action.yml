@@ -32,8 +32,8 @@ runs:
         {
           echo "## ${TITLE}"
           echo
-          echo "| Source | Rule | Level | File | Line | Message |"
-          echo "| --- | --- | --- | --- | --- | --- |"
+          echo "| Source | Rule | Level | File | Line | Suppressed | Message |"
+          echo "| --- | --- | --- | --- | --- | --- | --- |"
         } >> "$GITHUB_STEP_SUMMARY"
 
         TOTAL_ERRORS=0
@@ -46,19 +46,21 @@ runs:
           SOURCE="${f%.sarif}"
           ROWS="$(jq -r '
             .runs[].results[] |
+            ((.suppressions // []) != []) as $suppressed |
             [
-              (.level == "error" | tostring),
+              ((.level == "error") and ($suppressed | not) | tostring),
               (.ruleId // "-"),
               (.level // "-"),
               (.locations[0].physicalLocation.artifactLocation.uri // "-"),
               (.locations[0].physicalLocation.region.startLine // "-" | tostring),
+              ($suppressed | if . then "yes" else "no" end),
               (.message.text // "-" | gsub("\\r?\\n|\\t"; " ") | gsub("\\|"; "\\|"))
             ] | @tsv
           ' "$f")" || { echo "::error::${TITLE}: failed to parse $f"; exit 1; }
 
           if [ -n "$ROWS" ]; then
-            while IFS=$'\t' read -r is_error rule level uri line message; do
-              echo "| ${SOURCE} | ${rule} | ${level} | ${uri} | ${line} | ${message} |" >> "$GITHUB_STEP_SUMMARY"
+            while IFS=$'\t' read -r is_error rule level uri line suppressed message; do
+              echo "| ${SOURCE} | ${rule} | ${level} | ${uri} | ${line} | ${suppressed} | ${message} |" >> "$GITHUB_STEP_SUMMARY"
               [ "$is_error" = "true" ] && TOTAL_ERRORS=$((TOTAL_ERRORS + 1))
             done <<< "$ROWS"
           fi
