@@ -15,7 +15,6 @@ runs:
   steps:
 
     - name: "NuGet Push with Symbols"
-      if: always()
       uses: ./.github/actions/dotnet-tool-run
       with:
         WORKING_DIRECTORY: "${{github.workspace}}"
