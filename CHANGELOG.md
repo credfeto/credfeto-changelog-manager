@@ -13,15 +13,18 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
-- Dependencies - Updated SonarAnalyzer.CSharp to 10.31.0.145097
-- Dependencies - Updated LibGit2Sharp to 0.32.0
-- Dependencies - Updated Meziantou.Analyzer to 3.0.138
 ### Deprecated
 ### Removed
 ### Deployment Changes
 <!--
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
+## [1.10.197] - 2026-08-04
+### Changed
+- Dependencies - Updated SonarAnalyzer.CSharp to 10.31.0.145097
+- Dependencies - Updated LibGit2Sharp to 0.32.0
+- Dependencies - Updated Meziantou.Analyzer to 3.0.138
+
 ## [1.10.196] - 2026-07-31
 ### Fixed
 - Changelog linter now rejects release dates that don't match the configured language format, including previously-accepted garbage values
