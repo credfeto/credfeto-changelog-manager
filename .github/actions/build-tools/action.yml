@@ -4,7 +4,7 @@ name: 'Install dotnet and build tools'
 description: 'Install dotnet and build tools'
 inputs:
   # GENERAL
-  GITHUB_TOKEN:
+  github-token:
     description: 'Github Token'
     required: true
 
@@ -34,7 +34,7 @@ runs:
     - name: "Install dotnet"
       uses: ./.github/actions/dotnet-install
       with:
-        GITHUB_TOKEN: ${{inputs.GITHUB_TOKEN}}
+        github-token: ${{inputs.github-token}}
         NUGET_PUBLIC_RESTORE_FEED_CACHE: ${{inputs.NUGET_PUBLIC_RESTORE_FEED_CACHE}}
         NUGET_PUBLIC_RESTORE_FEED: ${{inputs.NUGET_PUBLIC_RESTORE_FEED}}
         NUGET_ADDITIONAL_RESTORE_FEED_RELEASE_CACHE: ${{inputs.NUGET_ADDITIONAL_RESTORE_FEED_RELEASE_CACHE}}
