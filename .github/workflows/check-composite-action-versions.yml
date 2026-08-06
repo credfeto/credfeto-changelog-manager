@@ -48,4 +48,4 @@ jobs:
       - name: "Check Composite Action Versions"
         uses: ./.github/actions/check-composite-action-versions
         with:
-          GITHUB_TOKEN: ${{secrets.SOURCE_PUSH_TOKEN}}
+          github-token: ${{secrets.SOURCE_PUSH_TOKEN}}
