@@ -59,7 +59,7 @@ jobs:
         if: runner.environment == 'self-hosted'
         uses: ./.github/actions/dotnet-install
         with:
-          GITHUB_TOKEN: ${{secrets.SOURCE_PUSH_TOKEN}}
+          github-token: ${{secrets.SOURCE_PUSH_TOKEN}}
           NUGET_PUBLIC_RESTORE_FEED_CACHE: ${{vars.NUGET_BAGET_CACHE}}
           NUGET_PUBLIC_RESTORE_FEED: ${{vars.NUGET_PUBLIC_RESTORE_FEED || 'https://api.nuget.org/v3/index.json'}}
           NUGET_ADDITIONAL_RESTORE_FEED_RELEASE_CACHE: ${{vars.RELEASE_BAGET_CACHE}}
@@ -71,7 +71,7 @@ jobs:
         if: runner.environment != 'self-hosted'
         uses: ./.github/actions/dotnet-install
         with:
-          GITHUB_TOKEN: ${{secrets.SOURCE_PUSH_TOKEN}}
+          github-token: ${{secrets.SOURCE_PUSH_TOKEN}}
           NUGET_PUBLIC_RESTORE_FEED_CACHE: ""
           NUGET_PUBLIC_RESTORE_FEED: ${{vars.NUGET_PUBLIC_RESTORE_FEED || 'https://api.nuget.org/v3/index.json'}}
           NUGET_ADDITIONAL_RESTORE_FEED_RELEASE_CACHE: ""
