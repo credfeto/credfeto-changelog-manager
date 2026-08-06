@@ -52,7 +52,7 @@ inputs:
     required: false
 
   # GENERAL
-  GITHUB_TOKEN:
+  github-token:
     description: 'Github Token'
     required: true
 
@@ -166,7 +166,7 @@ runs:
       uses: ./.github/actions/sql
       with:
         DB_FOLDER: ${{inputs.DB_FOLDER}}
-        GITHUB_TOKEN: ${{inputs.GITHUB_TOKEN}}
+        github-token: ${{inputs.github-token}}
 
     ############################################################################################################
     # Publish ready for deploy
