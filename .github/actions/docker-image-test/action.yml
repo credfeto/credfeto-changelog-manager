@@ -9,7 +9,7 @@ inputs:
   APP_NAME:
     description: 'docker app name'
     required: true
-  GITHUB_TOKEN:
+  github-token:
     description: 'github token for accessing github'
     required: true
 
@@ -23,7 +23,7 @@ runs:
 #    - name: "Create SBOM"
 #      uses: anchore/sbom-action@v0.24.0
 #      with:
-#        github-token: ${{inputs.GITHUB_TOKEN}}
+#        github-token: ${{inputs.github-token}}
 #        format: spdx-json
 #        output-file: "${{ github.event.repository.name }}-sbom.spdx.json"
 #        config: "${{ github.workspace }}.github/linters/syft.yml"
@@ -62,7 +62,7 @@ runs:
 #        exit-code: 1
 #        dockle-version: latest
 #        accept-extensions: pem
-#        token: ${{inputs.GITHUB_TOKEN}}
+#        token: ${{inputs.github-token}}
 
 #    - name: "Upload dockle Report"
 #      uses: actions/upload-artifact@v7.0.1
