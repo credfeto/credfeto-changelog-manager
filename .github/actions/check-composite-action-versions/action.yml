@@ -3,7 +3,7 @@
 name: "Check Composite Action Versions"
 description: "Raises a pre-approved issue with an implementation plan when action version pins are outdated. No-op on non-template repos."
 inputs:
-  GITHUB_TOKEN:
+  github-token:
     # Also needs Projects (v2) write access to pre-approve the issue on the "Workflow" board;
     # pre-approval is skipped (with a warning) if that scope is missing or no board is set up.
     description: "GitHub token with issues:write permission"
@@ -15,7 +15,7 @@ runs:
     - name: "Check Composite Action Versions"
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       with:
-        github-token: ${{inputs.GITHUB_TOKEN}}
+        github-token: ${{inputs.github-token}}
         script: |
           const { readFileSync, readdirSync } = require('fs');
           const path = require('path');
