@@ -33,7 +33,7 @@ inputs:
   BUILD_VERSION:
     description: "Build Version"
     required: true
-  GITHUB_TOKEN:
+  github-token:
     description: 'github token for accessing github'
     required: true
 
@@ -60,7 +60,7 @@ runs:
         DOCKER_APP_NAME: ${{inputs.DOCKER_APP_NAME}}
         BUILD_VERSION: ${{inputs.BUILD_VERSION}}
       with:
-        github-token: ${{ inputs.GITHUB_TOKEN }}
+        github-token: ${{ inputs.github-token }}
         script: |
           github.rest.git.createRef({
             owner: context.repo.owner,
@@ -83,7 +83,7 @@ runs:
         DOCKER_CONTAINER_REGISTRY: ${{inputs.DOCKER_CONTAINER_REGISTRY}}
         AWS_LOAD_BALANCER_PRIORITY: ${{inputs.AWS_LOAD_BALANCER_PRIORITY}}
       with:
-        github-token: ${{ inputs.GITHUB_TOKEN }}
+        github-token: ${{ inputs.github-token }}
         script: |
           const id = await github.rest.actions.createWorkflowDispatch({
             owner: context.repo.owner,
