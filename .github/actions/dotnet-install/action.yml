@@ -3,7 +3,7 @@
 name: 'Install dotnet'
 description: 'Install dotnet, configure nuget feeds and create tool manifest'
 inputs:
-  GITHUB_TOKEN:
+  github-token:
     description: 'Github Token'
     required: true
 
@@ -104,7 +104,7 @@ runs:
       name: "Install dotnet (For Build)"
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       env:
-        GITHUB_TOKEN: ${{inputs.GITHUB_TOKEN}}
+        GITHUB_TOKEN: ${{inputs.github-token}}
       with:
         cache: false
         global-json-file: "${{ github.workspace }}/src/global.json"
@@ -115,7 +115,7 @@ runs:
       name: "Install dotnet (Tools)"
       uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
       env:
-        GITHUB_TOKEN: ${{inputs.GITHUB_TOKEN}}
+        GITHUB_TOKEN: ${{inputs.github-token}}
       with:
         cache: false
         dotnet-version: |
