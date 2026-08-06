@@ -24,9 +24,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    permissions:
-      issues: write  # for crazy-max/ghaction-github-labeler to create, rename, update
-
     steps:
       - name: "Check Required Secrets"
         shell: bash
@@ -55,7 +52,6 @@ jobs:
         with:
           clean: true
           fetch-depth: 1
-          token: ${{secrets.SOURCE_PUSH_TOKEN}}
 
       - name: "Update Github label config"
         if: success()
