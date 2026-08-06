@@ -129,7 +129,7 @@ inputs:
     required: true
 
   # GITHUB
-  GITHUB_TOKEN:
+  github-token:
     description: 'Github Token'
     required: true
   CREATE_RELEASE:
@@ -240,7 +240,7 @@ runs:
     - name: "Install Build tools"
       uses: ./.github/actions/build-tools
       with:
-        GITHUB_TOKEN: ${{inputs.GITHUB_TOKEN}}
+        github-token: ${{inputs.github-token}}
         NUGET_PUBLIC_RESTORE_FEED_CACHE: ${{inputs.NUGET_PUBLIC_RESTORE_FEED_CACHE}}
         NUGET_PUBLIC_RESTORE_FEED: ${{inputs.NUGET_PUBLIC_RESTORE_FEED}}
         NUGET_ADDITIONAL_RESTORE_FEED_RELEASE_CACHE: ${{inputs.NUGET_ADDITIONAL_RESTORE_FEED_RELEASE_CACHE}}
@@ -288,7 +288,7 @@ runs:
     - name: "Get Unique Build Number"
       uses: ./.github/actions/build-version
       with:
-        GITHUB_TOKEN: ${{inputs.GITHUB_TOKEN}}
+        github-token: ${{inputs.github-token}}
 
     - name: "Deploy check - Default"
       shell: bash
@@ -360,7 +360,7 @@ runs:
         NUGET_API_KEY: ${{inputs.NUGET_API_KEY}}
         SLEET_CONFIG: ${{inputs.SLEET_CONFIG}}
         SLEET_FEED: ${{inputs.SLEET_FEED}}
-        GITHUB_TOKEN: ${{inputs.GITHUB_TOKEN}}
+        github-token: ${{inputs.github-token}}
         PROJECT_TO_PUBLISH: ${{inputs.PROJECT_TO_PUBLISH}}
         DOTNET_DOCKER_PLATFORM: ${{inputs.DOTNET_DOCKER_PLATFORM}}
 
@@ -433,7 +433,7 @@ runs:
       uses: ./.github/actions/docker-build-to-registry
       with:
         DEPLOY: ${{env.DEPLOY}}
-        GITHUB_TOKEN: ${{inputs.GITHUB_TOKEN}}
+        github-token: ${{inputs.github-token}}
         BUILD_VERSION: ${{env.BUILD_VERSION}}
         BUILD_TAG: ${{inputs.BUILD_TAG}}
         APP_OWNER: ${{inputs.DOCKER_APP_OWNER}}
@@ -492,7 +492,7 @@ runs:
         AWS_LOAD_BALANCER_HOSTNAME: ${{inputs.AWS_LOAD_BALANCER_HOSTNAME}}
         AWS_LOAD_BALANCER_PRIORITY: ${{inputs.AWS_LOAD_BALANCER_PRIORITY}}
         DOCKER_CONTAINER_REGISTRY: ${{inputs.DOCKER_CONTAINER_REGISTRY}}
-        GITHUB_TOKEN: ${{inputs.GITHUB_TOKEN}}
+        github-token: ${{inputs.github-token}}
 
     - name: "Dotnet: NPM Deploy"
       if: |-
@@ -511,7 +511,7 @@ runs:
       if: steps.build_tools.outputs.BUILD_ENV == 'true' && inputs.CREATE_RELEASE == 'true'
       uses: ./.github/actions/create-release
       with:
-        github-token: ${{inputs.GITHUB_TOKEN}}
+        github-token: ${{inputs.github-token}}
         version: ${{env.BUILD_VERSION}}
         release-notes-file: "RELEASE_NOTES.md"
 
