@@ -145,27 +145,27 @@ jobs:
         uses: ./.github/actions/dotnet-install
         with:
           github-token: ${{secrets.SOURCE_PUSH_TOKEN}}
-          NUGET_PUBLIC_RESTORE_FEED_CACHE: ${{vars.NUGET_BAGET_CACHE}}
-          NUGET_PUBLIC_RESTORE_FEED: ${{vars.NUGET_PUBLIC_RESTORE_FEED || 'https://api.nuget.org/v3/index.json'}}
-          NUGET_ADDITIONAL_RESTORE_FEED_RELEASE_CACHE: ""
-          NUGET_ADDITIONAL_RESTORE_FEED_PRERELEASE_CACHE: ""
-          NUGET_ADDITIONAL_RESTORE_FEED_RELEASE: ""
-          NUGET_ADDITIONAL_RESTORE_FEED_PRERELEASE: ""
+          nuget-public-restore-feed-cache: ${{vars.NUGET_BAGET_CACHE}}
+          nuget-public-restore-feed: ${{vars.NUGET_PUBLIC_RESTORE_FEED || 'https://api.nuget.org/v3/index.json'}}
+          nuget-additional-restore-feed-release-cache: ""
+          nuget-additional-restore-feed-prerelease-cache: ""
+          nuget-additional-restore-feed-release: ""
+          nuget-additional-restore-feed-prerelease: ""
 
       - name: "Install Changelog tool"
         if: (github.actor != 'dependabot[bot]' && !endsWith(github.repository , '-template'))
         uses: ./.github/actions/dotnet-tool
         with:
-          TOOL_NAME: "Credfeto.ChangeLog.Cmd"
-          TOOL_VERSION: "latest"
+          tool-name: "Credfeto.ChangeLog.Cmd"
+          tool-version: "latest"
 
       - name: "Check Changelog"
         if: (github.actor != 'dependabot[bot]' && !endsWith(github.repository , '-template'))
         uses: ./.github/actions/dotnet-tool-run
         with:
-          WORKING_DIRECTORY: ${{github.workspace}}
-          TOOL_NAME: "changelog"
-          TOOL_ARGUMENTS: "--changelog \"${{github.workspace}}/CHANGELOG.md\" --check-insert \"origin/${{github.base_ref}}\""
+          working-directory: ${{github.workspace}}
+          tool-name: "changelog"
+          tool-arguments: "--changelog \"${{github.workspace}}/CHANGELOG.md\" --check-insert \"origin/${{github.base_ref}}\""
 
   # @@required: merge
   does-not-contain-secrets:
@@ -388,25 +388,25 @@ jobs:
         uses: ./.github/actions/dotnet-install
         with:
           github-token: ${{secrets.SOURCE_PUSH_TOKEN}}
-          NUGET_PUBLIC_RESTORE_FEED_CACHE: ${{vars.NUGET_BAGET_CACHE}}
-          NUGET_PUBLIC_RESTORE_FEED: ${{vars.NUGET_PUBLIC_RESTORE_FEED || 'https://api.nuget.org/v3/index.json'}}
-          NUGET_ADDITIONAL_RESTORE_FEED_RELEASE_CACHE: ""
-          NUGET_ADDITIONAL_RESTORE_FEED_PRERELEASE_CACHE: ""
-          NUGET_ADDITIONAL_RESTORE_FEED_RELEASE: ""
-          NUGET_ADDITIONAL_RESTORE_FEED_PRERELEASE: ""
+          nuget-public-restore-feed-cache: ${{vars.NUGET_BAGET_CACHE}}
+          nuget-public-restore-feed: ${{vars.NUGET_PUBLIC_RESTORE_FEED || 'https://api.nuget.org/v3/index.json'}}
+          nuget-additional-restore-feed-release-cache: ""
+          nuget-additional-restore-feed-prerelease-cache: ""
+          nuget-additional-restore-feed-release: ""
+          nuget-additional-restore-feed-prerelease: ""
 
       - name: "Install Changelog tool"
         uses: ./.github/actions/dotnet-tool
         with:
-          TOOL_NAME: "Credfeto.ChangeLog.Cmd"
-          TOOL_VERSION: "latest"
+          tool-name: "Credfeto.ChangeLog.Cmd"
+          tool-version: "latest"
 
       - name: "Check Changelog"
         uses: ./.github/actions/dotnet-tool-run
         with:
-          WORKING_DIRECTORY: ${{github.workspace}}
-          TOOL_NAME: "changelog"
-          TOOL_ARGUMENTS: "--changelog \"${{github.workspace}}/CHANGELOG.md\" --lint"
+          working-directory: ${{github.workspace}}
+          tool-name: "changelog"
+          tool-arguments: "--changelog \"${{github.workspace}}/CHANGELOG.md\" --lint"
 
   # @@required: main
   lint-code:
@@ -506,8 +506,8 @@ jobs:
       - name: "Summarise Poutine findings"
         uses: ./.github/actions/sarif-summary
         with:
-          TITLE: "Poutine findings"
-          GLOB: "poutine.sarif"
+          title: "Poutine findings"
+          glob: "poutine.sarif"
 
       ############################################################################################################
       # Upload Sarif files to GitHub
@@ -516,4 +516,4 @@ jobs:
         if: always()
         uses: ./.github/actions/sarif
         with:
-          REPO_VISIBILITY: ${{steps.visibility.outputs.is_public == 'true' && 'public' || 'private'}}
+          repo-visibility: ${{steps.visibility.outputs.is_public == 'true' && 'public' || 'private'}}
