@@ -115,7 +115,7 @@ runs:
               -p:SuppressNETCoreSdkPreviewMessage=true \
               --ignore-failed-sources
 
-    - name: "Dotnet: Build (Non-Release)"
+    - name: "Dotnet: Build"
       working-directory: ${{github.workspace}}/src
       shell: bash
       run: |
