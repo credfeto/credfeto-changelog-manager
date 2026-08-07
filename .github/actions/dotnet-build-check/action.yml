@@ -4,7 +4,7 @@ name: 'Dotnet Build Check'
 description: 'Dotnet Build Check'
 inputs:
   # GENERAL
-  RELEASE:
+  release:
     description: 'Is this a release build'
     required: true
 
@@ -14,8 +14,8 @@ runs:
     - name: "Install Dotnet Build Check tool"
       uses: ./.github/actions/dotnet-tool
       with:
-        TOOL_NAME: "FunFair.BuildCheck"
-        TOOL_VERSION: "latest"
+        tool-name: "FunFair.BuildCheck"
+        tool-version: "latest"
 
     - name: "Dotnet: Find Solution"
       id: find_solution
@@ -31,6 +31,6 @@ runs:
     - name: "Dotnet: Run build check"
       uses: ./.github/actions/dotnet-tool-run
       with:
-        WORKING_DIRECTORY: "${{github.workspace}}/src"
-        TOOL_NAME: "buildcheck"
-        TOOL_ARGUMENTS: "-Solution \"${{steps.find_solution.outputs.SOLUTION}}\" -WarningAsErrors true -PreReleaseBuild false"
+        working-directory: "${{github.workspace}}/src"
+        tool-name: "buildcheck"
+        tool-arguments: "-Solution \"${{steps.find_solution.outputs.SOLUTION}}\" -WarningAsErrors true -PreReleaseBuild false"
