@@ -3,10 +3,10 @@
 name: 'Summarise SARIF findings'
 description: 'Extracts SARIF results into a markdown table on the job summary and the associated PR as a comment; fails on error-level findings'
 inputs:
-  TITLE:
+  title:
     description: 'Heading for the summary table'
     required: true
-  GLOB:
+  glob:
     description: 'Glob (relative to the results folder) matching the SARIF files to summarise'
     required: true
   github-token:
@@ -20,8 +20,8 @@ runs:
       id: build-table
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
-        TITLE: ${{inputs.TITLE}}
-        GLOB_PATTERN: ${{inputs.GLOB}}
+        TITLE: ${{inputs.title}}
+        GLOB_PATTERN: ${{inputs.glob}}
       with:
         script: |
           const fs = require('fs');
@@ -130,7 +130,7 @@ runs:
       continue-on-error: true
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
-        TITLE: ${{inputs.TITLE}}
+        TITLE: ${{inputs.title}}
         TABLE_FILE: ${{steps.build-table.outputs.table-file}}
         ROW_COUNT: ${{steps.build-table.outputs.row-count}}
         PR_NUMBER: ${{github.event_name == 'pull_request' && github.event.pull_request.number || steps.find-pr.outputs.number}}
@@ -187,7 +187,7 @@ runs:
       if: ${{ !cancelled() && steps.build-table.outputs.table-file != '' && steps.build-table.outputs.error-count != '0' }}
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
-        TITLE: ${{inputs.TITLE}}
+        TITLE: ${{inputs.title}}
         ERROR_COUNT: ${{steps.build-table.outputs.error-count}}
       with:
         script: |
