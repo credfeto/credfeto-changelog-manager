@@ -3,10 +3,10 @@
 name: 'Publish to nuget using multi-push (With integrated symbol feed)'
 description: 'Publishes Nuget packages with multi-push (With integrated symbol feed)'
 inputs:
-  NUGET_FEED:
+  nuget-feed:
     description: 'Nuget feed to push packages to'
     required: false
-  NUGET_API_KEY:
+  nuget-api-key:
     description: 'API key to authenticate when pushing packages'
     required: false
 
@@ -17,6 +17,6 @@ runs:
     - name: "NuGet Push with Symbols"
       uses: ./.github/actions/dotnet-tool-run
       with:
-        WORKING_DIRECTORY: "${{github.workspace}}"
-        TOOL_NAME: "pushpackages"
-        TOOL_ARGUMENTS: "--folder dist --api-key \"${{inputs.NUGET_API_KEY}}\" --source \"${{inputs.NUGET_FEED}}\""
+        working-directory: "${{github.workspace}}"
+        tool-name: "pushpackages"
+        tool-arguments: "--folder dist --api-key \"${{inputs.nuget-api-key}}\" --source \"${{inputs.nuget-feed}}\""
