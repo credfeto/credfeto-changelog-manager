@@ -365,8 +365,21 @@ runs:
         DOTNET_DOCKER_PLATFORM: ${{inputs.DOTNET_DOCKER_PLATFORM}}
 
     ############################################################################################################
-    # Summarise Roslyn analyzer SARIF files
+    # Merge and summarise Roslyn analyzer SARIF files
     ############################################################################################################
+    - name: "Merge Roslyn analyzer SARIF files"
+      # Each project's ErrorLog writes its own file (a shared path would have each project's
+      # compile overwrite the last), so merge them into one before upload: code scanning
+      # rejects a directory upload containing multiple files from the same tool.
+      if: |-
+        !cancelled() &&
+        steps.check_files.outputs.DOTNET_EXIST == 'true'
+      uses: ./.github/actions/sarif-merge
+      with:
+        GLOB: "*.sarif"
+        EXCLUDE: "*.Tests.sarif"
+        OUTPUT: "DotNet.sarif"
+
     - name: "Summarise Roslyn analyzer findings"
       if: |-
         !cancelled() &&
@@ -374,7 +387,8 @@ runs:
       uses: ./.github/actions/sarif-summary
       with:
         TITLE: "Roslyn analyzer findings"
-        GLOB: "*.sarif"
+        GLOB: "DotNet.sarif"
+        github-token: ${{inputs.github-token}}
 
     ############################################################################################################
     # NPM BUILD
