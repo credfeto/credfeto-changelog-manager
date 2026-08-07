@@ -3,10 +3,10 @@
 name: 'Run docker image tests'
 description: 'Docker image tests'
 inputs:
-  APP_OWNER:
+  app-owner:
     description: 'docker app owner'
     required: true
-  APP_NAME:
+  app-name:
     description: 'docker app name'
     required: true
   github-token:
@@ -43,7 +43,7 @@ runs:
 #      if: always()
 #      uses: anchore/scan-action@v7.4.0
 #      with:
-#        image: "${{inputs.APP_OWNER}}/${{inputs.APP_NAME}}:test"
+#        image: "${{inputs.app-owner}}/${{inputs.app-name}}:test"
 #        fail-build: true
 #        output-format: table
 #        severity-cutoff: medium
@@ -55,7 +55,7 @@ runs:
 #      if: always()
 #      uses: erzz/dockle-action@v1.4.1
 #      with:
-#        image: "${{inputs.APP_OWNER}}/${{inputs.APP_NAME}}:test"
+#        image: "${{inputs.app-owner}}/${{inputs.app-name}}:test"
 #        report-format: json
 #        report-name: dockle-report
 #        failure-threshold: warn
@@ -78,7 +78,7 @@ runs:
 #      if: always()
 #      uses: aquasecurity/trivy-action@v0.36.0
 #      with:
-#        image-ref: "${{inputs.APP_OWNER}}/${{inputs.APP_NAME}}:test"
+#        image-ref: "${{inputs.app-owner}}/${{inputs.app-name}}:test"
 #        format: 'table'
 #        exit-code: '1'
 #        ignore-unfixed: true
