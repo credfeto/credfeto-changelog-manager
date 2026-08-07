@@ -73,16 +73,16 @@ jobs:
       - name: "Log parameters"
         uses: ./.github/actions/log-deploy-parameters
         with:
-          CLOUD_FORMATION_STACK: ${{inputs.CLOUD_FORMATION_STACK}}
-          CLOUD_FORMATION_TEMPLATE_FILE: ${{inputs.CLOUD_FORMATION_TEMPLATE_FILE}}
-          DOCKER_APP_OWNER: ${{inputs.DOCKER_APP_OWNER}}
-          DOCKER_APP_NAME: ${{inputs.DOCKER_APP_NAME}}
-          BUILD_VERSION: ${{inputs.BUILD_VERSION}}
-          API_HOST: ${{inputs.API_HOST}}
-          API_PREFIX: ${{inputs.API_PREFIX}}
-          AWS_LOAD_BALANCER_HOSTNAME: ${{inputs.AWS_LOAD_BALANCER_HOSTNAME}}
-          DOCKER_CONTAINER_REGISTRY: ${{inputs.DOCKER_CONTAINER_REGISTRY}}
-          AWS_LOAD_BALANCER_PRIORITY: ${{inputs.AWS_LOAD_BALANCER_PRIORITY}}
+          cloud-formation-stack: ${{inputs.CLOUD_FORMATION_STACK}}
+          cloud-formation-template-file: ${{inputs.CLOUD_FORMATION_TEMPLATE_FILE}}
+          docker-app-owner: ${{inputs.DOCKER_APP_OWNER}}
+          docker-app-name: ${{inputs.DOCKER_APP_NAME}}
+          build-version: ${{inputs.BUILD_VERSION}}
+          api-host: ${{inputs.API_HOST}}
+          api-prefix: ${{inputs.API_PREFIX}}
+          aws-load-balancer-hostname: ${{inputs.AWS_LOAD_BALANCER_HOSTNAME}}
+          docker-container-registry: ${{inputs.DOCKER_CONTAINER_REGISTRY}}
+          aws-load-balancer-priority: ${{inputs.AWS_LOAD_BALANCER_PRIORITY}}
 
       - name: "Run Cloud Formation Linter"
         uses: ./.github/actions/cfn-lint
@@ -99,15 +99,15 @@ jobs:
       - name: "Cloudformation Deploy"
         uses: ./.github/actions/cloudformation-deploy
         with:
-          CLOUD_FORMATION_STACK: ${{inputs.CLOUD_FORMATION_STACK}}
-          CLOUDFORMATION_SNS_ARN: ${{vars.CLOUDFORMATION_SNS_ARN}}
-          CLOUD_FORMATION_TEMPLATE_FILE: "${{github.workspace}}/${{inputs.CLOUD_FORMATION_TEMPLATE_FILE}}"
-          DOCKER_APP_NAME: ${{inputs.DOCKER_APP_NAME}}
-          BUILD_VERSION: ${{inputs.BUILD_VERSION}}
-          API_HOST: ${{inputs.API_HOST}}
-          AWS_LOAD_BALANCER_HOSTNAME: ${{inputs.AWS_LOAD_BALANCER_HOSTNAME}}
-          AWS_LOAD_BALANCER_PRIORITY: ${{inputs.AWS_LOAD_BALANCER_PRIORITY}}
-          DOCKER_CONTAINER_REGISTRY: ${{inputs.DOCKER_CONTAINER_REGISTRY}}
+          cloud-formation-stack: ${{inputs.CLOUD_FORMATION_STACK}}
+          cloudformation-sns-arn: ${{vars.CLOUDFORMATION_SNS_ARN}}
+          cloud-formation-template-file: "${{github.workspace}}/${{inputs.CLOUD_FORMATION_TEMPLATE_FILE}}"
+          docker-app-name: ${{inputs.DOCKER_APP_NAME}}
+          build-version: ${{inputs.BUILD_VERSION}}
+          api-host: ${{inputs.API_HOST}}
+          aws-load-balancer-hostname: ${{inputs.AWS_LOAD_BALANCER_HOSTNAME}}
+          aws-load-balancer-priority: ${{inputs.AWS_LOAD_BALANCER_PRIORITY}}
+          docker-container-registry: ${{inputs.DOCKER_CONTAINER_REGISTRY}}
 
       - name: "Log Build Version"
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
