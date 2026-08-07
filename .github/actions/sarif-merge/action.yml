@@ -3,13 +3,13 @@
 name: 'Merge SARIF files'
 description: 'Combines SARIF files in the results folder into one, since code scanning upload rejects multiple files from the same tool'
 inputs:
-  GLOB:
+  glob:
     description: 'Glob (relative to the results folder) matching the SARIF files to merge'
     required: true
-  EXCLUDE:
+  exclude:
     description: 'Glob (relative to the results folder) of SARIF files to leave untouched'
     required: false
-  OUTPUT:
+  output:
     description: 'Filename (relative to the results folder) to write the merged SARIF document to'
     required: true
 
@@ -19,9 +19,9 @@ runs:
     - name: "Merge SARIF files"
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
-        GLOB_PATTERN: ${{inputs.GLOB}}
-        EXCLUDE_PATTERN: ${{inputs.EXCLUDE}}
-        OUTPUT_NAME: ${{inputs.OUTPUT}}
+        GLOB_PATTERN: ${{inputs.glob}}
+        EXCLUDE_PATTERN: ${{inputs.exclude}}
+        OUTPUT_NAME: ${{inputs.output}}
       with:
         script: |
           const fs = require('fs');
