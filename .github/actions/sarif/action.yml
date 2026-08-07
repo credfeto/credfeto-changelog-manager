@@ -4,7 +4,7 @@ name: 'Upload sarif files'
 description: 'Builds and deploys the source'
 inputs:
   # GENERAL
-  REPO_VISIBILITY:
+  repo-visibility:
     description: 'Visibility of the repo'
     required: true
 
@@ -20,7 +20,7 @@ runs:
         echo "Hash: ${{ hashfiles('**/*.sarif') }}"
         echo "SARIF_HASH=${{ hashfiles('**/*.sarif') }}" >> $GITHUB_ENV
 
-    - if: inputs.REPO_VISIBILITY == 'public' && env.SARIF_HASH != ''
+    - if: inputs.repo-visibility == 'public' && env.SARIF_HASH != ''
       name: "Upload SARIF file for diagnostics"
       id: sarif
       uses: github/codeql-action/upload-sarif@c4dd10e44af883a891fe31ced449bcb4a6728b9b # v3.37.6
@@ -32,7 +32,7 @@ runs:
         # and continue-on-error above already absorbs any processing failure.
         wait-for-processing: false
 
-    - if: inputs.REPO_VISIBILITY == 'public' && env.SARIF_HASH != ''
+    - if: inputs.repo-visibility == 'public' && env.SARIF_HASH != ''
       name: "Sarif Upload Summary"
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       continue-on-error: true
