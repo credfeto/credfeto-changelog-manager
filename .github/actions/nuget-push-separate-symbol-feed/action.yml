@@ -3,13 +3,13 @@
 name: 'Publish to nuget using multi-push (with symbols)'
 description: 'Publishes Nuget packages with multi-push (with symbols)'
 inputs:
-  NUGET_FEED:
+  nuget-feed:
     description: 'Nuget feed to push packages to'
     required: false
-  NUGET_SYMBOL_FEED:
+  nuget-symbol-feed:
     description: 'Nuget feed to push packages symbols to'
     required: false
-  NUGET_API_KEY:
+  nuget-api-key:
     description: 'API key to authenticate when pushing packages'
     required: false
 
@@ -21,7 +21,7 @@ runs:
     - name: "NuGet Push with Separate Symbol Feed"
       uses: ./.github/actions/dotnet-tool-run
       with:
-        WORKING_DIRECTORY: "${{github.workspace}}"
-        TOOL_NAME: "pushpackages"
-        TOOL_ARGUMENTS: "--folder dist --api-key \"${{inputs.NUGET_API_KEY}}\" --source \"${{inputs.NUGET_FEED}}\" --symbol-source \"${{inputs.NUGET_SYMBOL_FEED}}\""
+        working-directory: "${{github.workspace}}"
+        tool-name: "pushpackages"
+        tool-arguments: "--folder dist --api-key \"${{inputs.nuget-api-key}}\" --source \"${{inputs.nuget-feed}}\" --symbol-source \"${{inputs.nuget-symbol-feed}}\""
 # yamllint enable rule:line-length
