@@ -3,7 +3,7 @@
 name: 'Build SQL'
 description: 'Builds SQL Package'
 inputs:
-  DB_FOLDER:
+  db-folder:
     description: 'Folder where SQL Files live'
     required: true
 
@@ -18,15 +18,15 @@ runs:
     - name: "SQL: Install TSQLLint"
       uses: ./.github/actions/dotnet-tool
       with:
-        TOOL_NAME: "TSQLLint"
-        TOOL_VERSION: "latest"
+        tool-name: "TSQLLint"
+        tool-version: "latest"
 
     - name: "SQL: Lint SQL Files (TSQLLint)"
       uses: ./.github/actions/dotnet-tool-run
       with:
-        TOOL_NAME: "tsqllint"
-        TOOL_ARGUMENTS: "${{inputs.DB_FOLDER}}"
-        WORKING_DIRECTORY: ${{github.workspace}}
+        tool-name: "tsqllint"
+        tool-arguments: "${{inputs.db-folder}}"
+        working-directory: ${{github.workspace}}
 
     - name: "SQL: Lint SQL Files (SQLFluff)"
       uses: super-linter/super-linter@4ce20838b8ab83717e78138c5b3a1407148e0918 # v8.7.0
