@@ -3,34 +3,34 @@
 name: "Log Deploy Parameters"
 description: "Logs Cloud Formation deployment parameters"
 inputs:
-  CLOUD_FORMATION_STACK:
+  cloud-formation-stack:
     description: 'The Cloud Formation stack to deploy as'
     required: true
-  CLOUD_FORMATION_TEMPLATE_FILE:
+  cloud-formation-template-file:
     description: 'The Cloud Formation file to deploy'
     required: true
-  DOCKER_APP_OWNER:
+  docker-app-owner:
     description: 'docker app owner'
     required: true
-  DOCKER_APP_NAME:
+  docker-app-name:
     description: 'docker app name'
     required: true
-  BUILD_VERSION:
+  build-version:
     description: "Build Version"
     required: true
-  API_HOST:
+  api-host:
     description: 'Api Host'
     required: false
-  API_PREFIX:
+  api-prefix:
     description: 'API Prefix'
     required: false
-  AWS_LOAD_BALANCER_HOSTNAME:
+  aws-load-balancer-hostname:
     description: "AWS Load Balancer match hostname"
     required: false
-  DOCKER_CONTAINER_REGISTRY:
+  docker-container-registry:
     description: "AWS container registry to retrieve package from"
     required: true
-  AWS_LOAD_BALANCER_PRIORITY:
+  aws-load-balancer-priority:
     description: "AWS Load Balancer match priority"
     required: true
 
@@ -40,16 +40,16 @@ runs:
     - name: "Log parameters"
       shell: bash
       env:
-        CLOUD_FORMATION_STACK: ${{inputs.CLOUD_FORMATION_STACK}}
-        CLOUD_FORMATION_TEMPLATE_FILE: ${{inputs.CLOUD_FORMATION_TEMPLATE_FILE}}
-        DOCKER_APP_OWNER: ${{inputs.DOCKER_APP_OWNER}}
-        DOCKER_APP_NAME: ${{inputs.DOCKER_APP_NAME}}
-        BUILD_VERSION: ${{inputs.BUILD_VERSION}}
-        API_HOST: ${{inputs.API_HOST}}
-        API_PREFIX: ${{inputs.API_PREFIX}}
-        AWS_LOAD_BALANCER_HOSTNAME: ${{inputs.AWS_LOAD_BALANCER_HOSTNAME}}
-        DOCKER_CONTAINER_REGISTRY: ${{inputs.DOCKER_CONTAINER_REGISTRY}}
-        AWS_LOAD_BALANCER_PRIORITY: ${{inputs.AWS_LOAD_BALANCER_PRIORITY}}
+        CLOUD_FORMATION_STACK: ${{inputs.cloud-formation-stack}}
+        CLOUD_FORMATION_TEMPLATE_FILE: ${{inputs.cloud-formation-template-file}}
+        DOCKER_APP_OWNER: ${{inputs.docker-app-owner}}
+        DOCKER_APP_NAME: ${{inputs.docker-app-name}}
+        BUILD_VERSION: ${{inputs.build-version}}
+        API_HOST: ${{inputs.api-host}}
+        API_PREFIX: ${{inputs.api-prefix}}
+        AWS_LOAD_BALANCER_HOSTNAME: ${{inputs.aws-load-balancer-hostname}}
+        DOCKER_CONTAINER_REGISTRY: ${{inputs.docker-container-registry}}
+        AWS_LOAD_BALANCER_PRIORITY: ${{inputs.aws-load-balancer-priority}}
       run: |
         echo "CLOUD_FORMATION_STACK: $CLOUD_FORMATION_STACK"
         echo "CLOUD_FORMATION_TEMPLATE_FILE: $CLOUD_FORMATION_TEMPLATE_FILE"
