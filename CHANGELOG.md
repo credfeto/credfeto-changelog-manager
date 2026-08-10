@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+- ChangeLogChecker - Fixed off-by-one boundary check that flagged edits to the line immediately before a release header as modifying the released section
 ### Changed
 - Dependencies - Updated FunFair.Test to 6.3.7.2568
 - Dependencies - Updated FunFair.Test.Source.Generator to 6.3.7.2568
