@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+- ChangeLogChecker - Fixed off-by-one boundary check that flagged edits to the line immediately before a release header as modifying the released section
 ### Changed
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.12.2288
 - Dependencies - Updated Meziantou.Analyzer to 3.0.151
