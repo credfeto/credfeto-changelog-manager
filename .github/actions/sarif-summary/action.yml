@@ -35,6 +35,12 @@ runs:
           const toRegExp = glob => new RegExp(`^${glob.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.')}$`);
           const pattern = toRegExp(globPattern);
 
+          // SARIF results from tools that see the runner's filesystem (e.g. Roslyn analyzers)
+          // report absolute file:// URIs; strip the workspace prefix so the table shows a
+          // repo-relative path instead of the runner's local build path.
+          const workspacePrefix = `file://${process.env.GITHUB_WORKSPACE}/`;
+          const toRepoRelativeUri = uri => uri.startsWith(workspacePrefix) ? decodeURIComponent(uri.slice(workspacePrefix.length)) : uri;
+
           let entries;
           try {
             entries = fs.readdirSync(resultsDir);
@@ -64,10 +70,14 @@ runs:
 
             for (const run of sarif.runs ?? []) {
               for (const result of run.results ?? []) {
+                if (result.level === 'note') {
+                  continue;
+                }
+
                 const suppressed = (result.suppressions ?? []).length > 0;
                 const isError = result.level === 'error' && !suppressed;
                 const location = result.locations?.[0]?.physicalLocation;
-                const uri = location?.artifactLocation?.uri ?? '-';
+                const uri = location?.artifactLocation?.uri ? toRepoRelativeUri(location.artifactLocation.uri) : '-';
                 const line = location?.region?.startLine ?? '-';
                 const message = (result.message?.text ?? '-').replace(/\r?\n|\t/g, ' ').replace(/\|/g, '\\|');
 
