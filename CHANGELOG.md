@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+- ChangeLogChecker - Fixed off-by-one boundary check that flagged edits to the line immediately before a release header as modifying the released section
 ### Changed
 - Dependencies - Updated Meziantou.Analyzer to 3.0.141
 - Dependencies - Updated Roslynator.Analyzers to 4.16.0
