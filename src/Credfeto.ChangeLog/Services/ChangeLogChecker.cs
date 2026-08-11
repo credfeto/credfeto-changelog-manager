@@ -158,7 +158,7 @@ internal sealed class ChangeLogChecker : IChangeLogChecker
                 changeLength = 1;
             }
 
-            int changeEnd = changeStart + changeLength;
+            int changeEnd = changeLength == 0 ? changeStart : changeStart + changeLength - 1;
 
             if (changeEnd >= firstReleaseVersionIndex)
             {
@@ -171,7 +171,6 @@ internal sealed class ChangeLogChecker : IChangeLogChecker
 
     private static string ExtractPatchDetails(string patch)
     {
-        Console.WriteLine(patch);
         List<string> lines = [.. patch.SplitToLines()];
 
         RemoveLastLineIfBlank(lines);
