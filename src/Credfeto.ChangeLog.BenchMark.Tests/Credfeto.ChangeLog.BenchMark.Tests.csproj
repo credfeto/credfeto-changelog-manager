@@ -57,7 +57,7 @@
     <PackageReference Include="FunFair.Test.Common" Version="6.3.7.2568" />
     <PackageReference Include="LibGit2Sharp" Version="0.32.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
-    <PackageReference Include="NSubstitute" Version="6.1.0" />
+    <PackageReference Include="NSubstitute" Version="6.2.0" />
     <PackageReference Include="xunit.v3.mtp-v2" Version="3.2.2" />
   </ItemGroup>
   <ItemGroup>
