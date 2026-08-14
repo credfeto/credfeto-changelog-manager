@@ -193,6 +193,10 @@ For complex files, commit+push+update after each round; do not wait until fully 
 
 ## Background Tasks and Monitor Tool (MANDATORY)
 
+This section covers polling a command that was **accepted** and is running; if a command was
+instead **denied** by a `PreToolUse` hook, it never started at all and there is nothing to poll
+for, see [claude-hooks.instructions.md](claude-hooks.instructions.md) for that case.
+
 When using the Monitor tool to watch a background Bash task, the poll condition in the `until` loop **must** be provably satisfiable; a condition that can never be met loops forever and blocks the entire session.
 
 ### Rules for poll conditions
@@ -241,7 +245,7 @@ When using the Monitor tool to watch a background Bash task, the poll condition 
 
 ## Never Truncate Test/Commit Commands (MANDATORY)
 
-This is a distinct concern from the poll-loop timeouts above: those govern how long you wait for something _else_ to finish; this governs the timeout on the command _actually doing the work_.
+This is a distinct concern from the poll-loop timeouts above: those govern how long you wait for something _else_ to finish; this governs the timeout on the command _actually doing the work_ (a call rejected outright for missing `run_in_background: true` never ran; see [claude-hooks.instructions.md](claude-hooks.instructions.md) for that case, not here).
 
 `git commit`/`pre-commit`, `dotnet build`, `dotnet test`, `npm test`, and `bun test` have no bounded, predictable duration: `pre-commit` can run a heavy hook chain (`dotnet buildcheck` across every project, `trivy`, `hadolint`), `dotnet build` runs through a large analyzer stack (Roslynator, SonarAnalyzer, Meziantou, Threading, Security Code Scan, and more) plus NuGet restore, and test runs scale with what changed. A commit has already been killed mid-run on a foreground timeout in a live session. There is no timeout value that is both practical and safe to pick for any of these five commands, so do not try to pick one.
 
