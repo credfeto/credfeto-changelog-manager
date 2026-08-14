@@ -15,6 +15,7 @@ Read all of these before starting any task, regardless of language or context.
 | File | Covers |
 | --- | --- |
 | [git.instructions.md](git.instructions.md) | Prerequisites, build/test verification, git identity/GPG, branching, commits, GitHub issues, template rule escalation |
+| [claude-hooks.instructions.md](claude-hooks.instructions.md) | Claude Code `PreToolUse` hook denials: a denial means the command never ran, read its stated reason literally and retry immediately, reference index of the installed hook set |
 | [git-rebasing.instructions.md](git-rebasing.instructions.md) | When to rebase (fetch/check/rebase), version-conflict resolution when merging or rebasing |
 | [task-workflow.instructions.md](task-workflow.instructions.md) | Agent routing table, model selection, failure handling, issue/PR assignment, Workflow project board, commit cadence, resuming work, command timeouts, ad-hoc prompt intake, prompt traceability |
 | [code-quality.instructions.md](code-quality.instructions.md) | Code coverage, tests, async, immutability, parameterised tests, refactoring |
