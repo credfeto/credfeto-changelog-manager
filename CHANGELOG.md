@@ -13,16 +13,19 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
-- Dependencies - Updated FunFair.Test to 6.3.7.2568
-- Dependencies - Updated FunFair.Test.Source.Generator to 6.3.7.2568
-- Dependencies - Updated Microsoft.Extensions to 10.0.11
-- Dependencies - Updated NSubstitute to 6.2.0
 ### Deprecated
 ### Removed
 ### Deployment Changes
 <!--
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
+## [1.10.199] - 2026-08-14
+### Changed
+- Dependencies - Updated FunFair.Test to 6.3.7.2568
+- Dependencies - Updated FunFair.Test.Source.Generator to 6.3.7.2568
+- Dependencies - Updated Microsoft.Extensions to 10.0.11
+- Dependencies - Updated NSubstitute to 6.2.0
+
 ## [1.10.198] - 2026-08-12
 ### Changed
 - Dependencies - Updated Roslynator.Analyzers to 4.16.0
