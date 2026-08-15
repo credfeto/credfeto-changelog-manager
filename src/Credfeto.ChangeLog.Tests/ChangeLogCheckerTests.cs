@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -396,6 +396,144 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         );
 
         Assert.True(result, userMessage: "Expected true when unreleased section modified and trailing newline removed");
+    }
+
+    [Fact]
+    public async Task ChangeLogModifiedInReleaseSectionReturnsTrueWhenEditImmediatelyBeforeReleaseHeader()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        byte[] changeLogBytes = Encoding.UTF8.GetBytes(CHANGE_LOG_WITH_RELEASES);
+        (string changeLogPath, string originBranchName, Repository repo) =
+            await GitRepositoryHelpers.CreateRepoWithOriginBranchAsync(
+                this.TempFolder,
+                changeLogBytes,
+                cancellationToken
+            );
+
+        using (repo)
+        {
+            // Modify only the blank line immediately preceding the "## [1.0.0]" release header (line 8)
+            const string UPDATED_CHANGE_LOG = """
+                # Changelog
+                All notable changes to this project will be documented in this file.
+
+                ## [Unreleased]
+                ### Added
+                - Some unreleased item
+                <!-- note -->
+                ## [1.0.0] - 2024-01-01
+                ### Added
+                - First release item
+
+                ## [0.0.0] - Project created
+                """;
+
+            await File.WriteAllTextAsync(changeLogPath, UPDATED_CHANGE_LOG, Encoding.UTF8, cancellationToken);
+            Commands.Stage(repo, changeLogPath);
+            Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
+            repo.Commit("Modify line immediately before release header", author, author);
+        }
+
+        bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
+            changeLogFileName: changeLogPath,
+            originBranchName: originBranchName,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.True(result, userMessage: "Expected true when the edit ends exactly one line above the release header");
+    }
+
+    [Fact]
+    public async Task ChangeLogModifiedInReleaseSectionReturnsFalseWhenReleaseHeaderLineModified()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        byte[] changeLogBytes = Encoding.UTF8.GetBytes(CHANGE_LOG_WITH_RELEASES);
+        (string changeLogPath, string originBranchName, Repository repo) =
+            await GitRepositoryHelpers.CreateRepoWithOriginBranchAsync(
+                this.TempFolder,
+                changeLogBytes,
+                cancellationToken
+            );
+
+        using (repo)
+        {
+            // Modify the release header line (line 8) itself
+            const string UPDATED_CHANGE_LOG = """
+                # Changelog
+                All notable changes to this project will be documented in this file.
+
+                ## [Unreleased]
+                ### Added
+                - Some unreleased item
+
+                ## [1.0.0] - 2024-01-02
+                ### Added
+                - First release item
+
+                ## [0.0.0] - Project created
+                """;
+
+            await File.WriteAllTextAsync(changeLogPath, UPDATED_CHANGE_LOG, Encoding.UTF8, cancellationToken);
+            Commands.Stage(repo, changeLogPath);
+            Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
+            repo.Commit("Modify release header line", author, author);
+        }
+
+        bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
+            changeLogFileName: changeLogPath,
+            originBranchName: originBranchName,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.False(result, userMessage: "Expected false when the edit touches the release header line itself");
+    }
+
+    [Fact]
+    public async Task ChangeLogModifiedInReleaseSectionReturnsFalseWhenLineDeletedImmediatelyAfterReleaseHeader()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        byte[] changeLogBytes = Encoding.UTF8.GetBytes(CHANGE_LOG_WITH_RELEASES);
+        (string changeLogPath, string originBranchName, Repository repo) =
+            await GitRepositoryHelpers.CreateRepoWithOriginBranchAsync(
+                this.TempFolder,
+                changeLogBytes,
+                cancellationToken
+            );
+
+        using (repo)
+        {
+            // Delete the "### Added" line immediately after the release header (pure-deletion hunk, L == 0),
+            // whose preceding line in the new file is the release header itself
+            const string UPDATED_CHANGE_LOG = """
+                # Changelog
+                All notable changes to this project will be documented in this file.
+
+                ## [Unreleased]
+                ### Added
+                - Some unreleased item
+
+                ## [1.0.0] - 2024-01-01
+                - First release item
+
+                ## [0.0.0] - Project created
+                """;
+
+            await File.WriteAllTextAsync(changeLogPath, UPDATED_CHANGE_LOG, Encoding.UTF8, cancellationToken);
+            Commands.Stage(repo, changeLogPath);
+            Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
+            repo.Commit("Delete line immediately after release header", author, author);
+        }
+
+        bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
+            changeLogFileName: changeLogPath,
+            originBranchName: originBranchName,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.False(
+            result,
+            userMessage: "Expected false when a pure-deletion hunk (L == 0) whose insertion point is the release header line is treated as touching the released section"
+        );
     }
 
     /// <summary>
