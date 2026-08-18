@@ -297,6 +297,65 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
+    public void EnsureUnreleasedSectionsCreatesAdditionalSectionWhenMissing()
+    {
+        ChangeLogLanguage languageWithAdditionalSection = Language with
+        {
+            SectionOrder = [.. Language.SectionOrder, "CustomSection"],
+        };
+
+        const string existing =
+            @"# Changelog
+All notable changes to this project will be documented in this file.
+
+<!--
+Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
+-->
+
+## [Unreleased]
+### Added
+- A new feature.
+### Fixed
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+## [0.0.0] - Project created";
+
+        string result = Serialise(
+            ChangeLogUpdater.EnsureUnreleasedSections(ParseOrCreate(existing), languageWithAdditionalSection)
+        );
+
+        const string expected =
+            @"# Changelog
+All notable changes to this project will be documented in this file.
+
+<!--
+Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
+-->
+
+## [Unreleased]
+### Security
+### Added
+- A new feature.
+### Fixed
+### Changed
+### Deprecated
+### Removed
+### Deployment Changes
+### CustomSection
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+## [0.0.0] - Project created";
+
+        Assert.Equal(expected.ToLocalEndLine(), actual: result);
+    }
+
+    [Fact]
     public void MissingUnreleasedSectionThrows()
     {
         const string noUnreleased =
