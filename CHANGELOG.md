@@ -13,6 +13,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 - ChangeLogChecker - Fixed off-by-one boundary check that flagged edits to the line immediately before a release header as modifying the released section
+- Program - --additional-sections now applies to --add, --remove, and --create-release, not just --lint
 ### Changed
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.12.2288
 - Dependencies - Updated FunFair.Test to 6.3.8.2585

@@ -44,9 +44,7 @@ public static class Program
     {
         CancellationToken cancellationToken = CancellationToken.None;
         IChangeLogDetector detector = services.GetRequiredService<IChangeLogDetector>();
-        ChangeLogLanguage language = services
-            .GetRequiredService<IChangeLogLanguageFactory>()
-            .Get(ChangeLogLanguageFactory.English);
+        ChangeLogLanguage effectiveLanguage = ResolveEffectiveLanguage(options: options, services: services);
 
         if (options.Extract is not null || options.Version is not null)
         {
@@ -69,7 +67,7 @@ public static class Program
             await AddEntryToUnreleasedChangelogAsync(
                 options: options,
                 detector: detector,
-                language: language,
+                language: effectiveLanguage,
                 updater: services.GetRequiredService<IChangeLogUpdater>(),
                 cancellationToken: cancellationToken
             );
@@ -84,7 +82,7 @@ public static class Program
             await RemoveEntryFromUnreleasedChangelogAsync(
                 options: options,
                 detector: detector,
-                language: language,
+                language: effectiveLanguage,
                 updater: services.GetRequiredService<IChangeLogUpdater>(),
                 cancellationToken: cancellationToken
             );
@@ -95,10 +93,19 @@ public static class Program
         await ParsedOkContinuationAsync(
             options: options,
             detector: detector,
-            language: language,
+            language: effectiveLanguage,
             services: services,
             cancellationToken: cancellationToken
         );
+    }
+
+    private static ChangeLogLanguage ResolveEffectiveLanguage(Options options, IServiceProvider services)
+    {
+        ChangeLogLanguage language = services
+            .GetRequiredService<IChangeLogLanguageFactory>()
+            .Get(ChangeLogLanguageFactory.English);
+
+        return WithAdditionalSections(language: language, additionalSections: [.. options.AdditionalSections]);
     }
 
     private static void EnsureExtractOptionsComplete(Options options)
@@ -212,14 +219,9 @@ public static class Program
         string changeLog = FindChangeLog(options, detector);
         Console.WriteLine($"Using Changelog {changeLog}");
 
-        ChangeLogLanguage effectiveLanguage = WithAdditionalSections(
-            language: language,
-            additionalSections: [.. options.AdditionalSections]
-        );
-
         IReadOnlyList<LintError> errors = await linter.LintAsync(
             changeLogFileName: changeLog,
-            language: effectiveLanguage,
+            language: language,
             cancellationToken: cancellationToken
         );
 
@@ -239,7 +241,7 @@ public static class Program
         {
             await FixAndRelintAsync(
                 changeLog: changeLog,
-                language: effectiveLanguage,
+                language: language,
                 linter: linter,
                 fixer: fixer,
                 cancellationToken: cancellationToken

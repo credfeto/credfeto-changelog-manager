@@ -254,6 +254,39 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
     }
 
     [Fact]
+    public async Task AddEntryAsyncCreatesAdditionalSectionWhenChangeLogIsMissing()
+    {
+        using CancellationTokenSource cancellationTokenSource = new();
+
+        ChangeLogLanguage languageWithAdditionalSection = Language with
+        {
+            SectionOrder = [.. Language.SectionOrder, "CustomSection"],
+        };
+
+        string fileName = Path.Combine(this.TempFolder, $"{Guid.NewGuid():N}.md");
+
+        IChangeLogUpdater updater = this._serviceProvider.GetRequiredService<IChangeLogUpdater>();
+
+        await updater.AddEntryAsync(
+            changeLogFileName: fileName,
+            language: languageWithAdditionalSection,
+            type: "CustomSection",
+            message: "A custom entry",
+            cancellationToken: cancellationTokenSource.Token
+        );
+
+        string content = await File.ReadAllTextAsync(fileName, Encoding.UTF8, cancellationTokenSource.Token);
+        Assert.True(
+            content.Contains("### CustomSection", StringComparison.Ordinal),
+            userMessage: $"Expected CustomSection heading to be created, got:{Environment.NewLine}{content}"
+        );
+        Assert.True(
+            content.Contains("- A custom entry", StringComparison.Ordinal),
+            userMessage: $"Expected entry to be added to CustomSection, got:{Environment.NewLine}{content}"
+        );
+    }
+
+    [Fact]
     public async Task RemoveEntryAsyncRemovesEntryFromChangeLog()
     {
         using CancellationTokenSource cancellationTokenSource = new();
