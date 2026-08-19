@@ -12,9 +12,9 @@ Load this file when adding changelog entries or acting as the Changelog agent.
 
 ## When to Skip
 
-Do **not** add an entry if:
+Do **not** add a `CHANGELOG.md` entry if:
 
-- The repository name contains `-template` (e.g. `credfeto/cs-template`), kept blank for template consumers.
+- The repository name contains `-template` (e.g. `credfeto/cs-template`), kept blank for template consumers. The Changelog agent's Placeholder step still commits a `.deleteme.now` file instead; see [agent-roles.instructions.md](agent-roles.instructions.md#changelog) for the convention.
 
 ## Dependabot and Other Bot PRs
 
