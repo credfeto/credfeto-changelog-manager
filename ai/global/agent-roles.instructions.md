@@ -30,6 +30,8 @@ When picking up an **Issue** that has no existing PR:
      - **Board configured**: check whether a human has set the board status to **Approved**. If yes → skip to implementation. If not yet → revise or re-post the plan, mark Blocked, STOP (step 2).
      - **No board**: check for a human approval comment posted **after** the plan comment (keywords: `approved` / `go ahead` / `looks good` / `lgtm`, case-insensitive, whole word). If found → skip to implementation. If not → revise or re-post, mark Blocked, STOP (step 2).
 
+   Either way, before skipping to implementation, check for an existing branch first (see [git.instructions.md#branching](git.instructions.md#branching)).
+
 2. **Plan mode**: produce a concrete implementation plan using `/plan`, then post it as an issue comment in **exactly** this format:
 
    ```text
@@ -113,8 +115,9 @@ If a change proposed by `/simplify` (Phase A) or a finding raised by `/code-revi
 
 Only when all four phases pass (or no reviewable changes):
 
-1. Update Workflow board to **Human Review** (if board data present), unless Phase D already moved it there on success.
-2. Enable auto-merge:
+1. Safety net (belt-and-suspenders on top of the Code Reviewer Compliance check above): confirm `.deleteme.now` is not present in `git diff origin/main...HEAD --name-only` (see [Changelog](#changelog)); if it is still present, remove it in its own commit, re-run Code Tester, then continue.
+2. Update Workflow board to **Human Review** (if board data present), unless Phase D already moved it there on success.
+3. Enable auto-merge:
 
    ```bash
    gh pr merge --auto --merge <number> --repo <owner/repo>
@@ -124,7 +127,7 @@ Only when all four phases pass (or no reviewable changes):
 
 ### Workflow Board
 
-Each generated `CLAUDE.md` may contain Workflow board data in this format:
+Each generated `CLAUDE.md` may contain Workflow board data in this format, as a cache of the lookup below so most sessions can skip the API round-trip:
 
 ```text
 Workflow board (see agent-roles.instructions.md for update commands):
@@ -142,7 +145,28 @@ Workflow board (see agent-roles.instructions.md for update commands):
   WF_COMPLETE=<option-id>
 ```
 
-If this section is **absent** from your CLAUDE.md, skip all board updates silently.
+If this section is **absent** from your CLAUDE.md, look up the repo's Workflow board instead of skipping updates:
+
+#### Looking Up the Board (when CLAUDE.md has no Workflow Board section)
+
+Every repo with a board names its GitHub Projects (v2) board **"Workflow"**, linked directly to that repo.
+
+```bash
+# Step 1: find the "Workflow" project linked to this repo (gives WF_PROJECT_ID)
+WF_PROJECT_ID=$(gh api graphql \
+  -f query='query($owner:String!,$repo:String!){repository(owner:$owner,name:$repo){projectsV2(first:20){nodes{id title}}}}' \
+  -f owner=<owner> -f repo=<repo> \
+  --jq '.data.repository.projectsV2.nodes[] | select(.title=="Workflow") | .id')
+
+# Step 2: resolve the Status field and its option IDs (gives WF_STATUS_FIELD_ID and each WF_* option id)
+gh api graphql \
+  -f query='query($project:ID!){node(id:$project){... on ProjectV2{field(name:"Status"){... on ProjectV2SingleSelectField{id options{id name}}}}}}' \
+  -f project="${WF_PROJECT_ID}"
+```
+
+Match each returned option's `name` to its `WF_*` variable: `Not Started`→`WF_NOT_STARTED`, `Planning`→`WF_PLANNING`, `Approved`→`WF_APPROVED`, `Development`→`WF_DEVELOPMENT`, `AI Simplify`→`WF_AI_SIMPLIFY`, `AI Review`→`WF_AI_REVIEW`, `AI Security Review`→`WF_AI_SECURITY_REVIEW`, `AI Coverage`→`WF_AI_COVERAGE`, `Human Review`→`WF_HUMAN_REVIEW`, `Complete`→`WF_COMPLETE`. The field's own `id` is `WF_STATUS_FIELD_ID`. Use these looked-up values for the rest of the session exactly as if they had come from CLAUDE.md.
+
+**Only if Step 1 finds no project titled "Workflow" linked to the repo** — there genuinely is no board — skip all board updates silently.
 
 To update the board status, run these two commands in sequence. Replace `<STATUS_OPTION_ID>` with the appropriate `WF_*` value from the CLAUDE.md, and `<ISSUE_OR_PR_NUMBER>` with the issue or PR number:
 
@@ -418,6 +442,7 @@ Invoked by: Code Writer, Code Fixer, Code Reviewer, CI Debugger.
 - Rule Breaking: files that change linting rules or build rules in a way that weakens the repo's quality gates.
 - Language/framework rules: e.g. dotnet, shell, SQL instruction compliance where those files are present.
 - Documentation rules: README, CHANGELOG, and comment conventions from `documentation.instructions.md`.
+- Leftover placeholder: a `.deleteme.now` file still present in the diff (see [Changelog](#changelog)).
 
 ## Repo Auditor
 
@@ -466,12 +491,12 @@ Runs in two modes; both use `dotnet changelog` (see [changelog.instructions.md](
 
 - **Placeholder**: runs first, before Code Writer touches any code, so the branch/PR can exist from the start of work on the item. Add a stub entry (best-guess `Type`, message `TBD - to be finalized after review`). Hand off straight to Committer for a changelog-only commit, then PR Submitter to open the draft PR.
 - **Correction**: replaces the placeholder (or a prior correction) once there is a real diff to describe. Runs after Code Tester and Code Reviewer are satisfied in the initial development loop, never before. Also re-runs after any AI Review Loop phase (Simplify, Code Review, Security Review — see [PR Workflow: AI Review Loop](#pr-workflow-ai-review-loop)) that actually changed files, so the entry keeps matching the diff those phases produced. Read `git diff origin/main...HEAD`, remove the previous entry and add the corrected one (`dotnet changelog` has no in-place edit).
-- **Skip case**: if the work item qualifies for a skip under [changelog.instructions.md](changelog.instructions.md#when-to-skip) (template repo), skip Placeholder entirely — there is nothing to commit yet, so Committer/PR Submitter cannot open a PR from an empty branch. Code Writer runs first as before, and PR Submitter opens the PR from that first real commit. Correction is likewise a no-op for these items.
+- **Skip case**: if the work item qualifies for a skip under [changelog.instructions.md](changelog.instructions.md#when-to-skip) (template repo), commit a `.deleteme.now` placeholder file at the repo root instead of a `CHANGELOG.md` entry (a short delete-before-merge comment as its content). Hand off straight to Committer for a placeholder-only commit, then PR Submitter to open the draft PR. Code Writer removes `.deleteme.now` as part of its first real change set, for Committer to commit as usual. Correction is a no-op for these items, same as before.
 
 ## Committer
 
 - Use `git` CLI only; never `gh` or the GitHub API for commit/push.
-- For the placeholder changelog entry (no code exists yet): commit `CHANGELOG.md` alone.
+- For the placeholder step (no code exists yet): commit the placeholder artefact alone: `CHANGELOG.md`, or `.deleteme.now` for template-skip repos (see [Changelog](#changelog)).
 - Otherwise: commit code+tests as one GPG-signed commit (Conventional Commits, original prompt in body as `Prompt: …`), and `CHANGELOG.md` as a separate GPG-signed commit whenever Changelog produced a correction alongside it.
 - Push immediately after. Do not open the PR; that is PR Submitter's job.
 - Do not use `--no-verify`. If a pre-commit hook fails: capture output, report to the producing agent, re-stage and retry. Escalate to Orchestrator after 3 failed cycles.
