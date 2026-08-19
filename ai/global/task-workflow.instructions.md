@@ -107,6 +107,7 @@ github is configured to automatically create PRs from pushed branches. These PRs
 **Checking for existing work before branching (MANDATORY):**
 
 - Check branch names in all open PRs, not just PR authors. If any open PR's `headRefName` contains the issue number, that is your work from a prior session; resume it instead of creating a new branch.
+- This only catches work that already has a PR open. A branch pushed but never turned into a PR (session died first) needs the separate check in [git.instructions.md's Branching section](git.instructions.md#branching).
 
 ## PR Title, Body, and Label Sync (MANDATORY)
 
@@ -292,7 +293,7 @@ Every sequence below starts with the [Pre-Work Baseline Check](git.instructions.
 | CI failure (unknown cause) | Pre-Work Baseline Check → CI Debugger |
 | Dependabot / dependency update | Pre-Work Baseline Check → Dependency Updater |
 
-Rows starting with `Changelog (placeholder)` assume the work item takes a changelog entry at all. If it hits the skip condition in [changelog.instructions.md](changelog.instructions.md#when-to-skip) (template repo), drop the leading `Changelog (placeholder) → Committer → PR Submitter` and start the row at the first `Code Writer` step instead — the PR then opens from that first real commit, as it did before this split existed.
+Rows starting with `Changelog (placeholder)` assume the work item takes a changelog entry at all. If it hits the skip condition in [changelog.instructions.md](changelog.instructions.md#when-to-skip) (template repo), the row runs unchanged — see [agent-roles.instructions.md](agent-roles.instructions.md#changelog) for what the Changelog agent commits instead.
 
 For detailed agent role definitions, see [agent-roles.instructions.md](agent-roles.instructions.md).
 
