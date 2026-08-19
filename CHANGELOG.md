@@ -21,7 +21,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Meziantou.Analyzer to 3.0.156
 - Dependencies - Updated xunit.analyzers to 2.0.0
 - Dependencies - Updated xunit.v3 to 4.0.0
-- TBD - to be finalized after review (issue #336)
+- ChangeLogUpdater - Hoisted the loop-invariant requested-version parse out of ValidateVersionNotExists so it is parsed once per --create-release invocation instead of once per existing release
 ### Deprecated
 ### Removed
 ### Deployment Changes
