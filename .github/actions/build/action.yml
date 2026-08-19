@@ -53,11 +53,14 @@ inputs:
   nuget-feed:
     description: 'Nuget feed to push packages to'
     required: false
-  nuget-symbol-feed:
-    description: 'Nuget feed to push packages symbols to'
+  nuget-feed-type:
+    description: >-
+      Which feed to publish packages to: 'NUGET' publishes to nuget-feed via Trusted Publishing
+      (nuget.org is deprecating static API keys, so no key is used), 'SLEET' publishes via Sleet,
+      empty/unset skips publishing
     required: false
-  nuget-api-key:
-    description: 'API key to authenticate when pushing packages'
+  nuget-username:
+    description: 'nuget.org username (profile name) the Trusted Publishing policy is registered against'
     required: false
   sleet-config:
     description: 'Sleet config file'
@@ -161,10 +164,9 @@ runs:
     - name: "Parameter Summary"
       uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
-        NUGET_API_KEY: ${{inputs.nuget-api-key}}
+        NUGET_FEED_TYPE: ${{inputs.nuget-feed-type}}
         PROJECT_TO_PUBLISH: ${{inputs.project-to-publish}}
         NUGET_FEED: ${{inputs.nuget-feed}}
-        NUGET_SYMBOL_FEED: ${{inputs.nuget-symbol-feed}}
         NUGET_PUBLIC_RESTORE_FEED_CACHE: ${{inputs.nuget-public-restore-feed-cache}}
         NUGET_PUBLIC_RESTORE_FEED: ${{inputs.nuget-public-restore-feed}}
         NUGET_ADDITIONAL_RESTORE_FEED_RELEASE_CACHE: ${{inputs.nuget-additional-restore-feed-release-cache}}
@@ -174,10 +176,8 @@ runs:
         NUGET_PACK: ${{inputs.nuget-pack}}
       with:
         script: |
-          if (process.env.NUGET_API_KEY) { core.setSecret(process.env.NUGET_API_KEY); }
-          core.info('NUGET_API_KEY: ' + (process.env.NUGET_API_KEY ? '[set]' : '[not set]'));
           const names = [
-            'PROJECT_TO_PUBLISH', 'NUGET_FEED', 'NUGET_SYMBOL_FEED',
+            'NUGET_FEED_TYPE', 'PROJECT_TO_PUBLISH', 'NUGET_FEED',
             'NUGET_PUBLIC_RESTORE_FEED_CACHE', 'NUGET_PUBLIC_RESTORE_FEED',
             'NUGET_ADDITIONAL_RESTORE_FEED_RELEASE_CACHE', 'NUGET_ADDITIONAL_RESTORE_FEED_PRERELEASE_CACHE',
             'NUGET_ADDITIONAL_RESTORE_FEED_RELEASE', 'NUGET_ADDITIONAL_RESTORE_FEED_PRERELEASE', 'NUGET_PACK'
@@ -356,8 +356,8 @@ runs:
         db-folder: ${{github.workspace}}/db
         nuget-pack: ${{inputs.nuget-pack}}
         nuget-feed: ${{inputs.nuget-feed}}
-        nuget-symbol-feed: ${{inputs.nuget-symbol-feed}}
-        nuget-api-key: ${{inputs.nuget-api-key}}
+        nuget-feed-type: ${{inputs.nuget-feed-type}}
+        nuget-username: ${{inputs.nuget-username}}
         sleet-config: ${{inputs.sleet-config}}
         sleet-feed: ${{inputs.sleet-feed}}
         github-token: ${{inputs.github-token}}
