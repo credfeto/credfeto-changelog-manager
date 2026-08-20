@@ -536,6 +536,145 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         );
     }
 
+    [Fact]
+    public async Task ChangeLogModifiedInReleaseSectionReturnsTrueWhenOriginMainCutsReleaseAfterBranchPoint()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        byte[] changeLogBytes = Encoding.UTF8.GetBytes(CHANGE_LOG_WITH_RELEASES);
+        (string changeLogPath, string originBranchName, Repository repo) =
+            await GitRepositoryHelpers.CreateRepoWithOriginBranchAsync(
+                this.TempFolder,
+                changeLogBytes,
+                cancellationToken
+            );
+
+        using (repo)
+        {
+            await DivergeBranchAndOriginMainAsync(
+                repo: repo,
+                changeLogPath: changeLogPath,
+                originBranchName: originBranchName,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
+            changeLogFileName: changeLogPath,
+            originBranchName: originBranchName,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.True(
+            result,
+            userMessage: "Expected true: the branch only changed Unreleased, even though origin/main cut a release after the branch point"
+        );
+    }
+
+    [Fact]
+    public async Task ChangeLogModifiedInReleaseSectionThrowsWhenNoCommonAncestorExists()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        byte[] changeLogBytes = Encoding.UTF8.GetBytes(CHANGE_LOG_WITH_RELEASES);
+        (string changeLogPath, string originBranchName, Repository repo) =
+            await GitRepositoryHelpers.CreateRepoWithOriginBranchAsync(
+                this.TempFolder,
+                changeLogBytes,
+                cancellationToken
+            );
+
+        using (repo)
+        {
+            PointOriginBranchAtUnrelatedHistory(repo: repo, originBranchName: originBranchName);
+        }
+
+        await Assert.ThrowsAsync<MergeBaseNotFoundException>(async () =>
+        {
+            await this._checker.ChangeLogModifiedInReleaseSectionAsync(
+                changeLogFileName: changeLogPath,
+                originBranchName: originBranchName,
+                cancellationToken: cancellationToken
+            );
+        });
+    }
+
+    private static void PointOriginBranchAtUnrelatedHistory(Repository repo, string originBranchName)
+    {
+        Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
+        Blob blob = repo.ObjectDatabase.CreateBlob(new MemoryStream(Encoding.UTF8.GetBytes(CHANGE_LOG_WITH_RELEASES)));
+        TreeDefinition treeDefinition = new TreeDefinition().Add("CHANGELOG.md", blob, Mode.NonExecutableFile);
+        Tree orphanTree = repo.ObjectDatabase.CreateTree(treeDefinition);
+        Commit orphanCommit = repo.ObjectDatabase.CreateCommit(
+            author: author,
+            committer: author,
+            message: "Unrelated orphan history",
+            tree: orphanTree,
+            parents: [],
+            prettifyMessage: false
+        );
+
+        Branch originBranch = repo.Branches[originBranchName];
+        repo.Refs.UpdateTarget(originBranch.Reference, orphanCommit.Id);
+    }
+
+    private static async ValueTask DivergeBranchAndOriginMainAsync(
+        Repository repo,
+        string changeLogPath,
+        string originBranchName,
+        CancellationToken cancellationToken
+    )
+    {
+        string featureBranchName = repo.Head.FriendlyName;
+        Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
+
+        // The PR's own change: an item added to Unreleased only
+        const string PR_CHANGE_LOG = """
+            # Changelog
+            All notable changes to this project will be documented in this file.
+
+            ## [Unreleased]
+            ### Added
+            - Some unreleased item
+            - PR's new item
+
+            ## [1.0.0] - 2024-01-01
+            ### Added
+            - First release item
+
+            ## [0.0.0] - Project created
+            """;
+        await File.WriteAllTextAsync(changeLogPath, PR_CHANGE_LOG, Encoding.UTF8, cancellationToken);
+        Commands.Stage(repo, changeLogPath);
+        repo.Commit("Add unreleased item on feature branch", author, author);
+
+        // origin/main advances independently, cutting a release from what was
+        // Unreleased at the point this branch diverged
+        Branch originBranch = repo.Branches[originBranchName];
+        Commands.Checkout(repo, originBranch);
+
+        const string MAIN_RELEASE_CUT_CHANGE_LOG = """
+            # Changelog
+            All notable changes to this project will be documented in this file.
+
+            ## [Unreleased]
+
+            ## [1.1.0] - 2024-02-01
+            ### Added
+            - Some unreleased item
+
+            ## [1.0.0] - 2024-01-01
+            ### Added
+            - First release item
+
+            ## [0.0.0] - Project created
+            """;
+        await File.WriteAllTextAsync(changeLogPath, MAIN_RELEASE_CUT_CHANGE_LOG, Encoding.UTF8, cancellationToken);
+        Commands.Stage(repo, changeLogPath);
+        repo.Commit("Cut release 1.1.0 on main", author, author);
+
+        // this branch never rebased onto main's release cut
+        Commands.Checkout(repo, featureBranchName);
+    }
+
     /// <summary>
     /// Creates a temp git repo with a changelog. HEAD == origin tip (same commit).
     /// Returns changelog path and the branch name to use as originBranchName.

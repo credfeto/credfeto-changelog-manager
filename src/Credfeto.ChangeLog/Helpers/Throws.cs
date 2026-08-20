@@ -19,6 +19,14 @@ public static class Throws
     }
 
     [DoesNotReturn]
+    public static Commit CouldNotFindMergeBase(string headSha, string originBranchName)
+    {
+        throw new MergeBaseNotFoundException(
+            $"Could not find a common ancestor between HEAD ({headSha}) and {originBranchName}"
+        );
+    }
+
+    [DoesNotReturn]
     public static (string Version, string Date, bool IsYanked) MalformedVersionHeader(string line)
     {
         throw new InvalidChangeLogException($"Malformed version header (missing closing bracket): {line}");
