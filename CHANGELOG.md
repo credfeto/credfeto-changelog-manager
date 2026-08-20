@@ -14,6 +14,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Fixed
 - ChangeLogChecker - Fixed off-by-one boundary check that flagged edits to the line immediately before a release header as modifying the released section
 - Program - --additional-sections now applies to --add, --remove, and --create-release, not just --lint
+- ChangeLogChecker - Fixed check-insert false positive ('Changelog modified in released section') when origin/main advances (e.g. cuts a release) after the branch diverged; the diff is now taken against the merge base instead of origin's tip
 ### Changed
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.12.2288
 - Dependencies - Updated FunFair.Test to 6.3.8.2585

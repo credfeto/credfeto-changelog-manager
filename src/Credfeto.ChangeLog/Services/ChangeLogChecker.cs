@@ -66,8 +66,15 @@ internal sealed class ChangeLogChecker : IChangeLogChecker
 
             int firstReleaseVersionIndex = position.Value;
 
+            // Diff against the merge base, not the origin branch's tip: if origin has advanced
+            // (e.g. a release was cut) since this branch diverged, diffing against its tip would
+            // pull in origin's own unrelated changes and could misreport them as this branch's.
+            Commit mergeBase =
+                repo.ObjectDatabase.FindMergeBase(originBranch.Tip, repo.Head.Tip)
+                ?? Throws.CouldNotFindMergeBase(headSha: sha, originBranchName: originBranchName);
+
             Patch changes = repo.Diff.Compare<Patch>(
-                BranchTree(originBranch),
+                mergeBase.Tree,
                 HeadTree(repo),
                 paths: [changeLogInRepoPath],
                 compareOptions: CompareSettings.BuildCompareOptions
