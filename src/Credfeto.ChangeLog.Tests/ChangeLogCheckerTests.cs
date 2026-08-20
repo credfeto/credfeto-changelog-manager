@@ -571,6 +571,40 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
     }
 
     [Fact]
+    public async Task ChangeLogModifiedInReleaseSectionReturnsFalseWhenBranchModifiesReleasedSectionAfterOriginAdvances()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        byte[] changeLogBytes = Encoding.UTF8.GetBytes(CHANGE_LOG_WITH_RELEASES);
+        (string changeLogPath, string originBranchName, Repository repo) =
+            await GitRepositoryHelpers.CreateRepoWithOriginBranchAsync(
+                this.TempFolder,
+                changeLogBytes,
+                cancellationToken
+            );
+
+        using (repo)
+        {
+            await DivergeBranchWithReleasedSectionEditAndOriginMainAsync(
+                repo: repo,
+                changeLogPath: changeLogPath,
+                originBranchName: originBranchName,
+                cancellationToken: cancellationToken
+            );
+        }
+
+        bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
+            changeLogFileName: changeLogPath,
+            originBranchName: originBranchName,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.False(
+            result,
+            userMessage: "Expected false: the branch modified the released section, even though origin/main also advanced"
+        );
+    }
+
+    [Fact]
     public async Task ChangeLogModifiedInReleaseSectionThrowsWhenNoCommonAncestorExists()
     {
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
@@ -616,16 +650,13 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         repo.Refs.UpdateTarget(originBranch.Reference, orphanCommit.Id);
     }
 
-    private static async ValueTask DivergeBranchAndOriginMainAsync(
+    private static ValueTask DivergeBranchAndOriginMainAsync(
         Repository repo,
         string changeLogPath,
         string originBranchName,
-        CancellationToken cancellationToken
+        in CancellationToken cancellationToken
     )
     {
-        string featureBranchName = repo.Head.FriendlyName;
-        Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
-
         // The PR's own change: an item added to Unreleased only
         const string PR_CHANGE_LOG = """
             # Changelog
@@ -642,9 +673,66 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
 
             ## [0.0.0] - Project created
             """;
-        await File.WriteAllTextAsync(changeLogPath, PR_CHANGE_LOG, Encoding.UTF8, cancellationToken);
+
+        return DivergeBranchAndOriginMainCoreAsync(
+            repo: repo,
+            changeLogPath: changeLogPath,
+            originBranchName: originBranchName,
+            featureBranchChangeLog: PR_CHANGE_LOG,
+            featureBranchCommitMessage: "Add unreleased item on feature branch",
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private static ValueTask DivergeBranchWithReleasedSectionEditAndOriginMainAsync(
+        Repository repo,
+        string changeLogPath,
+        string originBranchName,
+        in CancellationToken cancellationToken
+    )
+    {
+        // The PR's own change: a real violation, an item sneaked into the already-released section
+        const string PR_CHANGE_LOG_RELEASE_MODIFIED = """
+            # Changelog
+            All notable changes to this project will be documented in this file.
+
+            ## [Unreleased]
+            ### Added
+            - Some unreleased item
+
+            ## [1.0.0] - 2024-01-01
+            ### Added
+            - First release item
+            - Sneaked in item
+
+            ## [0.0.0] - Project created
+            """;
+
+        return DivergeBranchAndOriginMainCoreAsync(
+            repo: repo,
+            changeLogPath: changeLogPath,
+            originBranchName: originBranchName,
+            featureBranchChangeLog: PR_CHANGE_LOG_RELEASE_MODIFIED,
+            featureBranchCommitMessage: "Sneak change into released section on feature branch",
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private static async ValueTask DivergeBranchAndOriginMainCoreAsync(
+        Repository repo,
+        string changeLogPath,
+        string originBranchName,
+        string featureBranchChangeLog,
+        string featureBranchCommitMessage,
+        CancellationToken cancellationToken
+    )
+    {
+        string featureBranchName = repo.Head.FriendlyName;
+        Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
+
+        await File.WriteAllTextAsync(changeLogPath, featureBranchChangeLog, Encoding.UTF8, cancellationToken);
         Commands.Stage(repo, changeLogPath);
-        repo.Commit("Add unreleased item on feature branch", author, author);
+        repo.Commit(featureBranchCommitMessage, author, author);
 
         // origin/main advances independently, cutting a release from what was
         // Unreleased at the point this branch diverged
