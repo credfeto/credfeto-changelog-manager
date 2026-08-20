@@ -252,6 +252,8 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     )]
     private static void ValidateVersionNotExists(in ImmutableArray<ChangeLogRelease> releases, string version)
     {
+        bool requestedParsed = Version.TryParse(version, out Version? requested);
+
         foreach (ChangeLogRelease release in releases)
         {
             if (release.Version.EqualsOrdinal(version))
@@ -259,11 +261,7 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
                 throw new ReleaseAlreadyExistsException($"Release {version} already exists");
             }
 
-            if (
-                Version.TryParse(release.Version, out Version? existing)
-                && Version.TryParse(version, out Version? requested)
-                && existing > requested
-            )
+            if (requestedParsed && Version.TryParse(release.Version, out Version? existing) && existing > requested)
             {
                 throw new ReleaseTooOldException(
                     $"Release {release.Version} already exists and is newer than {version}"
