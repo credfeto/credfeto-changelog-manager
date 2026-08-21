@@ -16,13 +16,13 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Program - --additional-sections now applies to --add, --remove, and --create-release, not just --lint
 - ChangeLogChecker - Fixed check-insert false positive ('Changelog modified in released section') when origin/main advances (e.g. cuts a release) after the branch diverged; the diff is now taken against the merge base instead of origin's tip
 ### Changed
-- Dependencies - Updated FunFair.CodeAnalysis to 7.2.12.2288
 - Dependencies - Updated FunFair.Test to 6.3.8.2585
 - Dependencies - Updated FunFair.Test.Source.Generator to 6.3.8.2585
 - Dependencies - Updated Meziantou.Analyzer to 3.0.156
 - Dependencies - Updated xunit.analyzers to 2.0.0
 - Dependencies - Updated xunit.v3 to 4.0.0
 - ChangeLogUpdater - Hoisted the loop-invariant requested-version parse out of ValidateVersionNotExists so it is parsed once per --create-release invocation instead of once per existing release
+- Dependencies - Updated FunFair.CodeAnalysis to 7.2.13.2323
 ### Deprecated
 ### Removed
 ### Deployment Changes
