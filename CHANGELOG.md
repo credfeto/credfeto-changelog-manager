@@ -27,6 +27,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated CSharpIsNullAnalyzer to 0.2.19
 - Dependencies - Updated Meziantou.Analyzer to 3.0.177
 - Dependencies - Updated Roslynator.Analyzers to 5.0.0
+- Dependencies - Updated SonarAnalyzer.CSharp to 10.33.0.1635
 ### Deprecated
 ### Removed
 ### Deployment Changes
