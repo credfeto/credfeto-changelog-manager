@@ -24,6 +24,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Roslynator.Analyzers to 4.16.1
 - Dependencies - Updated FunFair.Test to 6.3.9.2602
 - Dependencies - Updated FunFair.Test.Source.Generator to 6.3.9.2602
+- Dependencies - Updated Credfeto.Enumeration to 1.2.152.2216
 ### Deprecated
 ### Removed
 ### Deployment Changes
