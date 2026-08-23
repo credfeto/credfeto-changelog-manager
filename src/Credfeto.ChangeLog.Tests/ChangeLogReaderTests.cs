@@ -62,7 +62,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
     [InlineData("1.0.0.1")]
-    public void ReadEmptyChangeLogReturnsEmpty(string version)
+    public static void ReadEmptyChangeLogReturnsEmpty(string version)
     {
         string result = ExtractReleaseNotes(changeLog: string.Empty, version: version);
         Assert.Empty(result);
@@ -71,7 +71,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public void ReadUnReleasedSectionWithNoContentReturnsEmpty(string version)
+    public static void ReadUnReleasedSectionWithNoContentReturnsEmpty(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -101,7 +101,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public void ReadUnReleasedSectionWithJustAddedReturnsAddedSectionOnly(string version)
+    public static void ReadUnReleasedSectionWithJustAddedReturnsAddedSectionOnly(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -136,7 +136,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public void ReadUnReleasedSectionWithJustFixedReturnsAddedSectionOnly(string version)
+    public static void ReadUnReleasedSectionWithJustFixedReturnsAddedSectionOnly(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -171,7 +171,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public void ReadUnReleasedSectionWithJustChangedReturnsChangedSectionOnly(string version)
+    public static void ReadUnReleasedSectionWithJustChangedReturnsChangedSectionOnly(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -206,7 +206,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public void ReadUnReleasedSectionWithJustRemovedReturnsRemovedSectionOnly(string version)
+    public static void ReadUnReleasedSectionWithJustRemovedReturnsRemovedSectionOnly(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -241,7 +241,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public void ReadUnReleasedSectionWithJustDeploymentChangesReturnsDeploymentChangesSectionOnly(string version)
+    public static void ReadUnReleasedSectionWithJustDeploymentChangesReturnsDeploymentChangesSectionOnly(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -277,7 +277,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [InlineData("1.1.1")]
     [InlineData("1.1.1.1")]
     [InlineData("1.1.1.3000")]
-    public void ReadASpecificReleaseReturnsThatReleaseOnly(string version)
+    public static void ReadASpecificReleaseReturnsThatReleaseOnly(string version)
     {
         string result = ExtractReleaseNotes(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
         const string expected =
@@ -291,7 +291,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [InlineData("1.0.0")]
     [InlineData("1.0.0.0")]
     [InlineData("1.0.0.3000")]
-    public void ReadASpecificReleaseReturnsThatReleaseOnlyIgnoringZeroVersionParts(string version)
+    public static void ReadASpecificReleaseReturnsThatReleaseOnlyIgnoringZeroVersionParts(string version)
     {
         string result = ExtractReleaseNotes(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
         const string expected =
@@ -305,7 +305,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [InlineData("0.0.0")]
     [InlineData("0.0.0.0")]
     [InlineData("0.0.0.3000")]
-    public void ReadASpecificReleaseAtEndOfFile(string version)
+    public static void ReadASpecificReleaseAtEndOfFile(string version)
     {
         string result = ExtractReleaseNotes(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
 
@@ -320,7 +320,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [InlineData("8.1.0")]
     [InlineData("9.2.3.0")]
     [InlineData("10.3.4.3000")]
-    public void ReadNonExistentVersion(string version)
+    public static void ReadNonExistentVersion(string version)
     {
         string result = ExtractReleaseNotes(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
 

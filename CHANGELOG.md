@@ -16,6 +16,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Program - --additional-sections now applies to --add, --remove, and --create-release, not just --lint
 - ChangeLogChecker - Fixed check-insert false positive ('Changelog modified in released section') when origin/main advances (e.g. cuts a release) after the branch diverged; the diff is now taken against the merge base instead of origin's tip
 - Fixed build break from FunFair.Test 6.4.0.2617 update by switching xunit.v3.mtp-v2 package reference to xunit.v3.aot.mtp-v2 (FunFair.Test.Common now depends on the AOT xunit variants)
+- Fixed CA1822 build errors introduced by FunFair.Test.Common 6.4.0.2617 by marking theory test methods that do not access instance data as static
 ### Changed
 - Dependencies - Updated xunit.analyzers to 2.0.0
 - Dependencies - Updated xunit.v3 to 4.0.0

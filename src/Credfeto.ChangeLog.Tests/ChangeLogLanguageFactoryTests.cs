@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using FunFair.Test.Common;
 using Xunit;
 
@@ -24,7 +24,7 @@ public sealed class ChangeLogLanguageFactoryTests : TestBase
     [InlineData(ChangeLogLanguageFactory.Ukrainian)]
     [InlineData(ChangeLogLanguageFactory.ChineseSimplified)]
     [InlineData(ChangeLogLanguageFactory.ChineseTraditional)]
-    public void Get_KnownLanguageCode_ReturnsNonNullLanguage(string languageCode)
+    public static void Get_KnownLanguageCode_ReturnsNonNullLanguage(string languageCode)
     {
         ChangeLogLanguage language = Factory.Get(languageCode);
 
@@ -47,7 +47,7 @@ public sealed class ChangeLogLanguageFactoryTests : TestBase
     [InlineData(ChangeLogLanguageFactory.Ukrainian)]
     [InlineData(ChangeLogLanguageFactory.ChineseSimplified)]
     [InlineData(ChangeLogLanguageFactory.ChineseTraditional)]
-    public void Get_KnownLanguageCode_ReturnsNonEmptyDocumentTitle(string languageCode)
+    public static void Get_KnownLanguageCode_ReturnsNonEmptyDocumentTitle(string languageCode)
     {
         ChangeLogLanguage language = Factory.Get(languageCode);
 
@@ -73,7 +73,7 @@ public sealed class ChangeLogLanguageFactoryTests : TestBase
     [InlineData(ChangeLogLanguageFactory.Ukrainian)]
     [InlineData(ChangeLogLanguageFactory.ChineseSimplified)]
     [InlineData(ChangeLogLanguageFactory.ChineseTraditional)]
-    public void Get_KnownLanguageCode_ReturnsNonEmptyUnreleasedSectionName(string languageCode)
+    public static void Get_KnownLanguageCode_ReturnsNonEmptyUnreleasedSectionName(string languageCode)
     {
         ChangeLogLanguage language = Factory.Get(languageCode);
 
@@ -106,7 +106,7 @@ public sealed class ChangeLogLanguageFactoryTests : TestBase
     [InlineData(ChangeLogLanguageFactory.Ukrainian)]
     [InlineData(ChangeLogLanguageFactory.ChineseSimplified)]
     [InlineData(ChangeLogLanguageFactory.ChineseTraditional)]
-    public void Get_KnownLanguageCode_ReturnsSixSections(string languageCode)
+    public static void Get_KnownLanguageCode_ReturnsSixSections(string languageCode)
     {
         ChangeLogLanguage language = Factory.Get(languageCode);
 
@@ -129,7 +129,7 @@ public sealed class ChangeLogLanguageFactoryTests : TestBase
     [InlineData(ChangeLogLanguageFactory.Ukrainian)]
     [InlineData(ChangeLogLanguageFactory.ChineseSimplified)]
     [InlineData(ChangeLogLanguageFactory.ChineseTraditional)]
-    public void Get_KnownLanguageCode_AllSectionsNonEmpty(string languageCode)
+    public static void Get_KnownLanguageCode_AllSectionsNonEmpty(string languageCode)
     {
         ChangeLogLanguage language = Factory.Get(languageCode);
 
@@ -158,7 +158,7 @@ public sealed class ChangeLogLanguageFactoryTests : TestBase
     [InlineData(ChangeLogLanguageFactory.Ukrainian)]
     [InlineData(ChangeLogLanguageFactory.ChineseSimplified)]
     [InlineData(ChangeLogLanguageFactory.ChineseTraditional)]
-    public void Get_KnownLanguageCode_DateFormatIsIso8601(string languageCode)
+    public static void Get_KnownLanguageCode_DateFormatIsIso8601(string languageCode)
     {
         ChangeLogLanguage language = Factory.Get(languageCode);
 
@@ -188,7 +188,10 @@ public sealed class ChangeLogLanguageFactoryTests : TestBase
     [InlineData(ChangeLogLanguageFactory.Ukrainian, "Видалено")]
     [InlineData(ChangeLogLanguageFactory.ChineseSimplified, "移除")]
     [InlineData(ChangeLogLanguageFactory.ChineseTraditional, "移除")]
-    public void Get_KnownLanguageCode_LastSectionIsRemovedEquivalent(string languageCode, string expectedLastSection)
+    public static void Get_KnownLanguageCode_LastSectionIsRemovedEquivalent(
+        string languageCode,
+        string expectedLastSection
+    )
     {
         ChangeLogLanguage language = Factory.Get(languageCode);
 
@@ -211,7 +214,10 @@ public sealed class ChangeLogLanguageFactoryTests : TestBase
     [InlineData(ChangeLogLanguageFactory.Ukrainian, "Безпека")]
     [InlineData(ChangeLogLanguageFactory.ChineseSimplified, "安全性")]
     [InlineData(ChangeLogLanguageFactory.ChineseTraditional, "安全性")]
-    public void Get_KnownLanguageCode_FirstSectionIsSecurityEquivalent(string languageCode, string expectedFirstSection)
+    public static void Get_KnownLanguageCode_FirstSectionIsSecurityEquivalent(
+        string languageCode,
+        string expectedFirstSection
+    )
     {
         ChangeLogLanguage language = Factory.Get(languageCode);
 
@@ -235,7 +241,7 @@ public sealed class ChangeLogLanguageFactoryTests : TestBase
     [InlineData("En")]
     [InlineData("DE")]
     [InlineData("FR")]
-    public void Get_LanguageCodeWrongCase_ThrowsArgumentException(string languageCode)
+    public static void Get_LanguageCodeWrongCase_ThrowsArgumentException(string languageCode)
     {
         Assert.Throws<ArgumentException>(() => Factory.Get(languageCode));
     }
