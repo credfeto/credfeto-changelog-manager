@@ -15,7 +15,7 @@ public sealed class TextBlockToLinesTests : TestBase
     [InlineData("a\r\n\r\nb", "a,,b")]
     [InlineData("", "")]
     [InlineData("single-line", "single-line")]
-    public void SplitToLinesSplitsOnAllLineEndingVariants(string value, string expectedJoined)
+    public static void SplitToLinesSplitsOnAllLineEndingVariants(string value, string expectedJoined)
     {
         IReadOnlyList<string> expected = expectedJoined.Split(',');
 

@@ -92,7 +92,7 @@ public sealed class ChangeLogYankedReleaseTests : TestBase
     [InlineData("## [1.0.0] - 2024-01-01 [YANKED]")]
     [InlineData("## [1.0.0] - 2024-01-01 [yanked]")]
     [InlineData("## [1.0.0] - 2024-01-01 [Yanked]")]
-    public void ParseYankedRelease_CaseInsensitive(string header)
+    public static void ParseYankedRelease_CaseInsensitive(string header)
     {
         string content = $"""
             # Changelog

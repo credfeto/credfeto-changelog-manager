@@ -27,7 +27,7 @@ public sealed class EnumExtensionsTests : TestBase
     [InlineData(ErrorType.MissingGroupOptionError)]
     [InlineData(ErrorType.GroupOptionAmbiguityError)]
     [InlineData(ErrorType.MultipleDefaultVerbsError)]
-    public void ErrorTypeGetNameReturnsNonEmptyString(ErrorType value)
+    public static void ErrorTypeGetNameReturnsNonEmptyString(ErrorType value)
     {
         string name = value.GetName();
         Assert.NotEmpty(name);
@@ -52,7 +52,7 @@ public sealed class EnumExtensionsTests : TestBase
     [InlineData(ErrorType.MissingGroupOptionError)]
     [InlineData(ErrorType.GroupOptionAmbiguityError)]
     [InlineData(ErrorType.MultipleDefaultVerbsError)]
-    public void ErrorTypeGetDescriptionReturnsNonEmptyString(ErrorType value)
+    public static void ErrorTypeGetDescriptionReturnsNonEmptyString(ErrorType value)
     {
         string description = value.GetDescription();
         Assert.NotEmpty(description);
@@ -77,7 +77,7 @@ public sealed class EnumExtensionsTests : TestBase
     [InlineData(ErrorType.MissingGroupOptionError)]
     [InlineData(ErrorType.GroupOptionAmbiguityError)]
     [InlineData(ErrorType.MultipleDefaultVerbsError)]
-    public void ErrorTypeIsDefinedReturnsTrueForKnownValues(ErrorType value)
+    public static void ErrorTypeIsDefinedReturnsTrueForKnownValues(ErrorType value)
     {
         bool defined = value.IsDefined();
         Assert.True(defined, userMessage: "Expected IsDefined to return true for a known ErrorType value");
@@ -104,7 +104,7 @@ public sealed class EnumExtensionsTests : TestBase
     [InlineData(LogLevel.Info)]
     [InlineData(LogLevel.Debug)]
     [InlineData(LogLevel.Trace)]
-    public void LogLevelGetNameReturnsNonEmptyString(LogLevel value)
+    public static void LogLevelGetNameReturnsNonEmptyString(LogLevel value)
     {
         string name = value.GetName();
         Assert.NotEmpty(name);
@@ -118,7 +118,7 @@ public sealed class EnumExtensionsTests : TestBase
     [InlineData(LogLevel.Info)]
     [InlineData(LogLevel.Debug)]
     [InlineData(LogLevel.Trace)]
-    public void LogLevelGetDescriptionReturnsNonEmptyString(LogLevel value)
+    public static void LogLevelGetDescriptionReturnsNonEmptyString(LogLevel value)
     {
         string description = value.GetDescription();
         Assert.NotEmpty(description);
@@ -132,7 +132,7 @@ public sealed class EnumExtensionsTests : TestBase
     [InlineData(LogLevel.Info)]
     [InlineData(LogLevel.Debug)]
     [InlineData(LogLevel.Trace)]
-    public void LogLevelIsDefinedReturnsTrueForKnownValues(LogLevel value)
+    public static void LogLevelIsDefinedReturnsTrueForKnownValues(LogLevel value)
     {
         bool defined = value.IsDefined();
         Assert.True(defined, userMessage: "Expected IsDefined to return true for a known LogLevel value");

@@ -289,7 +289,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 
     [Theory]
     [MemberData(nameof(EnsureUnreleasedSectionsCases))]
-    public void EnsureUnreleasedSectionsProducesCorrectResult(string existing, string expected)
+    public static void EnsureUnreleasedSectionsProducesCorrectResult(string existing, string expected)
     {
         string result = Serialise(ChangeLogUpdater.EnsureUnreleasedSections(ParseOrCreate(existing), Language));
 
