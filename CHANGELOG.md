@@ -12,7 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
-- TBD - to be finalized after review
+- ChangeLogSerialiser/ChangeLogParser - the changelog write path inconsistently inserted or omitted the blank line before the following release heading; every release heading (including the first one after Unreleased) is now normalised to exactly one blank line before it, and lint/lint-fix detect and correct violations
 ### Changed
 ### Deprecated
 ### Removed

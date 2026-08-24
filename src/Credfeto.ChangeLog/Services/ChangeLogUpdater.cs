@@ -154,7 +154,13 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         }
 
         string date = pending ? "TBD" : CurrentDate(language);
-        ChangeLogRelease newRelease = new(Version: version, Date: date, LineNumber: 0, Sections: releaseSections);
+        ChangeLogRelease newRelease = new(
+            Version: version,
+            Date: date,
+            LineNumber: 0,
+            Sections: releaseSections,
+            BlankLinesBeforeHeading: 1
+        );
         ImmutableArray<ChangeLogRelease> releases = [newRelease, .. document.Releases];
         ChangeLogUnreleased cleared = ClearUnreleasedEntries(unreleased);
         return document with { Unreleased = cleared, Releases = releases };

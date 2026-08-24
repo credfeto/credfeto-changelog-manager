@@ -23,14 +23,15 @@ public sealed class ChangeLogParser : IChangeLogParser
         }
 
         int unreleasedEnd = lines.FindUnreleasedEnd(unreleasedStart);
+        ChangeLogUnreleased unreleased = ParseUnreleased(lines, start: unreleasedStart, end: unreleasedEnd);
         (ImmutableArray<ChangeLogRelease> releases, ImmutableArray<string> trailingLines) = ParseReleases(
             lines,
             start: unreleasedEnd
         );
         return new(
             HeaderLines: CollectLines(lines, start: 0, end: unreleasedStart),
-            Unreleased: ParseUnreleased(lines, start: unreleasedStart, end: unreleasedEnd),
-            Releases: releases,
+            Unreleased: unreleased,
+            Releases: ApplyUnreleasedBoundaryBlankLines(releases: releases, unreleased: unreleased),
             TrailingLines: trailingLines
         );
     }
@@ -61,7 +62,40 @@ public sealed class ChangeLogParser : IChangeLogParser
         }
 
         FlushSection(sections: sections, name: currentName, entries: currentEntries);
+        MoveTrailingBlanksFromLastSection(sections: sections, trailer: trailer);
         return new(LineNumber: start + 1, Sections: [.. sections], TrailingLines: [.. trailer]);
+    }
+
+    // When an HTML comment precedes the next release heading, ProcessUnreleasedLine's
+    // StartsWithHtmlComment() branch already moves the last section's trailing blanks into
+    // trailer before collecting the comment. With no comment, those blanks are never moved out
+    // of the last section's Entries (FlushSection does not trim them), so the gap before the
+    // heading is silently lost. Doing the move here unconditionally covers both cases: a no-op
+    // when it already happened, the missing step when it didn't.
+    private static void MoveTrailingBlanksFromLastSection(List<ChangeLogSection> sections, List<string> trailer)
+    {
+        if (sections.Count == 0)
+        {
+            return;
+        }
+
+        ChangeLogSection last = sections[^1];
+        int end = last.Entries.Length;
+
+        while (end > 0 && string.IsNullOrWhiteSpace(last.Entries[end - 1]))
+        {
+            end--;
+        }
+
+        if (end == last.Entries.Length)
+        {
+            return;
+        }
+
+        List<string> moved = [.. last.Entries[end..], .. trailer];
+        trailer.Clear();
+        trailer.AddRange(moved);
+        sections[^1] = last with { Entries = last.Entries[..end] };
     }
 
     private static bool ProcessUnreleasedLine(
@@ -177,10 +211,25 @@ public sealed class ChangeLogParser : IChangeLogParser
             state.FlushSection();
             state.CurrentSectionName = line.GetChangeTypeName();
             state.CurrentSectionLine = lineIndex + 1;
+            state.NoteNonBlankLine();
         }
-        else if (state.CurrentSectionName is not null)
+        else if (string.IsNullOrWhiteSpace(line))
         {
-            state.CurrentEntries.Add(line);
+            state.NoteBlankLine();
+
+            if (state.CurrentSectionName is not null)
+            {
+                state.CurrentEntries.Add(line);
+            }
+        }
+        else
+        {
+            state.NoteNonBlankLine();
+
+            if (state.CurrentSectionName is not null)
+            {
+                state.CurrentEntries.Add(line);
+            }
         }
     }
 
@@ -193,6 +242,24 @@ public sealed class ChangeLogParser : IChangeLogParser
         }
 
         return builder.ToImmutable();
+    }
+
+    // The gap between [Unreleased] and the first release heading is parsed via a different
+    // code path (ChangeLogUnreleased.TrailingLines) to the gap between subsequent releases
+    // (tracked in ReleaseParseState), so the first release's blank-line count is corrected here
+    // once both are known, rather than in ReleaseParseState itself.
+    private static ImmutableArray<ChangeLogRelease> ApplyUnreleasedBoundaryBlankLines(
+        in ImmutableArray<ChangeLogRelease> releases,
+        ChangeLogUnreleased unreleased
+    )
+    {
+        if (releases.IsEmpty)
+        {
+            return releases;
+        }
+
+        int blankLines = unreleased.TrailingLines.CountTrailingBlankLines();
+        return releases.SetItem(index: 0, releases[0] with { BlankLinesBeforeHeading = blankLines });
     }
 
     private sealed class ReleaseParseState
@@ -209,12 +276,25 @@ public sealed class ChangeLogParser : IChangeLogParser
 
         public bool CurrentIsYanked { get; private set; }
 
+        // Consecutive blank lines seen since the last non-blank line, i.e. the gap immediately
+        // before whatever comes next (a new release heading, or end of file). Tracked
+        // independently of CurrentSectionName so it stays correct even for a release with no
+        // ### sections at all, where blank lines are never added to CurrentEntries.
+        private int TrailingBlankLineCount { get; set; }
+        public int CurrentBlankLinesBeforeHeading { get; private set; }
+
+        public void NoteBlankLine() => this.TrailingBlankLineCount++;
+
+        public void NoteNonBlankLine() => this.TrailingBlankLineCount = 0;
+
         public void StartRelease(string line, int lineNumber)
         {
             this.InTrailerMode = false;
             this.TrailingLines.Clear();
             (this.CurrentVersion, this.CurrentDate, this.CurrentIsYanked) = ParseVersionHeader(line);
             this.CurrentReleaseLineNumber = lineNumber;
+            this.CurrentBlankLinesBeforeHeading = this.TrailingBlankLineCount;
+            this.TrailingBlankLineCount = 0;
         }
 
         public void EnterTrailerMode()
@@ -295,7 +375,8 @@ public sealed class ChangeLogParser : IChangeLogParser
                     Date: this.CurrentDate ?? string.Empty,
                     LineNumber: this.CurrentReleaseLineNumber,
                     Sections: [.. this.CurrentSections],
-                    IsYanked: this.CurrentIsYanked
+                    IsYanked: this.CurrentIsYanked,
+                    BlankLinesBeforeHeading: this.CurrentBlankLinesBeforeHeading
                 )
             );
             this.CurrentSections.Clear();
