@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
@@ -36,6 +36,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         CheckUnreleased(document: document, errors: errors, language: language);
         CheckVersionHeaders(releases: document.Releases, errors: errors);
         CheckReleaseDates(releases: document.Releases, errors: errors, language: language);
+        CheckBlankLinesBeforeReleaseHeadings(releases: document.Releases, errors: errors);
         return errors;
     }
 
@@ -232,6 +233,23 @@ public sealed class ChangeLogLinter : IChangeLogLinter
                     )
                 );
             }
+        }
+    }
+
+    private static void CheckBlankLinesBeforeReleaseHeadings(
+        in ImmutableArray<ChangeLogRelease> releases,
+        List<LintError> errors
+    )
+    {
+        foreach (ChangeLogRelease release in releases.AsValueEnumerable().Where(r => r.BlankLinesBeforeHeading != 1))
+        {
+            string detail = release.BlankLinesBeforeHeading == 0 ? "Missing" : "Extra";
+            errors.Add(
+                new(
+                    LineNumber: release.LineNumber,
+                    Message: $"{detail} blank line(s) before release heading '## [{release.Version}]'; expected exactly one blank line"
+                )
+            );
         }
     }
 

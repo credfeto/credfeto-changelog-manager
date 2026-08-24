@@ -327,4 +327,92 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
             userMessage: $"Expected entry to be removed, but content was:{Environment.NewLine}{result}"
         );
     }
+
+    [Fact]
+    public async Task AddEntryAsyncNormalisesMissingBlankLineBeforeNextRelease()
+    {
+        using CancellationTokenSource cancellationTokenSource = new();
+
+        // No blank line between "- Existing item" and the following release heading (see #370).
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+            ### Security
+            ### Added
+            - Existing item
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+            ## [1.0.0] - 2024-01-01
+            ### Added
+            - Initial release
+
+            ## [0.0.0] - Project created
+            """;
+
+        string fileName = Path.Combine(this.TempFolder, $"{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(fileName, changeLog, Encoding.UTF8, cancellationTokenSource.Token);
+
+        IChangeLogUpdater updater = this._serviceProvider.GetRequiredService<IChangeLogUpdater>();
+
+        await updater.AddEntryAsync(
+            changeLogFileName: fileName,
+            language: Language,
+            type: "Fixed",
+            message: "A new fix",
+            cancellationToken: cancellationTokenSource.Token
+        );
+
+        string content = await File.ReadAllTextAsync(fileName, Encoding.UTF8, cancellationTokenSource.Token);
+        ChangeLogDocument reparsed = await ChangeLogTestHelper.ParseAsync(content);
+
+        Assert.Equal(expected: 1, actual: reparsed.Releases[0].BlankLinesBeforeHeading);
+    }
+
+    [Fact]
+    public async Task CreateReleaseAsyncNormalisesMissingBlankLineBeforeNextRelease()
+    {
+        using CancellationTokenSource cancellationTokenSource = new();
+
+        // No blank line between the last [Unreleased] entry and the following release heading.
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+            ### Security
+            ### Added
+            - A new item
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+            ## [1.0.0] - 2024-01-01
+            ### Added
+            - Initial release
+
+            ## [0.0.0] - Project created
+            """;
+
+        string fileName = Path.Combine(this.TempFolder, $"{Guid.NewGuid():N}.md");
+        await File.WriteAllTextAsync(fileName, changeLog, Encoding.UTF8, cancellationTokenSource.Token);
+
+        IChangeLogUpdater updater = this._serviceProvider.GetRequiredService<IChangeLogUpdater>();
+
+        await updater.CreateReleaseAsync(
+            changeLogFileName: fileName,
+            language: Language,
+            version: "2.0.0",
+            pending: true,
+            cancellationToken: cancellationTokenSource.Token
+        );
+
+        string content = await File.ReadAllTextAsync(fileName, Encoding.UTF8, cancellationTokenSource.Token);
+        ChangeLogDocument reparsed = await ChangeLogTestHelper.ParseAsync(content);
+
+        Assert.Equal(expected: 1, actual: reparsed.Releases[0].BlankLinesBeforeHeading);
+    }
 }

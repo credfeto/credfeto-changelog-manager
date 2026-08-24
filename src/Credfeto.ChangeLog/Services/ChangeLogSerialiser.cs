@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,7 +20,11 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
 
         if (document.Unreleased is not null)
         {
-            SerialiseUnreleased(document.Unreleased, lines);
+            SerialiseUnreleased(
+                unreleased: document.Unreleased,
+                lines: lines,
+                hasFollowingRelease: !document.Releases.IsEmpty
+            );
         }
 
         foreach (ChangeLogRelease release in document.Releases)
@@ -33,7 +37,11 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
         return lines.LinesToText();
     }
 
-    private static void SerialiseUnreleased(ChangeLogUnreleased unreleased, List<string> lines)
+    private static void SerialiseUnreleased(
+        ChangeLogUnreleased unreleased,
+        List<string> lines,
+        bool hasFollowingRelease
+    )
     {
         lines.Add("## [Unreleased]");
 
@@ -42,7 +50,29 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
             SerialiseSection(section, lines);
         }
 
-        lines.AddRange(unreleased.TrailingLines);
+        if (hasFollowingRelease)
+        {
+            // Every other release boundary is regenerated with exactly one blank line by
+            // SerialiseRelease below; normalise this one the same way instead of reproducing
+            // whatever gap happened to be in the source file (see #370).
+            AddNormalisedTrailer(lines: lines, trailer: unreleased.TrailingLines);
+        }
+        else
+        {
+            lines.AddRange(unreleased.TrailingLines);
+        }
+    }
+
+    private static void AddNormalisedTrailer(List<string> lines, in ImmutableArray<string> trailer)
+    {
+        int end = trailer.Length - trailer.CountTrailingBlankLines();
+
+        for (int i = 0; i < end; i++)
+        {
+            lines.Add(trailer[i]);
+        }
+
+        lines.Add(string.Empty);
     }
 
     private static void SerialiseRelease(ChangeLogRelease release, List<string> lines)

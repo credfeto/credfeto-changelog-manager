@@ -161,6 +161,64 @@ public sealed partial class ChangeLogFixerTests : TestBase
     }
 
     [Fact]
+    public void MissingBlankLineBeforeReleaseHeading_IsFixed()
+    {
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+            ### Security
+            ### Added
+            - an entry
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+            ## [1.0.0] - 2024-01-01
+            ### Added
+            - Initial release
+
+            ## [0.0.0] - Project created
+            """;
+
+        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void ExtraBlankLinesBeforeReleaseHeading_AreFixed()
+    {
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+            ### Security
+            ### Added
+            - an entry
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+
+
+            ## [1.0.0] - 2024-01-01
+            ### Added
+            - Initial release
+
+            ## [0.0.0] - Project created
+            """;
+
+        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
+        Assert.Empty(errors);
+    }
+
+    [Fact]
     public void MissingPreamble_IsAdded()
     {
         const string changeLog = """

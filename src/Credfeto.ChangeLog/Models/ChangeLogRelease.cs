@@ -9,5 +9,6 @@ public sealed record ChangeLogRelease(
     string Date,
     int LineNumber,
     ImmutableArray<ChangeLogSection> Sections,
-    bool IsYanked = false
+    bool IsYanked = false,
+    int BlankLinesBeforeHeading = 1
 );
