@@ -1,30 +1,26 @@
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Reports;
-using Credfeto.ChangeLog.BenchMark.Tests.Bench;
+using Credfeto.ChangeLog.Benchmark.Tests.Bench;
 using FunFair.Test.Common;
 using Xunit;
 
-namespace Credfeto.ChangeLog.BenchMark.Tests;
+namespace Credfeto.ChangeLog.Benchmark.Tests;
 
-public sealed class MoveTrailingBlanksBenchmarkTests : LoggingTestBase
+public sealed class ChangeLogCheckerBenchmarkTests : LoggingTestBase
 {
-    // Baseline measured after replacing the per-blank Insert(0, ...)/RemoveAt loop with a
-    // count-then-copy-then-RemoveRange pass in ChangeLogParser.MoveTrailingBlanks (issue #254).
-    // Allocations are unaffected by this change (both approaches only allocate on List<T> backing-array
-    // growth) — this baseline guards against allocation regressions, not the CPU-time win, which was
-    // measured separately: ParseAsync over a 200-trailing-blank-line fixture averaged ~13.5us/op after
-    // the fix vs ~18.3us/op before it (BenchmarkDotNet SimpleJob, allocations identical at ~24.5KB/op
-    // in both cases).
-    // This limit includes a 25% margin to allow for minor variation across machines.
-    private const long MAX_ALLOCATED_BYTES_MANY_TRAILING_BLANKS = 30650;
+    // Baseline measured after adding a `paths` filter to the diff comparison in ChangeLogChecker (issue #331),
+    // which limits the diff to the changelog file instead of scanning the whole working tree.
+    // These limits include a 25% margin to allow for minor variation across machines.
+    private const long MAX_ALLOCATED_BYTES_CHANGE_LOG_UNCHANGED = 44062;
+    private const long MAX_ALLOCATED_BYTES_UNRELEASED_SECTION_CHANGED = 54560;
 
-    public MoveTrailingBlanksBenchmarkTests(ITestOutputHelper output)
+    public ChangeLogCheckerBenchmarkTests(ITestOutputHelper output)
         : base(output) { }
 
     [Fact]
     public void RunBenchmark()
     {
-        (Summary summary, AccumulationLogger logger) = Benchmark<MoveTrailingBlanksBenchmark>();
+        (Summary summary, AccumulationLogger logger) = Benchmark<ChangeLogCheckerBenchmark>();
 
         this.Output.WriteLine(logger.GetLog());
 
@@ -53,8 +49,10 @@ public sealed class MoveTrailingBlanksBenchmarkTests : LoggingTestBase
     {
         return methodName switch
         {
-            nameof(MoveTrailingBlanksBenchmark.ParseAsync_ManyTrailingBlanks) =>
-                MAX_ALLOCATED_BYTES_MANY_TRAILING_BLANKS,
+            nameof(ChangeLogCheckerBenchmark.ChangeLogModifiedInReleaseSection_ChangeLogUnchangedAsync) =>
+                MAX_ALLOCATED_BYTES_CHANGE_LOG_UNCHANGED,
+            nameof(ChangeLogCheckerBenchmark.ChangeLogModifiedInReleaseSection_UnreleasedSectionChangedAsync) =>
+                MAX_ALLOCATED_BYTES_UNRELEASED_SECTION_CHANGED,
             _ => long.MaxValue,
         };
     }

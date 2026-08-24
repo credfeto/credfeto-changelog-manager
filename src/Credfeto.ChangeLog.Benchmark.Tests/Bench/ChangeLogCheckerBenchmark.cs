@@ -11,7 +11,7 @@ using FunFair.Test.Infrastructure.Mocks;
 using LibGit2Sharp;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Credfeto.ChangeLog.BenchMark.Tests.Bench;
+namespace Credfeto.ChangeLog.Benchmark.Tests.Bench;
 
 [SimpleJob]
 [MemoryDiagnoser(false)]

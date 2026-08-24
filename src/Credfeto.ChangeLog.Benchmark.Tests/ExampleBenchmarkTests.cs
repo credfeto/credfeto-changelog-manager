@@ -1,10 +1,10 @@
 ﻿using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Reports;
-using Credfeto.ChangeLog.BenchMark.Tests.Bench;
+using Credfeto.ChangeLog.Benchmark.Tests.Bench;
 using FunFair.Test.Common;
 using Xunit;
 
-namespace Credfeto.ChangeLog.BenchMark.Tests;
+namespace Credfeto.ChangeLog.Benchmark.Tests;
 
 public sealed class ExampleBenchmarkTests : LoggingTestBase
 {

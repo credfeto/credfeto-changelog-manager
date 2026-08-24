@@ -50,7 +50,7 @@
 
 - name: "credfeto-changelog-benchmark-tests"
   color: "0e8a16"
-  description: "Changes in Credfeto.ChangeLog.BenchMark.Tests project"
+  description: "Changes in Credfeto.ChangeLog.Benchmark.Tests project"
 
 - name: "credfeto-changelog-cmd"
   color: "96f7d2"

@@ -5,7 +5,7 @@ using System.Text;
 using BenchmarkDotNet.Attributes;
 using Credfeto.ChangeLog.Extensions;
 
-namespace Credfeto.ChangeLog.BenchMark.Tests.Bench;
+namespace Credfeto.ChangeLog.Benchmark.Tests.Bench;
 
 [SimpleJob]
 [MemoryDiagnoser(false)]

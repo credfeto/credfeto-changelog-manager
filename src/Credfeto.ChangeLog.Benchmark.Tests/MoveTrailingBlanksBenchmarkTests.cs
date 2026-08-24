@@ -1,25 +1,30 @@
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Reports;
-using Credfeto.ChangeLog.BenchMark.Tests.Bench;
+using Credfeto.ChangeLog.Benchmark.Tests.Bench;
 using FunFair.Test.Common;
 using Xunit;
 
-namespace Credfeto.ChangeLog.BenchMark.Tests;
+namespace Credfeto.ChangeLog.Benchmark.Tests;
 
-public sealed class EnsureUnreleasedSectionsBenchmarkTests : LoggingTestBase
+public sealed class MoveTrailingBlanksBenchmarkTests : LoggingTestBase
 {
-    // Baselines measured after replacing per-call HashSet with static FrozenSet (issue #253).
-    // These limits include a 25% margin to allow for minor variation across machines.
-    private const long MAX_ALLOCATED_BYTES_ALL_SECTIONS_CORRECT = 8000;
-    private const long MAX_ALLOCATED_BYTES_OUT_OF_ORDER_AND_MISSING = 8550;
+    // Baseline measured after replacing the per-blank Insert(0, ...)/RemoveAt loop with a
+    // count-then-copy-then-RemoveRange pass in ChangeLogParser.MoveTrailingBlanks (issue #254).
+    // Allocations are unaffected by this change (both approaches only allocate on List<T> backing-array
+    // growth) — this baseline guards against allocation regressions, not the CPU-time win, which was
+    // measured separately: ParseAsync over a 200-trailing-blank-line fixture averaged ~13.5us/op after
+    // the fix vs ~18.3us/op before it (BenchmarkDotNet SimpleJob, allocations identical at ~24.5KB/op
+    // in both cases).
+    // This limit includes a 25% margin to allow for minor variation across machines.
+    private const long MAX_ALLOCATED_BYTES_MANY_TRAILING_BLANKS = 30650;
 
-    public EnsureUnreleasedSectionsBenchmarkTests(ITestOutputHelper output)
+    public MoveTrailingBlanksBenchmarkTests(ITestOutputHelper output)
         : base(output) { }
 
     [Fact]
     public void RunBenchmark()
     {
-        (Summary summary, AccumulationLogger logger) = Benchmark<EnsureUnreleasedSectionsBenchmark>();
+        (Summary summary, AccumulationLogger logger) = Benchmark<MoveTrailingBlanksBenchmark>();
 
         this.Output.WriteLine(logger.GetLog());
 
@@ -48,10 +53,8 @@ public sealed class EnsureUnreleasedSectionsBenchmarkTests : LoggingTestBase
     {
         return methodName switch
         {
-            nameof(EnsureUnreleasedSectionsBenchmark.EnsureUnreleasedSections_AllSectionsCorrect) =>
-                MAX_ALLOCATED_BYTES_ALL_SECTIONS_CORRECT,
-            nameof(EnsureUnreleasedSectionsBenchmark.EnsureUnreleasedSections_OutOfOrderAndMissing) =>
-                MAX_ALLOCATED_BYTES_OUT_OF_ORDER_AND_MISSING,
+            nameof(MoveTrailingBlanksBenchmark.ParseAsync_ManyTrailingBlanks) =>
+                MAX_ALLOCATED_BYTES_MANY_TRAILING_BLANKS,
             _ => long.MaxValue,
         };
     }

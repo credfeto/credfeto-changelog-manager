@@ -1,26 +1,25 @@
 using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Reports;
-using Credfeto.ChangeLog.BenchMark.Tests.Bench;
+using Credfeto.ChangeLog.Benchmark.Tests.Bench;
 using FunFair.Test.Common;
 using Xunit;
 
-namespace Credfeto.ChangeLog.BenchMark.Tests;
+namespace Credfeto.ChangeLog.Benchmark.Tests;
 
-public sealed class ChangeLogCheckerBenchmarkTests : LoggingTestBase
+public sealed class EnsureUnreleasedSectionsBenchmarkTests : LoggingTestBase
 {
-    // Baseline measured after adding a `paths` filter to the diff comparison in ChangeLogChecker (issue #331),
-    // which limits the diff to the changelog file instead of scanning the whole working tree.
+    // Baselines measured after replacing per-call HashSet with static FrozenSet (issue #253).
     // These limits include a 25% margin to allow for minor variation across machines.
-    private const long MAX_ALLOCATED_BYTES_CHANGE_LOG_UNCHANGED = 44062;
-    private const long MAX_ALLOCATED_BYTES_UNRELEASED_SECTION_CHANGED = 54560;
+    private const long MAX_ALLOCATED_BYTES_ALL_SECTIONS_CORRECT = 8000;
+    private const long MAX_ALLOCATED_BYTES_OUT_OF_ORDER_AND_MISSING = 8550;
 
-    public ChangeLogCheckerBenchmarkTests(ITestOutputHelper output)
+    public EnsureUnreleasedSectionsBenchmarkTests(ITestOutputHelper output)
         : base(output) { }
 
     [Fact]
     public void RunBenchmark()
     {
-        (Summary summary, AccumulationLogger logger) = Benchmark<ChangeLogCheckerBenchmark>();
+        (Summary summary, AccumulationLogger logger) = Benchmark<EnsureUnreleasedSectionsBenchmark>();
 
         this.Output.WriteLine(logger.GetLog());
 
@@ -49,10 +48,10 @@ public sealed class ChangeLogCheckerBenchmarkTests : LoggingTestBase
     {
         return methodName switch
         {
-            nameof(ChangeLogCheckerBenchmark.ChangeLogModifiedInReleaseSection_ChangeLogUnchangedAsync) =>
-                MAX_ALLOCATED_BYTES_CHANGE_LOG_UNCHANGED,
-            nameof(ChangeLogCheckerBenchmark.ChangeLogModifiedInReleaseSection_UnreleasedSectionChangedAsync) =>
-                MAX_ALLOCATED_BYTES_UNRELEASED_SECTION_CHANGED,
+            nameof(EnsureUnreleasedSectionsBenchmark.EnsureUnreleasedSections_AllSectionsCorrect) =>
+                MAX_ALLOCATED_BYTES_ALL_SECTIONS_CORRECT,
+            nameof(EnsureUnreleasedSectionsBenchmark.EnsureUnreleasedSections_OutOfOrderAndMissing) =>
+                MAX_ALLOCATED_BYTES_OUT_OF_ORDER_AND_MISSING,
             _ => long.MaxValue,
         };
     }
