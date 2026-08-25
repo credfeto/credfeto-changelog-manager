@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Credfeto.ChangeLog.Exceptions;
 using Credfeto.ChangeLog.Models;
@@ -412,5 +413,52 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 
         this._output.WriteLine(updated);
         Assert.Equal(expected.ToLocalEndLine(), actual: updated);
+    }
+
+    // CreateRelease prepends a new release ahead of whatever was previously Releases[0]; that
+    // displaced release's BlankLinesBeforeHeading described its old boundary against [Unreleased]
+    // and must be corrected to reflect that it is now preceded by the new release instead,
+    // otherwise ChangeLogLinter.Lint reports a false blank-line violation for a document that has
+    // not even been serialised yet.
+    [Fact]
+    public void DisplacedReleaseBlankLinesBeforeHeadingIsCorrected()
+    {
+        const string changeLog =
+            @"# Changelog
+All notable changes to this project will be documented in this file.
+
+<!--
+Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
+-->
+
+## [Unreleased]
+### Added
+- New content
+### Fixed
+### Changed
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+
+## [1.0.0] - 2024-01-01
+### Added
+- Initial release
+
+## [0.0.0] - Project created";
+
+        ChangeLogDocument updated = ChangeLogUpdater.CreateRelease(Parse(changeLog), "2.0.0", true, Language);
+
+        ChangeLogRelease displaced = updated.Releases[1];
+        Assert.Equal(expected: "1.0.0", actual: displaced.Version);
+        Assert.Equal(expected: 1, actual: displaced.BlankLinesBeforeHeading);
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(updated, Language);
+        Assert.DoesNotContain(
+            errors,
+            e => e.Message.Contains(value: "## [1.0.0]", comparisonType: StringComparison.Ordinal)
+        );
     }
 }
