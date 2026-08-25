@@ -8,7 +8,7 @@
     <File Path="Directory.Build.props" />
     <File Path="global.json" />
   </Folder>
-  <Project Path="Credfeto.ChangeLog.BenchMark.Tests/Credfeto.ChangeLog.BenchMark.Tests.csproj" />
+  <Project Path="Credfeto.ChangeLog.Benchmark.Tests/Credfeto.ChangeLog.Benchmark.Tests.csproj" />
   <Project Path="Credfeto.ChangeLog.Cmd/Credfeto.ChangeLog.Cmd.csproj" />
   <Project Path="Credfeto.ChangeLog.Cmd.Tests/Credfeto.ChangeLog.Cmd.Tests.csproj" />
   <Project Path="Credfeto.ChangeLog.Tests/Credfeto.ChangeLog.Tests.csproj" />

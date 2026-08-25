@@ -39,6 +39,7 @@ public static class TemplateFile
                 "Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch\n"
             )
             .Append("-->\n")
+            .Append('\n')
             .Append("## [0.0.0] - Project created")
             .ToString();
     }

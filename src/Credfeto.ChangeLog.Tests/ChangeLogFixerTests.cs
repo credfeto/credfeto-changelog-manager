@@ -160,6 +160,37 @@ public sealed partial class ChangeLogFixerTests : TestBase
         Assert.Empty(errors);
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    public static void BlankLinesBeforeReleaseHeading_Mismatched_AreFixed(int blankLines)
+    {
+        string gap = new(c: '\n', count: blankLines);
+        string changeLog = $"""
+            # Changelog
+
+            ## [Unreleased]
+            ### Security
+            ### Added
+            - an entry
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+            {gap}## [1.0.0] - 2024-01-01
+            ### Added
+            - Initial release
+
+            ## [0.0.0] - Project created
+            """;
+
+        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
+        Assert.Empty(errors);
+    }
+
     [Fact]
     public void MissingPreamble_IsAdded()
     {

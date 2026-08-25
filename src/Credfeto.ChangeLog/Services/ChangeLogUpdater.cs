@@ -155,9 +155,27 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
 
         string date = pending ? "TBD" : CurrentDate(language);
         ChangeLogRelease newRelease = new(Version: version, Date: date, LineNumber: 0, Sections: releaseSections);
-        ImmutableArray<ChangeLogRelease> releases = [newRelease, .. document.Releases];
+        ImmutableArray<ChangeLogRelease> releases = PrependRelease(newRelease: newRelease, existing: document.Releases);
         ChangeLogUnreleased cleared = ClearUnreleasedEntries(unreleased);
         return document with { Unreleased = cleared, Releases = releases };
+    }
+
+    // The release previously at index 0 is now preceded by newRelease instead of [Unreleased], so
+    // its BlankLinesBeforeHeading (describing its old boundary) is stale; every release-to-release
+    // boundary always serialises to exactly one blank line (see ChangeLogSerialiser.SerialiseRelease),
+    // so that is the correct value once it is displaced.
+    private static ImmutableArray<ChangeLogRelease> PrependRelease(
+        ChangeLogRelease newRelease,
+        in ImmutableArray<ChangeLogRelease> existing
+    )
+    {
+        if (existing.IsEmpty)
+        {
+            return [newRelease];
+        }
+
+        ChangeLogRelease displaced = existing[0] with { BlankLinesBeforeHeading = 1 };
+        return [newRelease, displaced, .. existing[1..]];
     }
 
     public static ChangeLogDocument EnsureUnreleasedSections(ChangeLogDocument document, ChangeLogLanguage language)
