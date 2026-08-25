@@ -106,4 +106,37 @@ public sealed class ChangeLogParserTrailingBlanksTests : TestBase
         Assert.Equal(expected: "1.0.0", actual: release1.Version);
         Assert.Equal(expected: 1, actual: release1.BlankLinesBeforeHeading);
     }
+
+    // A non-blank, non-heading line encountered before the first ### section (garbage content
+    // between [Unreleased] and the first heading) must reset blanksBeforeFirstSection, the same
+    // way NoteNonBlankLine resets ReleaseParseState's TrailingBlankLineCount. Only the two blank
+    // lines after the stray line should count; if the reset didn't happen, this would incorrectly
+    // total three.
+    private const string UnreleasedWithNonBlankContentBeforeFirstSection = """
+        # Changelog
+
+        ## [Unreleased]
+
+        stray text here
+
+
+        ## [1.0.0] - 2024-01-01
+        ### Added
+        - Initial release
+
+        ## [0.0.0] - Project created
+        """;
+
+    [Fact]
+    public async Task ParseResetsBlankCountOnNonBlankContentBeforeFirstSectionAsync()
+    {
+        ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(
+            UnreleasedWithNonBlankContentBeforeFirstSection
+        );
+
+        ChangeLogRelease release1 = document.Releases[0];
+
+        Assert.Equal(expected: "1.0.0", actual: release1.Version);
+        Assert.Equal(expected: 2, actual: release1.BlankLinesBeforeHeading);
+    }
 }
