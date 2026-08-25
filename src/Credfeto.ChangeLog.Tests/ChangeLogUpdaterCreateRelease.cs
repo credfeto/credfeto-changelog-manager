@@ -420,6 +420,11 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     // and must be corrected to reflect that it is now preceded by the new release instead,
     // otherwise ChangeLogLinter.Lint reports a false blank-line violation for a document that has
     // not even been serialised yet.
+    //
+    // No blank line before ## [1.0.0] here deliberately: the source parses it to
+    // BlankLinesBeforeHeading == 0, so the assertion below only passes if PrependRelease actually
+    // corrects it to 1 rather than the fix being a no-op that happens to match an already-correct
+    // input (see PR #371 review).
     [Fact]
     public void DisplacedReleaseBlankLinesBeforeHeadingIsCorrected()
     {
@@ -442,14 +447,16 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 <!--
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
-
 ## [1.0.0] - 2024-01-01
 ### Added
 - Initial release
 
 ## [0.0.0] - Project created";
 
-        ChangeLogDocument updated = ChangeLogUpdater.CreateRelease(Parse(changeLog), "2.0.0", true, Language);
+        ChangeLogDocument original = Parse(changeLog);
+        Assert.Equal(expected: 0, actual: original.Releases[0].BlankLinesBeforeHeading);
+
+        ChangeLogDocument updated = ChangeLogUpdater.CreateRelease(original, "2.0.0", true, Language);
 
         ChangeLogRelease displaced = updated.Releases[1];
         Assert.Equal(expected: "1.0.0", actual: displaced.Version);
