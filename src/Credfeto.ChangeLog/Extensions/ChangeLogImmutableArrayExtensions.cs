@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 
 namespace Credfeto.ChangeLog.Extensions;
 
-public static class ImmutableArrayExtensions
+public static class ChangeLogImmutableArrayExtensions
 {
     public static int CountTrailingBlankLines(this in ImmutableArray<string> lines)
     {
