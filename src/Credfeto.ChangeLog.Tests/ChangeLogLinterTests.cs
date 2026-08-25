@@ -537,10 +537,13 @@ public sealed class ChangeLogLinterTests : TestBase
         );
     }
 
-    [Fact]
-    public void MissingBlankLineBeforeReleaseHeading_ReturnsError()
+    [Theory]
+    [InlineData(0, "Missing")]
+    [InlineData(2, "Extra")]
+    public static void BlankLinesBeforeReleaseHeading_Mismatched_ReturnsError(int blankLines, string expectedToken)
     {
-        const string changeLog = """
+        string gap = new(c: '\n', count: blankLines);
+        string changeLog = $"""
             # Changelog
 
             ## [Unreleased]
@@ -552,7 +555,7 @@ public sealed class ChangeLogLinterTests : TestBase
             ### Deprecated
             ### Removed
             ### Deployment Changes
-            ## [1.0.0] - 2024-01-01
+            {gap}## [1.0.0] - 2024-01-01
             ### Added
             - Initial release
 
@@ -565,41 +568,7 @@ public sealed class ChangeLogLinterTests : TestBase
             errors,
             e =>
                 e.Message.Contains(value: "## [1.0.0]", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "Missing", comparisonType: StringComparison.Ordinal)
-        );
-    }
-
-    [Fact]
-    public void ExtraBlankLinesBeforeReleaseHeading_ReturnsError()
-    {
-        const string changeLog = """
-            # Changelog
-
-            ## [Unreleased]
-            ### Security
-            ### Added
-            - an entry
-            ### Fixed
-            ### Changed
-            ### Deprecated
-            ### Removed
-            ### Deployment Changes
-
-
-            ## [1.0.0] - 2024-01-01
-            ### Added
-            - Initial release
-
-            ## [0.0.0] - Project created
-            """;
-
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
-
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "## [1.0.0]", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "Extra", comparisonType: StringComparison.Ordinal)
+                && e.Message.Contains(value: expectedToken, comparisonType: StringComparison.Ordinal)
         );
     }
 

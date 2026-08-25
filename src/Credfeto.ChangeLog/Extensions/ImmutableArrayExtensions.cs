@@ -15,4 +15,10 @@ public static class ImmutableArrayExtensions
 
         return count;
     }
+
+    public static ImmutableArray<string> TrimTrailingBlanks(this in ImmutableArray<string> lines)
+    {
+        int end = lines.Length - lines.CountTrailingBlankLines();
+        return end == lines.Length ? lines : lines[..end];
+    }
 }

@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.ChangeLog.Constants;
+using Credfeto.ChangeLog.Extensions;
 using Credfeto.ChangeLog.Models;
 using ZLinq;
 
@@ -61,7 +62,7 @@ public sealed class ChangeLogFixer : IChangeLogFixer
         ImmutableArray<string> before = commentStart >= 0 ? headerLines[..commentStart] : headerLines;
         ImmutableArray<string> after = commentStart >= 0 ? headerLines[commentStart..] : [];
 
-        ImmutableArray<string> trimmed = TrimTrailingBlanks(before);
+        ImmutableArray<string> trimmed = before.TrimTrailingBlanks();
 
         return
         [
@@ -85,18 +86,6 @@ public sealed class ChangeLogFixer : IChangeLogFixer
         }
 
         return -1;
-    }
-
-    private static ImmutableArray<string> TrimTrailingBlanks(in ImmutableArray<string> lines)
-    {
-        int end = lines.Length;
-
-        while (end > 0 && string.IsNullOrWhiteSpace(lines[end - 1]))
-        {
-            end--;
-        }
-
-        return end == lines.Length ? lines : lines[..end];
     }
 
     private static ChangeLogDocument RemoveBlankLinesAfterHeadings(ChangeLogDocument document)

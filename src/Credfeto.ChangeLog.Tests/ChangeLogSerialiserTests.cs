@@ -56,16 +56,19 @@ public sealed class ChangeLogSerialiserTests : TestBase
         Assert.Equal(expected: 1, actual: addedCount);
     }
 
-    [Fact]
-    public async Task MissingBlankLineBeforeFirstRelease_IsNormalisedOnSerialise()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    public static async Task BlankLinesBeforeFirstRelease_Mismatched_AreNormalisedToOneOnSerialiseAsync(int blankLines)
     {
-        const string changeLog = """
+        string gap = new(c: '\n', count: blankLines);
+        string changeLog = $"""
             # Changelog
 
             ## [Unreleased]
             ### Added
             - an entry
-            ## [1.0.0] - 2024-01-01
+            {gap}## [1.0.0] - 2024-01-01
             ### Added
             - Initial release
 
@@ -73,34 +76,7 @@ public sealed class ChangeLogSerialiserTests : TestBase
             """;
 
         ChangeLogDocument original = await ChangeLogTestHelper.ParseAsync(changeLog);
-        Assert.Equal(expected: 0, actual: original.Releases[0].BlankLinesBeforeHeading);
-
-        string serialised = await SerialiseAsync(original);
-        ChangeLogDocument reparsed = await ChangeLogTestHelper.ParseAsync(serialised);
-
-        Assert.Equal(expected: 1, actual: reparsed.Releases[0].BlankLinesBeforeHeading);
-    }
-
-    [Fact]
-    public async Task ExtraBlankLinesBeforeFirstRelease_AreCollapsedToOneOnSerialise()
-    {
-        const string changeLog = """
-            # Changelog
-
-            ## [Unreleased]
-            ### Added
-            - an entry
-
-
-            ## [1.0.0] - 2024-01-01
-            ### Added
-            - Initial release
-
-            ## [0.0.0] - Project created
-            """;
-
-        ChangeLogDocument original = await ChangeLogTestHelper.ParseAsync(changeLog);
-        Assert.Equal(expected: 2, actual: original.Releases[0].BlankLinesBeforeHeading);
+        Assert.Equal(expected: blankLines, actual: original.Releases[0].BlankLinesBeforeHeading);
 
         string serialised = await SerialiseAsync(original);
         ChangeLogDocument reparsed = await ChangeLogTestHelper.ParseAsync(serialised);

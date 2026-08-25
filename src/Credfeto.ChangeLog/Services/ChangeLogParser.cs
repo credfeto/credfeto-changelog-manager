@@ -80,21 +80,14 @@ public sealed class ChangeLogParser : IChangeLogParser
         }
 
         ChangeLogSection last = sections[^1];
-        int end = last.Entries.Length;
-
-        while (end > 0 && string.IsNullOrWhiteSpace(last.Entries[end - 1]))
-        {
-            end--;
-        }
+        int end = last.Entries.Length - last.Entries.CountTrailingBlankLines();
 
         if (end == last.Entries.Length)
         {
             return;
         }
 
-        List<string> moved = [.. last.Entries[end..], .. trailer];
-        trailer.Clear();
-        trailer.AddRange(moved);
+        trailer.InsertRange(index: 0, last.Entries[end..]);
         sections[^1] = last with { Entries = last.Entries[..end] };
     }
 
@@ -213,18 +206,16 @@ public sealed class ChangeLogParser : IChangeLogParser
             state.CurrentSectionLine = lineIndex + 1;
             state.NoteNonBlankLine();
         }
-        else if (string.IsNullOrWhiteSpace(line))
-        {
-            state.NoteBlankLine();
-
-            if (state.CurrentSectionName is not null)
-            {
-                state.CurrentEntries.Add(line);
-            }
-        }
         else
         {
-            state.NoteNonBlankLine();
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                state.NoteBlankLine();
+            }
+            else
+            {
+                state.NoteNonBlankLine();
+            }
 
             if (state.CurrentSectionName is not null)
             {

@@ -65,13 +65,7 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
 
     private static void AddNormalisedTrailer(List<string> lines, in ImmutableArray<string> trailer)
     {
-        int end = trailer.Length - trailer.CountTrailingBlankLines();
-
-        for (int i = 0; i < end; i++)
-        {
-            lines.Add(trailer[i]);
-        }
-
+        lines.AddRange(trailer.TrimTrailingBlanks());
         lines.Add(string.Empty);
     }
 

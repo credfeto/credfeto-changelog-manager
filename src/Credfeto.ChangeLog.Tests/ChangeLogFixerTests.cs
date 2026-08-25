@@ -160,10 +160,13 @@ public sealed partial class ChangeLogFixerTests : TestBase
         Assert.Empty(errors);
     }
 
-    [Fact]
-    public void MissingBlankLineBeforeReleaseHeading_IsFixed()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    public static void BlankLinesBeforeReleaseHeading_Mismatched_AreFixed(int blankLines)
     {
-        const string changeLog = """
+        string gap = new(c: '\n', count: blankLines);
+        string changeLog = $"""
             # Changelog
 
             ## [Unreleased]
@@ -175,37 +178,7 @@ public sealed partial class ChangeLogFixerTests : TestBase
             ### Deprecated
             ### Removed
             ### Deployment Changes
-            ## [1.0.0] - 2024-01-01
-            ### Added
-            - Initial release
-
-            ## [0.0.0] - Project created
-            """;
-
-        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
-
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
-        Assert.Empty(errors);
-    }
-
-    [Fact]
-    public void ExtraBlankLinesBeforeReleaseHeading_AreFixed()
-    {
-        const string changeLog = """
-            # Changelog
-
-            ## [Unreleased]
-            ### Security
-            ### Added
-            - an entry
-            ### Fixed
-            ### Changed
-            ### Deprecated
-            ### Removed
-            ### Deployment Changes
-
-
-            ## [1.0.0] - 2024-01-01
+            {gap}## [1.0.0] - 2024-01-01
             ### Added
             - Initial release
 
