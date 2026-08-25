@@ -79,4 +79,31 @@ public sealed class ChangeLogParserTrailingBlanksTests : TestBase
         Assert.Equal(expected: "2.0.0", actual: release2.Version);
         Assert.Equal(expected: 1, actual: release2.BlankLinesBeforeHeading);
     }
+
+    // [Unreleased] with no ### sections at all never reaches ChangeLogSection/currentEntries
+    // either, so the blank-line gap before the first release must be tracked independently of
+    // whether any section heading was ever seen, the same way as the no-sections release case
+    // above.
+    private const string UnreleasedWithNoSectionsFollowedByBlankLine = """
+        # Changelog
+
+        ## [Unreleased]
+
+        ## [1.0.0] - 2024-01-01
+        ### Added
+        - Initial release
+
+        ## [0.0.0] - Project created
+        """;
+
+    [Fact]
+    public async Task ParseCountsBlankLineBeforeFirstReleaseWhenUnreleasedHasNoSectionsAsync()
+    {
+        ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(UnreleasedWithNoSectionsFollowedByBlankLine);
+
+        ChangeLogRelease release1 = document.Releases[0];
+
+        Assert.Equal(expected: "1.0.0", actual: release1.Version);
+        Assert.Equal(expected: 1, actual: release1.BlankLinesBeforeHeading);
+    }
 }

@@ -42,6 +42,7 @@ public sealed class ChangeLogParser : IChangeLogParser
         List<string> trailer = [];
         string? currentName = null;
         List<string> currentEntries = [];
+        int blanksBeforeFirstSection = 0;
 
         for (int i = start + 1; i < end; i++)
         {
@@ -53,7 +54,8 @@ public sealed class ChangeLogParser : IChangeLogParser
                     sections: sections,
                     currentName: ref currentName,
                     currentEntries: currentEntries,
-                    trailer: trailer
+                    trailer: trailer,
+                    blanksBeforeFirstSection: ref blanksBeforeFirstSection
                 )
             )
             {
@@ -62,7 +64,11 @@ public sealed class ChangeLogParser : IChangeLogParser
         }
 
         FlushSection(sections: sections, name: currentName, entries: currentEntries);
-        MoveTrailingBlanksFromLastSection(sections: sections, trailer: trailer);
+        MoveTrailingBlanksFromLastSection(
+            sections: sections,
+            trailer: trailer,
+            blanksBeforeFirstSection: blanksBeforeFirstSection
+        );
         return new(LineNumber: start + 1, Sections: [.. sections], TrailingLines: [.. trailer]);
     }
 
@@ -72,10 +78,23 @@ public sealed class ChangeLogParser : IChangeLogParser
     // of the last section's Entries (FlushSection does not trim them), so the gap before the
     // heading is silently lost. Doing the move here unconditionally covers both cases: a no-op
     // when it already happened, the missing step when it didn't.
-    private static void MoveTrailingBlanksFromLastSection(List<ChangeLogSection> sections, List<string> trailer)
+    //
+    // A [Unreleased] block with no ### sections at all never reaches sections/currentEntries, so
+    // its blank-line gap is tracked separately via blanksBeforeFirstSection (see
+    // ProcessUnreleasedLine) and applied here instead.
+    private static void MoveTrailingBlanksFromLastSection(
+        List<ChangeLogSection> sections,
+        List<string> trailer,
+        int blanksBeforeFirstSection
+    )
     {
         if (sections.Count == 0)
         {
+            for (int i = 0; i < blanksBeforeFirstSection; i++)
+            {
+                trailer.Insert(index: 0, item: string.Empty);
+            }
+
             return;
         }
 
@@ -98,7 +117,8 @@ public sealed class ChangeLogParser : IChangeLogParser
         List<ChangeLogSection> sections,
         ref string? currentName,
         List<string> currentEntries,
-        List<string> trailer
+        List<string> trailer,
+        ref int blanksBeforeFirstSection
     )
     {
         string line = lines[lineIndex];
@@ -115,10 +135,19 @@ public sealed class ChangeLogParser : IChangeLogParser
             FlushSection(sections: sections, name: currentName, entries: currentEntries);
             currentName = line.GetChangeTypeName();
             currentEntries.Clear();
+            blanksBeforeFirstSection = 0;
         }
         else if (currentName is not null)
         {
             currentEntries.Add(line);
+        }
+        else if (string.IsNullOrWhiteSpace(line))
+        {
+            blanksBeforeFirstSection++;
+        }
+        else
+        {
+            blanksBeforeFirstSection = 0;
         }
 
         return true;
