@@ -219,7 +219,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
     // elsewhere to detect "is this changelog blank" (e.g. credfeto-global-pre-commit's
     // *-template check) produce a reference a genuinely blank file could never match.
     [Fact]
-    public async Task AddThenRemoveEntryOnNewFileMatchesPristineSkeletonAsync()
+    public async Task AddThenRemoveEntryOnNewFileMatchesPristineSkeleton()
     {
         using CancellationTokenSource cancellationTokenSource = new();
 
