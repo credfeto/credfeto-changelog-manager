@@ -12,7 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
-- TBD - to be finalized after review
+- BuildReleaseSections now excludes whitespace-only unreleased lines the same way it already excludes blank ones, so CreateRelease correctly throws EmptyChangeLogException instead of producing a release with only whitespace content
 ### Changed
 ### Deprecated
 ### Removed
