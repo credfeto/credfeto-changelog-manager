@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
@@ -294,7 +294,10 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
 
         foreach (ChangeLogSection s in sections)
         {
-            ImmutableArray<string> entries = [.. s.Entries.AsValueEnumerable().Where(e => !string.IsNullOrEmpty(e))];
+            ImmutableArray<string> entries =
+            [
+                .. s.Entries.AsValueEnumerable().Where(e => !string.IsNullOrWhiteSpace(e)),
+            ];
 
             if (entries.Length > 0)
             {
