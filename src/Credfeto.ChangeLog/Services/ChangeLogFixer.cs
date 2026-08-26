@@ -32,7 +32,8 @@ public sealed class ChangeLogFixer : IChangeLogFixer
     {
         ChangeLogDocument ensured = ChangeLogUpdater.EnsureUnreleasedSections(document: document, language: language);
         ChangeLogDocument withPreamble = EnsurePreamble(ensured);
-        return RemoveBlankLinesAfterHeadings(withPreamble);
+        ChangeLogDocument withoutBlankHeadingLines = RemoveBlankLinesAfterHeadings(withPreamble);
+        return EnsureBlankLineBeforeTrailerComment(withoutBlankHeadingLines);
     }
 
     public static ChangeLogDocument EnsurePreamble(ChangeLogDocument document)
@@ -123,5 +124,35 @@ public sealed class ChangeLogFixer : IChangeLogFixer
         }
 
         return start == 0 ? section : section with { Entries = section.Entries[start..] };
+    }
+
+    private static ChangeLogDocument EnsureBlankLineBeforeTrailerComment(ChangeLogDocument document)
+    {
+        if (document.Unreleased is null)
+        {
+            return document;
+        }
+
+        return document with
+        {
+            Unreleased = document.Unreleased with
+            {
+                TrailingLines = NormaliseBlankLinesBeforeTrailerComment(document.Unreleased.TrailingLines),
+            },
+        };
+    }
+
+    private static ImmutableArray<string> NormaliseBlankLinesBeforeTrailerComment(
+        in ImmutableArray<string> trailingLines
+    )
+    {
+        int commentIndex = trailingLines.FindLeadingHtmlCommentIndex();
+
+        if (commentIndex is < 0 or 1)
+        {
+            return trailingLines;
+        }
+
+        return [string.Empty, .. trailingLines[commentIndex..]];
     }
 }

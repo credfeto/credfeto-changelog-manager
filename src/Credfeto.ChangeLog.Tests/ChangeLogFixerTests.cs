@@ -191,6 +191,39 @@ public sealed partial class ChangeLogFixerTests : TestBase
         Assert.Empty(errors);
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    public static void BlankLinesBeforeDeploymentTrailerComment_Mismatched_AreFixed(int blankLines)
+    {
+        string gap = new(c: '\n', count: blankLines);
+        string changeLog = $"""
+            # Changelog
+
+            ## [Unreleased]
+            ### Security
+            ### Added
+            - an entry
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+            {gap}<!--
+            Deployment comment
+            -->
+
+            ## [0.0.0] - Project created
+            """;
+
+        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+
+        Assert.Contains("Deployment comment", result, StringComparison.Ordinal);
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
+        Assert.Empty(errors);
+    }
+
     [Fact]
     public void MissingPreamble_IsAdded()
     {

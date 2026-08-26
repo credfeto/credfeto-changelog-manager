@@ -13,11 +13,12 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 - BuildReleaseSections now excludes whitespace-only unreleased lines the same way it already excludes blank ones, so CreateRelease correctly throws EmptyChangeLogException instead of producing a release with only whitespace content
-- TemplateFile.Build no longer hardcodes a blank line before the [Unreleased] trailer comment that the add/remove round-trip path never produced or required, so a brand-new changelog and one built purely via add/remove entries are byte-identical (issue #376)
+- ChangeLogLinter/ChangeLogFixer now enforce exactly one blank line before the [Unreleased] trailer comment (previously unchecked, so a freshly generated changelog and one built purely via add/remove entries could permanently disagree on this whitespace); dotnet changelog --lint --fix now corrects it (issue #376)
 ### Changed
 ### Deprecated
 ### Removed
 ### Deployment Changes
+
 <!--
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->

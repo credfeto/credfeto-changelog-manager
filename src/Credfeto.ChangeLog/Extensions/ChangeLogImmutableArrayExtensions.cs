@@ -21,4 +21,25 @@ public static class ChangeLogImmutableArrayExtensions
         int end = lines.Length - lines.CountTrailingBlankLines();
         return end == lines.Length ? lines : lines[..end];
     }
+
+    // Index of the first HTML comment line, provided only blank lines precede it. Returns -1
+    // when there is no such comment (none present, or non-blank/non-comment content comes
+    // first) so callers never mistake unrelated trailer content for a comment boundary.
+    public static int FindLeadingHtmlCommentIndex(this in ImmutableArray<string> lines)
+    {
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (lines[i].StartsWithHtmlComment())
+            {
+                return i;
+            }
+
+            if (!string.IsNullOrWhiteSpace(lines[i]))
+            {
+                return -1;
+            }
+        }
+
+        return -1;
+    }
 }

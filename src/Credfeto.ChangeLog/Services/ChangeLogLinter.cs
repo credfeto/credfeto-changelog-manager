@@ -66,6 +66,28 @@ public sealed class ChangeLogLinter : IChangeLogLinter
             language: language
         );
         CheckBlankLinesAfterHeadings(sections: unreleased.Sections, errors: errors);
+        CheckBlankLinesBeforeTrailerComment(unreleased: unreleased, errors: errors);
+    }
+
+    // Only applies when the trailer actually starts with an HTML comment (preceded by nothing
+    // but blank lines); a trailer with no comment, or with other content before one, is left to
+    // whatever else governs that content — this rule owns only the comment's own leading gap.
+    private static void CheckBlankLinesBeforeTrailerComment(ChangeLogUnreleased unreleased, List<LintError> errors)
+    {
+        int commentIndex = unreleased.TrailingLines.FindLeadingHtmlCommentIndex();
+
+        if (commentIndex is < 0 or 1)
+        {
+            return;
+        }
+
+        string detail = commentIndex == 0 ? "Missing" : "Extra";
+        errors.Add(
+            new(
+                LineNumber: unreleased.LineNumber,
+                Message: $"{detail} blank line(s) before deployment trailer comment; expected exactly one blank line"
+            )
+        );
     }
 
     private static void CheckDuplicateSections(in ImmutableArray<ChangeLogSection> sections, List<LintError> errors)
