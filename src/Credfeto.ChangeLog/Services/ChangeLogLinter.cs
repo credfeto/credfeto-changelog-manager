@@ -82,13 +82,12 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         }
 
         int lineNumber = unreleased.TrailingLinesStartLineNumber + blankLineCount;
-        errors.Add(
-            BlankLineCountError(
-                lineNumber: lineNumber,
-                blankLineCount: blankLineCount,
-                subject: "deployment trailer comment"
-            )
+        LintError error = BlankLineCountError(
+            lineNumber: lineNumber,
+            blankLineCount: blankLineCount,
+            subject: "deployment trailer comment"
         );
+        errors.Add(error);
     }
 
     private static void CheckDuplicateSections(in ImmutableArray<ChangeLogSection> sections, List<LintError> errors)
