@@ -12,7 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
-- No longer suppresses analyzer findings that flagged real correctness/testability issues: release dates now come from an injected time source rather than DateTime.Now (making release timestamps deterministic and testable), and previously-internal service types are now public where they need to be for consumers to construct them directly (issue #364). BREAKING: ChangeLogUpdater's constructor now requires a TimeProvider argument, and the static ChangeLogUpdater.CreateRelease now takes a plain date string instead of a pending flag plus language - pass the new public ChangeLogUpdater.PendingReleaseDate constant to request a pending release
+- No longer suppresses analyzer findings that flagged real correctness/testability issues: release dates now come from an injected time source rather than DateTime.Now (making release timestamps deterministic and testable), and previously-internal service types are now public where they need to be for consumers to construct them directly (issue #364). BREAKING: ChangeLogUpdater's constructor now requires a TimeProvider argument, and the static ChangeLogUpdater.CreateRelease now takes a plain date string (validated non-empty) instead of a pending flag plus language - pass the new public ChangeLogRelease.PendingDate constant to request a pending release
 ### Changed
 ### Deprecated
 ### Removed
