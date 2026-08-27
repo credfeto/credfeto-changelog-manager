@@ -19,7 +19,7 @@ namespace Credfeto.ChangeLog.Tests;
 [SuppressMessage(
     category: "Microsoft.Reliability",
     checkId: "CA2012:UseValueTasksCorrectly",
-    Justification = "Parse() synchronously unwraps a ValueTask known to have already completed (pure in-memory parse, no I/O)"
+    Justification = "Parse() synchronously unwraps a ValueTask known to have already completed (pure in-memory parse, no I/O); MockChangeLogStorageLoad/MockChangeLogStorageSave use NSubstitute's .Returns(ValueTask...) idiom, which the analyzer also flags"
 )]
 public sealed class ChangeLogServiceMockTests : TestBase
 {
