@@ -69,7 +69,16 @@ public sealed class ChangeLogParser : IChangeLogParser
             trailer: trailer,
             blanksBeforeFirstSection: blanksBeforeFirstSection
         );
-        return new(LineNumber: start + 1, Sections: [.. sections], TrailingLines: [.. trailer]);
+        return new(
+            LineNumber: start + 1,
+            Sections: [.. sections],
+            TrailingLines: [.. trailer],
+            // trailer is always a contiguous suffix of the [start + 1, end) line range (every
+            // other path, sections/entries, blanksBeforeFirstSection, accounts for every line
+            // before it), so its own start line is derived directly from that range rather than
+            // reconstructed from section/entry counts; see MoveTrailingBlanksFromLastSection.
+            TrailingLinesStartLineNumber: end - trailer.Count + 1
+        );
     }
 
     // When an HTML comment precedes the next release heading, ProcessUnreleasedLine's

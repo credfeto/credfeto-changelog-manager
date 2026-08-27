@@ -660,14 +660,54 @@ public sealed class ChangeLogLinterTests : TestBase
         IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
 
         // Line number must point at the "<!--" comment itself (line 12/14 in the fixture above),
-        // not merely somewhere inside [Unreleased] — see credfeto/credfeto-changelog-manager#377
-        // review discussion.
+        // not merely somewhere inside [Unreleased].
         Assert.Contains(
             errors,
             e =>
                 e.Message.Contains(value: "deployment trailer comment", comparisonType: StringComparison.Ordinal)
                 && e.Message.Contains(value: expectedToken, comparisonType: StringComparison.Ordinal)
                 && e.LineNumber == expectedLineNumber
+        );
+    }
+
+    [Fact]
+    public static void BlankLineBeforeFirstSection_DoesNotSkewTrailerCommentLineNumber()
+    {
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+
+            ### Security
+            ### Added
+            - an entry
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+            <!--
+            Deployment comment
+            -->
+
+            ## [1.0.0] - 2024-01-01
+            ### Added
+            - Initial release
+
+            ## [0.0.0] - Project created
+            """;
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+
+        // A blank line between "## [Unreleased]" and its first "### " section heading must not
+        // throw off the reported line number: it is derived from the trailer's own position in
+        // the source, not reconstructed by counting sections/entries after the heading.
+        Assert.Contains(
+            errors,
+            e =>
+                e.Message.Contains(value: "deployment trailer comment", comparisonType: StringComparison.Ordinal)
+                && e.Message.Contains(value: "Missing", comparisonType: StringComparison.Ordinal)
+                && e.LineNumber == 13
         );
     }
 
@@ -709,7 +749,7 @@ public sealed class ChangeLogLinterTests : TestBase
     public void NoDeploymentTrailerComment_DoesNotTriggerBlankLineCheck()
     {
         // VALID_CHANGE_LOG's trailer has no HTML comment at all (goes straight from
-        // "### Deployment Changes" to the next release heading) — the rule must stay
+        // "### Deployment Changes" to the next release heading): the rule must stay
         // silent rather than treating that gap as a missing comment-blank-line.
         IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(VALID_CHANGE_LOG), Language);
 
