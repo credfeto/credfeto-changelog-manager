@@ -76,7 +76,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
     {
         int blankLineCount = unreleased.TrailingLines.CountBlankLinesBeforeHtmlComment();
 
-        if (blankLineCount.IsAlreadyOneBlankLineOrNoComment())
+        if (ChangeLogBlankLineRules.IsAlreadyOneBlankLineOrNoComment(blankLineCount))
         {
             return;
         }
@@ -275,6 +275,10 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         }
     }
 
+    // blankLineCount must already be known to be wrong (never 1, and never the -1 "not
+    // applicable" sentinel some callers use): callers filter those cases out first, since what
+    // counts as "not applicable" differs per subject (there is no release-heading equivalent of
+    // "no HTML comment present").
     private static LintError BlankLineCountError(int lineNumber, int blankLineCount, string subject)
     {
         string detail = blankLineCount == 0 ? "Missing" : "Extra";

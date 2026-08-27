@@ -143,7 +143,7 @@ public sealed class ChangeLogFixer : IChangeLogFixer
     {
         int blankLineCount = trailingLines.CountBlankLinesBeforeHtmlComment();
 
-        return blankLineCount.IsAlreadyOneBlankLineOrNoComment()
+        return ChangeLogBlankLineRules.IsAlreadyOneBlankLineOrNoComment(blankLineCount)
             ? trailingLines
             : [string.Empty, .. trailingLines[blankLineCount..]];
     }
