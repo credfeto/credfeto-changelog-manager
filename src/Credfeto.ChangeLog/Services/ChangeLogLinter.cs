@@ -81,9 +81,10 @@ public sealed class ChangeLogLinter : IChangeLogLinter
             return;
         }
 
+        int lineNumber = TrailerCommentLineNumber(unreleased: unreleased, blankLineCount: blankLineCount);
         errors.Add(
             BlankLineCountError(
-                lineNumber: TrailerCommentLineNumber(unreleased: unreleased, blankLineCount: blankLineCount),
+                lineNumber: lineNumber,
                 blankLineCount: blankLineCount,
                 subject: "deployment trailer comment"
             )

@@ -126,21 +126,16 @@ public sealed class ChangeLogFixer : IChangeLogFixer
         return start == 0 ? section : section with { Entries = section.Entries[start..] };
     }
 
-    private static ChangeLogDocument EnsureBlankLineBeforeTrailerComment(ChangeLogDocument document)
-    {
-        if (document.Unreleased is null)
-        {
-            return document;
-        }
-
-        return document with
-        {
-            Unreleased = document.Unreleased with
+    private static ChangeLogDocument EnsureBlankLineBeforeTrailerComment(ChangeLogDocument document) =>
+        document.Unreleased is null
+            ? document
+            : document with
             {
-                TrailingLines = NormaliseBlankLinesBeforeTrailerComment(document.Unreleased.TrailingLines),
-            },
-        };
-    }
+                Unreleased = document.Unreleased with
+                {
+                    TrailingLines = NormaliseBlankLinesBeforeTrailerComment(document.Unreleased.TrailingLines),
+                },
+            };
 
     private static ImmutableArray<string> NormaliseBlankLinesBeforeTrailerComment(
         in ImmutableArray<string> trailingLines
@@ -148,11 +143,6 @@ public sealed class ChangeLogFixer : IChangeLogFixer
     {
         int blankLineCount = trailingLines.CountBlankLinesBeforeHtmlComment();
 
-        if (blankLineCount is < 0 or 1)
-        {
-            return trailingLines;
-        }
-
-        return [string.Empty, .. trailingLines[blankLineCount..]];
+        return blankLineCount is < 0 or 1 ? trailingLines : [string.Empty, .. trailingLines[blankLineCount..]];
     }
 }
