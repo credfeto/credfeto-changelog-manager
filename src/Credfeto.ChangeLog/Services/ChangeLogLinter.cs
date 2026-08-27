@@ -76,7 +76,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
     {
         int blankLineCount = unreleased.TrailingLines.CountBlankLinesBeforeHtmlComment();
 
-        if (blankLineCount is < 0 or 1)
+        if (blankLineCount.IsAlreadyOneBlankLineOrNoComment())
         {
             return;
         }

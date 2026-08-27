@@ -43,4 +43,10 @@ public static class ChangeLogImmutableArrayExtensions
 
         return -1;
     }
+
+    // Whether a CountBlankLinesBeforeHtmlComment result already reflects exactly one blank line,
+    // or no HTML comment at all - the only counts that need no correction. Shared by the linter
+    // (to decide whether to report an error) and the fixer (to decide whether to rewrite
+    // TrailingLines), so the two stay in agreement if the accepted count is ever revisited.
+    public static bool IsAlreadyOneBlankLineOrNoComment(this int blankLineCount) => blankLineCount is < 0 or 1;
 }

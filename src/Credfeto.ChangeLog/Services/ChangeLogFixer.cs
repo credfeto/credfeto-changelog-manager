@@ -80,7 +80,7 @@ public sealed class ChangeLogFixer : IChangeLogFixer
     {
         for (int i = 0; i < headerLines.Length; i++)
         {
-            if (headerLines[i].StartsWith(value: "<!--", comparisonType: System.StringComparison.Ordinal))
+            if (headerLines[i].StartsWithHtmlComment())
             {
                 return i;
             }
@@ -143,6 +143,8 @@ public sealed class ChangeLogFixer : IChangeLogFixer
     {
         int blankLineCount = trailingLines.CountBlankLinesBeforeHtmlComment();
 
-        return blankLineCount is < 0 or 1 ? trailingLines : [string.Empty, .. trailingLines[blankLineCount..]];
+        return blankLineCount.IsAlreadyOneBlankLineOrNoComment()
+            ? trailingLines
+            : [string.Empty, .. trailingLines[blankLineCount..]];
     }
 }
