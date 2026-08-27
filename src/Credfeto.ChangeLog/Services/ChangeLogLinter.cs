@@ -300,7 +300,6 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         }
     }
 
-    private const string PendingReleaseDate = "TBD";
     private const string ProjectCreatedDate = "Project created";
 
     private static void CheckReleaseDate(ChangeLogRelease release, ChangeLogLanguage language, List<LintError> errors)
@@ -310,7 +309,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
             return;
         }
 
-        if (release.Date.EqualsOrdinal(PendingReleaseDate) || release.Date.EqualsOrdinal(ProjectCreatedDate))
+        if (release.Date.EqualsOrdinal(ChangeLogRelease.PendingDate) || release.Date.EqualsOrdinal(ProjectCreatedDate))
         {
             return;
         }

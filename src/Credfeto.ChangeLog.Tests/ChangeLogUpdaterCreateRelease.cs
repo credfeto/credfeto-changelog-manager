@@ -73,7 +73,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 ## [0.0.0] - Project created";
 
         Assert.Throws<EmptyChangeLogException>(() =>
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", true, Language)
+            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
         );
     }
 
@@ -102,7 +102,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 ## [0.0.0] - Project created";
 
         Assert.Throws<EmptyChangeLogException>(() =>
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", true, Language)
+            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
         );
     }
 
@@ -135,7 +135,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 ## [0.0.0] - Project created";
 
         Assert.Throws<ReleaseAlreadyExistsException>(() =>
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", true, Language)
+            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
         );
     }
 
@@ -168,7 +168,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 ## [0.0.0] - Project created";
 
         Assert.Throws<ReleaseTooOldException>(() =>
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", true, Language)
+            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
         );
     }
 
@@ -196,7 +196,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string updated = Serialise(ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", true, Language));
+        string updated = Serialise(
+            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
+        );
 
         const string expected =
             @"# Changelog
@@ -252,7 +254,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string updated = Serialise(ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", true, Language));
+        string updated = Serialise(
+            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
+        );
 
         const string expected =
             @"# Changelog
@@ -307,7 +311,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string updated = Serialise(ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", true, Language));
+        string updated = Serialise(
+            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
+        );
 
         const string expected =
             @"# Changelog
@@ -362,7 +368,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string updated = Serialise(ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", true, Language));
+        string updated = Serialise(
+            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
+        );
 
         const string expected =
             @"# Changelog
@@ -417,7 +425,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string updated = Serialise(ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", true, Language));
+        string updated = Serialise(
+            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
+        );
 
         const string expected =
             @"# Changelog
@@ -471,7 +481,9 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->";
 
-        string updated = Serialise(ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", true, Language));
+        string updated = Serialise(
+            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
+        );
 
         const string expected =
             @"# Changelog
@@ -541,7 +553,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
         ChangeLogDocument original = Parse(changeLog);
         Assert.Equal(expected: 0, actual: original.Releases[0].BlankLinesBeforeHeading);
 
-        ChangeLogDocument updated = ChangeLogUpdater.CreateRelease(original, "2.0.0", true, Language);
+        ChangeLogDocument updated = ChangeLogUpdater.CreateRelease(original, "2.0.0", ChangeLogRelease.PendingDate);
 
         ChangeLogRelease displaced = updated.Releases[1];
         Assert.Equal(expected: "1.0.0", actual: displaced.Version);
@@ -552,5 +564,36 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
             errors,
             e => e.Message.Contains(value: "## [1.0.0]", comparisonType: StringComparison.Ordinal)
         );
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public static void NullOrWhitespaceDateThrows(string? date)
+    {
+        const string changeLog =
+            @"# Changelog
+All notable changes to this project will be documented in this file.
+
+<!--
+Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
+-->
+
+## [Unreleased]
+### Added
+- New content
+### Fixed
+### Changed
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+## [0.0.0] - Project created";
+
+        // ! Intentionally passing null/empty/whitespace to exercise CreateRelease's guard.
+        Assert.ThrowsAny<ArgumentException>(() => ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", date!));
     }
 }

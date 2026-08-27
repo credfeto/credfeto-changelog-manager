@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -9,6 +10,7 @@ using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
 using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
+using FunFair.Test.Infrastructure.Mocks;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Xunit;
@@ -41,9 +43,23 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         this._serviceProvider.Dispose();
     }
 
+    private static void MockChangeLogStorageLoad(IChangeLogStorage storage, ChangeLogDocument document)
+    {
+        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+    }
+
+    private static void MockChangeLogStorageSave(IChangeLogStorage storage)
+    {
+        storage
+            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
+            .Returns(ValueTask.CompletedTask);
+    }
+
     [Fact]
     public async Task CreateReleaseWithPendingFalseUsesCurrentDate()
     {
+        using CancellationTokenSource cancellationTokenSource = new();
+
         const string changeLog = """
             # Changelog
 
@@ -61,20 +77,33 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
             """;
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(changeLog);
-        ChangeLogDocument result = ChangeLogUpdater.CreateRelease(
-            document: document,
+        IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
+        MockChangeLogStorageLoad(storage, document);
+
+        ChangeLogDocument? saved = null;
+        storage
+            .SaveAsync(Arg.Any<string>(), Arg.Do<ChangeLogDocument>(d => saved = d), Arg.Any<CancellationToken>())
+            .Returns(ValueTask.CompletedTask);
+
+        ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
+
+        await updater.CreateReleaseAsync(
+            changeLogFileName: "test-release.md",
+            language: Language,
             version: "1.0.0",
             pending: false,
-            language: Language
+            cancellationToken: cancellationTokenSource.Token
         );
 
-        // A non-pending release should have a date that is a valid date string (not "TBD")
-        Assert.False(result.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
-        Assert.NotEqual(expected: "TBD", actual: result.Releases[0].Date, comparer: StringComparer.Ordinal);
-        Assert.False(
-            string.IsNullOrEmpty(result.Releases[0].Date),
-            userMessage: "Expected a date to be set on the release"
-        );
+        // Derived straight from MockDateTimeSources.Past.GetLocalNow() (per this repo's Test Date
+        // Values rule) rather than via ChangeLogUpdater.CurrentDate itself, so a bug in that
+        // method's own TimeProvider access can't compute the same (wrong) value on both sides.
+        string expectedDate = MockDateTimeSources
+            .Past.GetLocalNow()
+            .ToString(format: Language.DateFormat, formatProvider: CultureInfo.InvariantCulture);
+        Assert.NotNull(saved);
+        Assert.False(saved.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
+        Assert.Equal(expected: expectedDate, actual: saved.Releases[0].Date, comparer: StringComparer.Ordinal);
     }
 
     [Fact]
@@ -100,12 +129,10 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(simpleChangeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
-        storage
-            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.CompletedTask);
+        MockChangeLogStorageLoad(storage, document);
+        MockChangeLogStorageSave(storage);
 
-        ChangeLogUpdater updater = new(storage, new ChangeLogParser());
+        ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
         string tempFile = Path.Combine(this.TempFolder, "test.md");
         await File.WriteAllTextAsync(tempFile, string.Empty, cancellationTokenSource.Token);
@@ -145,12 +172,14 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(simpleChangeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+        MockChangeLogStorageLoad(storage, document);
+
+        ChangeLogDocument? saved = null;
         storage
-            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
+            .SaveAsync(Arg.Any<string>(), Arg.Do<ChangeLogDocument>(d => saved = d), Arg.Any<CancellationToken>())
             .Returns(ValueTask.CompletedTask);
 
-        ChangeLogUpdater updater = new(storage, new ChangeLogParser());
+        ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
         string tempFile = Path.Combine(this.TempFolder, "test-release.md");
 
@@ -164,6 +193,13 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         await storage.Received(1).LoadAsync(tempFile, Arg.Any<CancellationToken>());
         await storage.Received(1).SaveAsync(tempFile, Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>());
+        Assert.NotNull(saved);
+        Assert.False(saved.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
+        Assert.Equal(
+            expected: ChangeLogRelease.PendingDate,
+            actual: saved.Releases[0].Date,
+            comparer: StringComparer.Ordinal
+        );
     }
 
     [Fact]

@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -7,12 +6,7 @@ using Credfeto.ChangeLog.Models;
 
 namespace Credfeto.ChangeLog.Services;
 
-[SuppressMessage(
-    category: "Microsoft.Performance",
-    checkId: "CA1812: Avoid uninstantiated internal classes",
-    Justification = "Registered in DI"
-)]
-internal sealed class FileSystemChangeLogStorage : IChangeLogStorage
+public sealed class FileSystemChangeLogStorage : IChangeLogStorage
 {
     private readonly IChangeLogParser _parser;
     private readonly IChangeLogSerialiser _serialiser;

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -19,11 +18,13 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
 {
     private readonly IChangeLogParser _parser;
     private readonly IChangeLogStorage _storage;
+    private readonly TimeProvider _timeProvider;
 
-    public ChangeLogUpdater(IChangeLogStorage storage, IChangeLogParser parser)
+    public ChangeLogUpdater(IChangeLogStorage storage, IChangeLogParser parser, TimeProvider timeProvider)
     {
         this._storage = storage;
         this._parser = parser;
+        this._timeProvider = timeProvider;
     }
 
     public async ValueTask CreateEmptyAsync(
@@ -81,12 +82,8 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     )
     {
         ChangeLogDocument document = await this._storage.LoadAsync(changeLogFileName, cancellationToken);
-        ChangeLogDocument updated = CreateRelease(
-            document: document,
-            version: version,
-            pending: pending,
-            language: language
-        );
+        string date = pending ? ChangeLogRelease.PendingDate : this.CurrentDate(language);
+        ChangeLogDocument updated = CreateRelease(document: document, version: version, date: date);
         ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
         await this._storage.SaveAsync(changeLogFileName, document: withPreamble, cancellationToken: cancellationToken);
     }
@@ -137,13 +134,10 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         return ReplaceSection(document: document, unreleased: unreleased, updated: updated);
     }
 
-    public static ChangeLogDocument CreateRelease(
-        ChangeLogDocument document,
-        string version,
-        bool pending,
-        ChangeLogLanguage language
-    )
+    public static ChangeLogDocument CreateRelease(ChangeLogDocument document, string version, string date)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(date);
+
         ChangeLogUnreleased unreleased = RequireUnreleased(document);
         ValidateVersionNotExists(releases: document.Releases, version: version);
         ImmutableArray<ChangeLogSection> releaseSections = BuildReleaseSections(unreleased.Sections);
@@ -153,7 +147,6 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
             throw new EmptyChangeLogException("No changes for the release");
         }
 
-        string date = pending ? "TBD" : CurrentDate(language);
         ChangeLogRelease newRelease = new(Version: version, Date: date, LineNumber: 0, Sections: releaseSections);
         ImmutableArray<ChangeLogRelease> releases = PrependRelease(newRelease: newRelease, existing: document.Releases);
         ChangeLogUnreleased cleared = ClearUnreleasedEntries(unreleased);
@@ -263,26 +256,21 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         return document with { Unreleased = unreleased with { Sections = sections } };
     }
 
-    [SuppressMessage(
-        category: "SonarAnalyzer.CSharp",
-        checkId: "S3267",
-        Justification = "Projection not applicable: full release object needed for exception messages"
-    )]
     private static void ValidateVersionNotExists(in ImmutableArray<ChangeLogRelease> releases, string version)
     {
         bool requestedParsed = Version.TryParse(version, out Version? requested);
 
-        foreach (ChangeLogRelease release in releases)
+        foreach (string existingVersion in releases.AsValueEnumerable().Select(release => release.Version))
         {
-            if (release.Version.EqualsOrdinal(version))
+            if (existingVersion.EqualsOrdinal(version))
             {
                 throw new ReleaseAlreadyExistsException($"Release {version} already exists");
             }
 
-            if (requestedParsed && Version.TryParse(release.Version, out Version? existing) && existing > requested)
+            if (requestedParsed && Version.TryParse(existingVersion, out Version? existing) && existing > requested)
             {
                 throw new ReleaseTooOldException(
-                    $"Release {release.Version} already exists and is newer than {version}"
+                    $"Release {existingVersion} already exists and is newer than {version}"
                 );
             }
         }
@@ -314,11 +302,8 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         return unreleased with { Sections = cleared };
     }
 
-    [SuppressMessage(
-        category: "FunFair.CodeAnalysis",
-        checkId: "FFS0001",
-        Justification = "Should always use the local time."
-    )]
-    private static string CurrentDate(ChangeLogLanguage language) =>
-        DateTime.Now.ToString(format: language.DateFormat, provider: CultureInfo.InvariantCulture);
+    private string CurrentDate(ChangeLogLanguage language) =>
+        this
+            ._timeProvider.GetLocalNow()
+            .ToString(format: language.DateFormat, formatProvider: CultureInfo.InvariantCulture);
 }
