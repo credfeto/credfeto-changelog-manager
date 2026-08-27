@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Extensions;
 using Credfeto.ChangeLog.Models;
 using ZLinq;
@@ -311,7 +310,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         }
 
         if (
-            release.Date.EqualsOrdinal(FileConstants.PendingReleaseDate)
+            release.Date.EqualsOrdinal(ChangeLogUpdater.PendingReleaseDate)
             || release.Date.EqualsOrdinal(ProjectCreatedDate)
         )
         {

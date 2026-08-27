@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
+using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
 using FunFair.Test.Infrastructure.Mocks;
 using NSubstitute;
@@ -19,7 +20,7 @@ namespace Credfeto.ChangeLog.Tests;
 [SuppressMessage(
     category: "Microsoft.Reliability",
     checkId: "CA2012:UseValueTasksCorrectly",
-    Justification = "NSubstitute mock setup and verification necessarily handles ValueTask instances outside normal await patterns"
+    Justification = "Parse() synchronously unwraps a ValueTask known to have already completed (pure in-memory parse, no I/O)"
 )]
 public sealed class ChangeLogServiceMockTests : TestBase
 {
@@ -63,7 +64,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+        ChangeLogStorageMockHelper.SetupLoad(storage, document);
 
         ChangeLogReader reader = new(storage);
 
@@ -97,7 +98,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(changeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+        ChangeLogStorageMockHelper.SetupLoad(storage, document);
 
         ChangeLogReader reader = new(storage);
 
@@ -136,10 +137,8 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(contentWithBlankLines);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
-        storage
-            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.CompletedTask);
+        ChangeLogStorageMockHelper.SetupLoad(storage, document);
+        ChangeLogStorageMockHelper.SetupSave(storage);
 
         ChangeLogFixer fixer = new(storage);
 
@@ -162,7 +161,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+        ChangeLogStorageMockHelper.SetupLoad(storage, document);
 
         ChangeLogLinter linter = new(storage);
 
@@ -188,7 +187,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(invalidContent);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+        ChangeLogStorageMockHelper.SetupLoad(storage, document);
 
         ChangeLogLinter linter = new(storage);
 
@@ -212,10 +211,8 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
-        storage
-            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.CompletedTask);
+        ChangeLogStorageMockHelper.SetupLoad(storage, document);
+        ChangeLogStorageMockHelper.SetupSave(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
@@ -252,10 +249,8 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
-        storage
-            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.CompletedTask);
+        ChangeLogStorageMockHelper.SetupLoad(storage, document);
+        ChangeLogStorageMockHelper.SetupSave(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 

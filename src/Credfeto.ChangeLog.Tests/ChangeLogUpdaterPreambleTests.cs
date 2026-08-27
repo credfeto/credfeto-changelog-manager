@@ -91,7 +91,11 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     {
         string result = await SerialiseAsync(
             ChangeLogFixer.EnsurePreamble(
-                ChangeLogUpdater.CreateRelease(await ParseAsync(ChangeLogWithoutPreamble), "1.0.0", "TBD")
+                ChangeLogUpdater.CreateRelease(
+                    await ParseAsync(ChangeLogWithoutPreamble),
+                    "1.0.0",
+                    ChangeLogUpdater.PendingReleaseDate
+                )
             )
         );
 

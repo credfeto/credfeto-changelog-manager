@@ -16,6 +16,12 @@ namespace Credfeto.ChangeLog.Services;
 
 public sealed class ChangeLogUpdater : IChangeLogUpdater
 {
+    // The sentinel CreateRelease recognises (and ChangeLogLinter accepts) for a pending
+    // (not-yet-dated) release. Public so a caller of the static CreateRelease API - which takes a
+    // plain date string, not a bool - has a supported way to request "TBD" instead of guessing at
+    // an internal implementation detail.
+    public const string PendingReleaseDate = "TBD";
+
     private readonly IChangeLogParser _parser;
     private readonly IChangeLogStorage _storage;
     private readonly TimeProvider _timeProvider;
@@ -82,7 +88,7 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     )
     {
         ChangeLogDocument document = await this._storage.LoadAsync(changeLogFileName, cancellationToken);
-        string date = pending ? FileConstants.PendingReleaseDate : this.CurrentDate(language);
+        string date = pending ? PendingReleaseDate : this.CurrentDate(language);
         ChangeLogDocument updated = CreateRelease(document: document, version: version, date: date);
         ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
         await this._storage.SaveAsync(changeLogFileName, document: withPreamble, cancellationToken: cancellationToken);

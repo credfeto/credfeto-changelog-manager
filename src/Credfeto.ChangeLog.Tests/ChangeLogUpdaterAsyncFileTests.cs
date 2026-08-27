@@ -42,18 +42,6 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         this._serviceProvider.Dispose();
     }
 
-    private static void SetupLoad(IChangeLogStorage storage, ChangeLogDocument document)
-    {
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
-    }
-
-    private static void SetupSave(IChangeLogStorage storage)
-    {
-        storage
-            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.CompletedTask);
-    }
-
     [Fact]
     public async Task CreateReleaseWithPendingFalseUsesCurrentDate()
     {
@@ -77,7 +65,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(changeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        SetupLoad(storage: storage, document: document);
+        ChangeLogStorageMockHelper.SetupLoad(storage, document);
 
         ChangeLogDocument? saved = null;
         storage
@@ -125,8 +113,8 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(simpleChangeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        SetupLoad(storage: storage, document: document);
-        SetupSave(storage);
+        ChangeLogStorageMockHelper.SetupLoad(storage, document);
+        ChangeLogStorageMockHelper.SetupSave(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
@@ -168,8 +156,8 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(simpleChangeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        SetupLoad(storage: storage, document: document);
-        SetupSave(storage);
+        ChangeLogStorageMockHelper.SetupLoad(storage, document);
+        ChangeLogStorageMockHelper.SetupSave(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
