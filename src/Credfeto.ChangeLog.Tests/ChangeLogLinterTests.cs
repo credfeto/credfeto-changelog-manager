@@ -746,6 +746,46 @@ public sealed class ChangeLogLinterTests : TestBase
     }
 
     [Fact]
+    public void NonBlankContentBeforeDeploymentTrailerComment_DoesNotTriggerBlankLineCheck()
+    {
+        // A non-blank line directly under "### Deployment Changes" stays part of that section's
+        // own entries (ChangeLogParser only ever moves trailing *blank* lines into TrailingLines,
+        // never arbitrary content), so only the one blank line actually adjacent to the comment
+        // reaches this rule; it correctly sees that as already-correct rather than as a large
+        // blank-line count skewed by the note above it.
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+            ### Security
+            ### Added
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+            Some deployment note.
+
+            <!--
+            Deployment comment
+            -->
+
+            ## [0.0.0] - Project created
+            """;
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+
+        Assert.DoesNotContain(
+            errors,
+            e =>
+                e.Message.Contains(
+                    value: "blank line(s) before deployment trailer comment",
+                    comparisonType: StringComparison.Ordinal
+                )
+        );
+    }
+
+    [Fact]
     public void NoDeploymentTrailerComment_DoesNotTriggerBlankLineCheck()
     {
         // VALID_CHANGE_LOG's trailer has no HTML comment at all (goes straight from
