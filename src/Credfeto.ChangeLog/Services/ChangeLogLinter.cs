@@ -83,11 +83,29 @@ public sealed class ChangeLogLinter : IChangeLogLinter
 
         errors.Add(
             BlankLineCountError(
-                lineNumber: unreleased.LineNumber,
+                lineNumber: TrailerCommentLineNumber(unreleased: unreleased, blankLineCount: blankLineCount),
                 blankLineCount: blankLineCount,
                 subject: "deployment trailer comment"
             )
         );
+    }
+
+    // TrailingLines carries no source line number of its own, so the comment's line is
+    // reconstructed from what Unreleased does track reliably: its own heading line, plus one
+    // line per section heading and each of that section's Entries (blank or not), in source
+    // order. The last section's own Entries may already have had trailing blanks moved into
+    // TrailingLines by the parser (see ChangeLogParser.MoveTrailingBlanksFromLastSection); that
+    // is still correct here, since blankLineCount then accounts for those same lines instead.
+    private static int TrailerCommentLineNumber(ChangeLogUnreleased unreleased, int blankLineCount)
+    {
+        int precedingLines = 0;
+
+        foreach (ChangeLogSection section in unreleased.Sections)
+        {
+            precedingLines += 1 + section.Entries.Length;
+        }
+
+        return unreleased.LineNumber + 1 + precedingLines + blankLineCount;
     }
 
     private static void CheckDuplicateSections(in ImmutableArray<ChangeLogSection> sections, List<LintError> errors)

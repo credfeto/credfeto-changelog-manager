@@ -625,11 +625,12 @@ public sealed class ChangeLogLinterTests : TestBase
     }
 
     [Theory]
-    [InlineData(0, "Missing")]
-    [InlineData(2, "Extra")]
+    [InlineData(0, "Missing", 12)]
+    [InlineData(2, "Extra", 14)]
     public static void BlankLinesBeforeDeploymentTrailerComment_Mismatched_ReturnsError(
         int blankLines,
-        string expectedToken
+        string expectedToken,
+        int expectedLineNumber
     )
     {
         string gap = new(c: '\n', count: blankLines);
@@ -658,11 +659,15 @@ public sealed class ChangeLogLinterTests : TestBase
 
         IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
 
+        // Line number must point at the "<!--" comment itself (line 12/14 in the fixture above),
+        // not merely somewhere inside [Unreleased] — see credfeto/credfeto-changelog-manager#377
+        // review discussion.
         Assert.Contains(
             errors,
             e =>
                 e.Message.Contains(value: "deployment trailer comment", comparisonType: StringComparison.Ordinal)
                 && e.Message.Contains(value: expectedToken, comparisonType: StringComparison.Ordinal)
+                && e.LineNumber == expectedLineNumber
         );
     }
 
