@@ -66,6 +66,28 @@ public sealed class ChangeLogLinter : IChangeLogLinter
             language: language
         );
         CheckBlankLinesAfterHeadings(sections: unreleased.Sections, errors: errors);
+        CheckBlankLinesBeforeTrailerComment(unreleased: unreleased, errors: errors);
+    }
+
+    // Only applies when the trailer actually starts with an HTML comment (preceded by nothing
+    // but blank lines); a trailer with no comment, or with other content before one, is left to
+    // whatever else governs that content: this rule owns only the comment's own leading gap.
+    private static void CheckBlankLinesBeforeTrailerComment(ChangeLogUnreleased unreleased, List<LintError> errors)
+    {
+        int blankLineCount = unreleased.TrailingLines.CountBlankLinesBeforeHtmlComment();
+
+        if (ChangeLogBlankLineRules.IsAlreadyOneBlankLineOrNoComment(blankLineCount))
+        {
+            return;
+        }
+
+        int lineNumber = unreleased.TrailingLinesStartLineNumber + blankLineCount;
+        LintError error = BlankLineCountError(
+            lineNumber: lineNumber,
+            blankLineCount: blankLineCount,
+            subject: "deployment trailer comment"
+        );
+        errors.Add(error);
     }
 
     private static void CheckDuplicateSections(in ImmutableArray<ChangeLogSection> sections, List<LintError> errors)
@@ -243,14 +265,27 @@ public sealed class ChangeLogLinter : IChangeLogLinter
     {
         foreach (ChangeLogRelease release in releases.AsValueEnumerable().Where(r => r.BlankLinesBeforeHeading != 1))
         {
-            string detail = release.BlankLinesBeforeHeading == 0 ? "Missing" : "Extra";
             errors.Add(
-                new(
-                    LineNumber: release.LineNumber,
-                    Message: $"{detail} blank line(s) before release heading '## [{release.Version}]'; expected exactly one blank line"
+                BlankLineCountError(
+                    lineNumber: release.LineNumber,
+                    blankLineCount: release.BlankLinesBeforeHeading,
+                    subject: $"release heading '## [{release.Version}]'"
                 )
             );
         }
+    }
+
+    // blankLineCount must already be known to be wrong (never 1, and never the -1 "not
+    // applicable" sentinel some callers use): callers filter those cases out first, since what
+    // counts as "not applicable" differs per subject (there is no release-heading equivalent of
+    // "no HTML comment present").
+    private static LintError BlankLineCountError(int lineNumber, int blankLineCount, string subject)
+    {
+        string detail = blankLineCount == 0 ? "Missing" : "Extra";
+        return new(
+            LineNumber: lineNumber,
+            Message: $"{detail} blank line(s) before {subject}; expected exactly one blank line"
+        );
     }
 
     private static void CheckReleaseDates(

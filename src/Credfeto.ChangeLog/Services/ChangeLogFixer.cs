@@ -32,7 +32,8 @@ public sealed class ChangeLogFixer : IChangeLogFixer
     {
         ChangeLogDocument ensured = ChangeLogUpdater.EnsureUnreleasedSections(document: document, language: language);
         ChangeLogDocument withPreamble = EnsurePreamble(ensured);
-        return RemoveBlankLinesAfterHeadings(withPreamble);
+        ChangeLogDocument withoutBlankHeadingLines = RemoveBlankLinesAfterHeadings(withPreamble);
+        return EnsureBlankLineBeforeTrailerComment(withoutBlankHeadingLines);
     }
 
     public static ChangeLogDocument EnsurePreamble(ChangeLogDocument document)
@@ -79,7 +80,7 @@ public sealed class ChangeLogFixer : IChangeLogFixer
     {
         for (int i = 0; i < headerLines.Length; i++)
         {
-            if (headerLines[i].StartsWith(value: "<!--", comparisonType: System.StringComparison.Ordinal))
+            if (headerLines[i].StartsWithHtmlComment())
             {
                 return i;
             }
@@ -123,5 +124,27 @@ public sealed class ChangeLogFixer : IChangeLogFixer
         }
 
         return start == 0 ? section : section with { Entries = section.Entries[start..] };
+    }
+
+    private static ChangeLogDocument EnsureBlankLineBeforeTrailerComment(ChangeLogDocument document) =>
+        document.Unreleased is null
+            ? document
+            : document with
+            {
+                Unreleased = document.Unreleased with
+                {
+                    TrailingLines = NormaliseBlankLinesBeforeTrailerComment(document.Unreleased.TrailingLines),
+                },
+            };
+
+    private static ImmutableArray<string> NormaliseBlankLinesBeforeTrailerComment(
+        in ImmutableArray<string> trailingLines
+    )
+    {
+        int blankLineCount = trailingLines.CountBlankLinesBeforeHtmlComment();
+
+        return ChangeLogBlankLineRules.IsAlreadyOneBlankLineOrNoComment(blankLineCount)
+            ? trailingLines
+            : [string.Empty, .. trailingLines[blankLineCount..]];
     }
 }

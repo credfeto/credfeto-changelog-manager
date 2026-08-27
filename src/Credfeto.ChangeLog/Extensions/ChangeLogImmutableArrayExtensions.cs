@@ -21,4 +21,24 @@ public static class ChangeLogImmutableArrayExtensions
         int end = lines.Length - lines.CountTrailingBlankLines();
         return end == lines.Length ? lines : lines[..end];
     }
+
+    // -1 covers both "no HTML comment present" and "non-comment content precedes it", so callers
+    // never mistake unrelated trailer content for a comment boundary.
+    public static int CountBlankLinesBeforeHtmlComment(this in ImmutableArray<string> lines)
+    {
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (lines[i].StartsWithHtmlComment())
+            {
+                return i;
+            }
+
+            if (!string.IsNullOrWhiteSpace(lines[i]))
+            {
+                return -1;
+            }
+        }
+
+        return -1;
+    }
 }

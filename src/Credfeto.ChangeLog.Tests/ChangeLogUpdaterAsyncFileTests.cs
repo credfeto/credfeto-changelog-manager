@@ -208,6 +208,70 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         Assert.Equal(expected: TemplateFile.Build(Language), actual: content.Trim());
     }
 
+    // Regression guard for the "brand-new file" skeleton (TemplateFile.Build) staying
+    // in sync with the round-trip add/remove path: asserted against a hardcoded
+    // literal rather than TemplateFile.Build itself, so a reintroduced mismatch
+    // between the two (e.g. the blank line before the trailer comment moving out of
+    // step) fails this test even though CreateEmptyAsyncCreatesFileMatchingTemplate
+    // above would not (that test compares a fresh file to TemplateFile.Build, which
+    // moves in lockstep with any such bug). Add/remove never touch TrailingLines here,
+    // so this does not exercise ChangeLogFixer.EnsureBlankLineBeforeTrailerComment; see
+    // ChangeLogLinterTests/ChangeLogFixerTests instead for the rule that actively
+    // enforces this blank line on pre-existing files via lint/--fix.
+    [Fact]
+    public async Task AddThenRemoveEntryOnNewFileMatchesPristineSkeleton()
+    {
+        using CancellationTokenSource cancellationTokenSource = new();
+
+        string fileName = Path.Combine(this.TempFolder, $"{Guid.NewGuid():N}.md");
+
+        IChangeLogUpdater updater = this._serviceProvider.GetRequiredService<IChangeLogUpdater>();
+
+        await updater.AddEntryAsync(
+            changeLogFileName: fileName,
+            language: Language,
+            type: "Added",
+            message: "__probe__",
+            cancellationToken: cancellationTokenSource.Token
+        );
+        await updater.RemoveEntryAsync(
+            changeLogFileName: fileName,
+            language: Language,
+            type: "Added",
+            message: "__probe__",
+            cancellationToken: cancellationTokenSource.Token
+        );
+
+        const string expected =
+            @"# Changelog
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+<!--
+Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
+-->
+
+## [Unreleased]
+### Security
+### Added
+### Fixed
+### Changed
+### Deprecated
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+
+## [0.0.0] - Project created";
+
+        string content = await File.ReadAllTextAsync(fileName, Encoding.UTF8, cancellationTokenSource.Token);
+        Assert.Equal(expected: expected.ToLocalEndLine(), actual: content.Trim());
+    }
+
     [Fact]
     public async Task CreateEmptyAsyncParsedDocumentHasSeedRelease()
     {

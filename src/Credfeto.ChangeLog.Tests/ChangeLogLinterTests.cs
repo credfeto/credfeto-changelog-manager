@@ -623,4 +623,183 @@ public sealed class ChangeLogLinterTests : TestBase
                 && e.Message.Contains(value: "Missing", comparisonType: StringComparison.Ordinal)
         );
     }
+
+    [Theory]
+    [InlineData(0, "Missing", 12)]
+    [InlineData(2, "Extra", 14)]
+    public static void BlankLinesBeforeDeploymentTrailerComment_Mismatched_ReturnsError(
+        int blankLines,
+        string expectedToken,
+        int expectedLineNumber
+    )
+    {
+        string gap = new(c: '\n', count: blankLines);
+        string changeLog = $"""
+            # Changelog
+
+            ## [Unreleased]
+            ### Security
+            ### Added
+            - an entry
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+            {gap}<!--
+            Deployment comment
+            -->
+
+            ## [1.0.0] - 2024-01-01
+            ### Added
+            - Initial release
+
+            ## [0.0.0] - Project created
+            """;
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+
+        // Line number must point at the "<!--" comment itself (line 12/14 in the fixture above),
+        // not merely somewhere inside [Unreleased].
+        Assert.Contains(
+            errors,
+            e =>
+                e.Message.Contains(value: "deployment trailer comment", comparisonType: StringComparison.Ordinal)
+                && e.Message.Contains(value: expectedToken, comparisonType: StringComparison.Ordinal)
+                && e.LineNumber == expectedLineNumber
+        );
+    }
+
+    [Fact]
+    public static void BlankLineBeforeFirstSection_DoesNotSkewTrailerCommentLineNumber()
+    {
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+
+            ### Security
+            ### Added
+            - an entry
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+            <!--
+            Deployment comment
+            -->
+
+            ## [1.0.0] - 2024-01-01
+            ### Added
+            - Initial release
+
+            ## [0.0.0] - Project created
+            """;
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+
+        // A blank line between "## [Unreleased]" and its first "### " section heading must not
+        // throw off the reported line number: it is derived from the trailer's own position in
+        // the source, not reconstructed by counting sections/entries after the heading.
+        Assert.Contains(
+            errors,
+            e =>
+                e.Message.Contains(value: "deployment trailer comment", comparisonType: StringComparison.Ordinal)
+                && e.Message.Contains(value: "Missing", comparisonType: StringComparison.Ordinal)
+                && e.LineNumber == 13
+        );
+    }
+
+    [Fact]
+    public void ExactlyOneBlankLineBeforeDeploymentTrailerComment_ReturnsNoError()
+    {
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+            ### Security
+            ### Added
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+
+            <!--
+            Deployment comment
+            -->
+
+            ## [0.0.0] - Project created
+            """;
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+
+        Assert.DoesNotContain(
+            errors,
+            e =>
+                e.Message.Contains(
+                    value: "blank line(s) before deployment trailer comment",
+                    comparisonType: StringComparison.Ordinal
+                )
+        );
+    }
+
+    [Fact]
+    public void NonBlankContentBeforeDeploymentTrailerComment_DoesNotTriggerBlankLineCheck()
+    {
+        // A non-blank line directly under "### Deployment Changes" stays part of that section's
+        // own entries (ChangeLogParser only ever moves trailing *blank* lines into TrailingLines,
+        // never arbitrary content), so only the one blank line actually adjacent to the comment
+        // reaches this rule; it correctly sees that as already-correct rather than as a large
+        // blank-line count skewed by the note above it.
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+            ### Security
+            ### Added
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+            Some deployment note.
+
+            <!--
+            Deployment comment
+            -->
+
+            ## [0.0.0] - Project created
+            """;
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+
+        Assert.DoesNotContain(
+            errors,
+            e =>
+                e.Message.Contains(
+                    value: "blank line(s) before deployment trailer comment",
+                    comparisonType: StringComparison.Ordinal
+                )
+        );
+    }
+
+    [Fact]
+    public void NoDeploymentTrailerComment_DoesNotTriggerBlankLineCheck()
+    {
+        // VALID_CHANGE_LOG's trailer has no HTML comment at all (goes straight from
+        // "### Deployment Changes" to the next release heading): the rule must stay
+        // silent rather than treating that gap as a missing comment-blank-line.
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(VALID_CHANGE_LOG), Language);
+
+        Assert.DoesNotContain(
+            errors,
+            e =>
+                e.Message.Contains(
+                    value: "blank line(s) before deployment trailer comment",
+                    comparisonType: StringComparison.Ordinal
+                )
+        );
+    }
 }
