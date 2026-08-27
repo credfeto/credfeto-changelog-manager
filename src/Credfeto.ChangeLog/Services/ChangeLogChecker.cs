@@ -26,6 +26,7 @@ public sealed class ChangeLogChecker : IChangeLogChecker
     public async Task<bool> ChangeLogModifiedInReleaseSectionAsync(
         string changeLogFileName,
         string originBranchName,
+        ChangeLogLanguage language,
         CancellationToken cancellationToken
     )
     {
@@ -33,6 +34,7 @@ public sealed class ChangeLogChecker : IChangeLogChecker
         int? position = await FindFirstReleaseVersionPositionAsync(
             changeLogFileName: changeLogFileName,
             loader: this._loader,
+            language: language,
             cancellationToken: cancellationToken
         );
 
@@ -46,46 +48,56 @@ public sealed class ChangeLogChecker : IChangeLogChecker
 
         using (Repository repo = GitRepository.OpenRepository(changelogDir))
         {
-            string sha = HeadSha(repo);
-
-            Branch originBranch = FindOriginBranch(repo: repo, originBranchName: originBranchName);
-
-            if (originBranch.Tip.Sha.EqualsOrdinal(sha))
-            {
-                return false;
-            }
-
-            string changeLogInRepoPath = FindChangeLogPositionInRepo(repo: repo, changeLogFileName: changeLogFileName);
-            Console.WriteLine($"Relative to Repo Root: {changeLogInRepoPath}");
-
-            int firstReleaseVersionIndex = position.Value;
-
-            // Diff against the merge base, not the origin branch's tip: if origin has advanced
-            // (e.g. a release was cut) since this branch diverged, diffing against its tip would
-            // pull in origin's own unrelated changes and could misreport them as this branch's.
-            Commit mergeBase =
-                repo.ObjectDatabase.FindMergeBase(originBranch.Tip, repo.Head.Tip)
-                ?? Throws.CouldNotFindMergeBase(headSha: sha, originBranchName: originBranchName);
-
-            Patch changes = repo.Diff.Compare<Patch>(
-                mergeBase.Tree,
-                HeadTree(repo),
-                paths: [changeLogInRepoPath],
-                compareOptions: CompareSettings.BuildCompareOptions
+            return EvaluateRepository(
+                repo: repo,
+                changeLogFileName: changeLogFileName,
+                originBranchName: originBranchName,
+                firstReleaseVersionIndex: position.Value
             );
-
-            PatchEntryChanges? change = changes.FirstOrDefault();
-
-            if (change is not null)
-            {
-                return CheckForChangesAfterFirstRelease(
-                    change: change,
-                    firstReleaseVersionIndex: firstReleaseVersionIndex
-                );
-            }
-
-            Console.WriteLine("Could not find change in diff");
         }
+    }
+
+    private static bool EvaluateRepository(
+        Repository repo,
+        string changeLogFileName,
+        string originBranchName,
+        int firstReleaseVersionIndex
+    )
+    {
+        string sha = HeadSha(repo);
+
+        Branch originBranch = FindOriginBranch(repo: repo, originBranchName: originBranchName);
+
+        if (originBranch.Tip.Sha.EqualsOrdinal(sha))
+        {
+            return false;
+        }
+
+        string changeLogInRepoPath = FindChangeLogPositionInRepo(repo: repo, changeLogFileName: changeLogFileName);
+        Console.WriteLine($"Relative to Repo Root: {changeLogInRepoPath}");
+
+        // Diff against the merge base, not the origin branch's tip: if origin has advanced
+        // (e.g. a release was cut) since this branch diverged, diffing against its tip would
+        // pull in origin's own unrelated changes and could misreport them as this branch's.
+        Commit mergeBase =
+            repo.ObjectDatabase.FindMergeBase(originBranch.Tip, repo.Head.Tip)
+            ?? Throws.CouldNotFindMergeBase(headSha: sha, originBranchName: originBranchName);
+
+        Patch changes = repo.Diff.Compare<Patch>(
+            mergeBase.Tree,
+            HeadTree(repo),
+            paths: [changeLogInRepoPath],
+            compareOptions: CompareSettings.BuildCompareOptions
+        );
+
+        PatchEntryChanges? change = changes.FirstOrDefault();
+
+        if (change is not null)
+        {
+            return CheckForChangesAfterFirstRelease(change: change, firstReleaseVersionIndex: firstReleaseVersionIndex);
+        }
+
+        Console.WriteLine("Could not find change in diff");
 
         return true;
     }
@@ -93,10 +105,15 @@ public sealed class ChangeLogChecker : IChangeLogChecker
     private static async Task<int?> FindFirstReleaseVersionPositionAsync(
         string changeLogFileName,
         IChangeLogStorage loader,
+        ChangeLogLanguage language,
         CancellationToken cancellationToken
     )
     {
-        ChangeLogDocument document = await loader.LoadAsync(changeLogFileName, cancellationToken);
+        ChangeLogDocument document = await loader.LoadAsync(
+            changeLogFileName,
+            language: language,
+            cancellationToken: cancellationToken
+        );
 
         return document.Releases.IsEmpty ? null : document.Releases[0].LineNumber;
     }

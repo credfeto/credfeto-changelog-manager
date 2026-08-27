@@ -59,6 +59,7 @@ public sealed class ChangeLogFileOperationsTests : LoggingFolderCleanupTestBase,
         string result = await reader.ExtractReleaseNotesFromFileAsync(
             changeLogFileName: fileName,
             version: string.Empty,
+            language: this._language,
             cancellationToken: cancellationTokenSource.Token
         );
 
@@ -82,6 +83,7 @@ public sealed class ChangeLogFileOperationsTests : LoggingFolderCleanupTestBase,
 
         int? result = await reader.FindFirstReleaseVersionPositionAsync(
             changeLogFileName: fileName,
+            language: this._language,
             cancellationToken: cancellationTokenSource.Token
         );
 

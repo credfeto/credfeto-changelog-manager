@@ -6,7 +6,16 @@ namespace Credfeto.ChangeLog;
 
 public interface IChangeLogStorage
 {
-    ValueTask<ChangeLogDocument> LoadAsync(string changeLogFileName, CancellationToken cancellationToken);
+    ValueTask<ChangeLogDocument> LoadAsync(
+        string changeLogFileName,
+        ChangeLogLanguage language,
+        CancellationToken cancellationToken
+    );
 
-    ValueTask SaveAsync(string changeLogFileName, ChangeLogDocument document, CancellationToken cancellationToken);
+    ValueTask SaveAsync(
+        string changeLogFileName,
+        ChangeLogDocument document,
+        ChangeLogLanguage language,
+        CancellationToken cancellationToken
+    );
 }

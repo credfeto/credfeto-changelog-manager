@@ -17,7 +17,11 @@ public sealed class FileSystemChangeLogStorage : IChangeLogStorage
         this._serialiser = serialiser;
     }
 
-    public async ValueTask<ChangeLogDocument> LoadAsync(string changeLogFileName, CancellationToken cancellationToken)
+    public async ValueTask<ChangeLogDocument> LoadAsync(
+        string changeLogFileName,
+        ChangeLogLanguage language,
+        CancellationToken cancellationToken
+    )
     {
         string content = await File.ReadAllTextAsync(
             path: changeLogFileName,
@@ -25,17 +29,23 @@ public sealed class FileSystemChangeLogStorage : IChangeLogStorage
             cancellationToken: cancellationToken
         );
 
-        return await this._parser.ParseAsync(content: content, cancellationToken: cancellationToken);
+        return await this._parser.ParseAsync(
+            content: content,
+            language: language,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async ValueTask SaveAsync(
         string changeLogFileName,
         ChangeLogDocument document,
+        ChangeLogLanguage language,
         CancellationToken cancellationToken
     )
     {
         string content = await this._serialiser.SerialiseAsync(
             document: document,
+            language: language,
             cancellationToken: cancellationToken
         );
 

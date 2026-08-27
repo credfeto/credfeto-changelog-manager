@@ -33,8 +33,17 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         CancellationToken cancellationToken
     )
     {
-        ChangeLogDocument empty = await this._parser.ParseAsync(TemplateFile.Build(language), cancellationToken);
-        await this._storage.SaveAsync(changeLogFileName, document: empty, cancellationToken: cancellationToken);
+        ChangeLogDocument empty = await this._parser.ParseAsync(
+            content: TemplateFile.Build(language),
+            language: language,
+            cancellationToken: cancellationToken
+        );
+        await this._storage.SaveAsync(
+            changeLogFileName,
+            document: empty,
+            language: language,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task AddEntryAsync(
@@ -52,7 +61,12 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         );
         ChangeLogDocument updated = AddEntry(document: document, type: type, message: message);
         ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
-        await this._storage.SaveAsync(changeLogFileName, document: withPreamble, cancellationToken: cancellationToken);
+        await this._storage.SaveAsync(
+            changeLogFileName,
+            document: withPreamble,
+            language: language,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task RemoveEntryAsync(
@@ -70,7 +84,12 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         );
         ChangeLogDocument updated = RemoveEntry(document: document, type: type, message: message);
         ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
-        await this._storage.SaveAsync(changeLogFileName, document: withPreamble, cancellationToken: cancellationToken);
+        await this._storage.SaveAsync(
+            changeLogFileName,
+            document: withPreamble,
+            language: language,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async Task CreateReleaseAsync(
@@ -81,11 +100,20 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         CancellationToken cancellationToken
     )
     {
-        ChangeLogDocument document = await this._storage.LoadAsync(changeLogFileName, cancellationToken);
+        ChangeLogDocument document = await this._storage.LoadAsync(
+            changeLogFileName,
+            language: language,
+            cancellationToken: cancellationToken
+        );
         string date = pending ? ChangeLogRelease.PendingDate : this.CurrentDate(language);
         ChangeLogDocument updated = CreateRelease(document: document, version: version, date: date);
         ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
-        await this._storage.SaveAsync(changeLogFileName, document: withPreamble, cancellationToken: cancellationToken);
+        await this._storage.SaveAsync(
+            changeLogFileName,
+            document: withPreamble,
+            language: language,
+            cancellationToken: cancellationToken
+        );
     }
 
     public async ValueTask EnsureUnreleasedSectionsAsync(
@@ -101,7 +129,12 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         );
         ChangeLogDocument updated = EnsureUnreleasedSections(document: document, language: language);
         ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
-        await this._storage.SaveAsync(changeLogFileName, document: withPreamble, cancellationToken: cancellationToken);
+        await this._storage.SaveAsync(
+            changeLogFileName,
+            document: withPreamble,
+            language: language,
+            cancellationToken: cancellationToken
+        );
     }
 
     public static ChangeLogDocument AddEntry(ChangeLogDocument document, string type, string message)
@@ -192,7 +225,11 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
             await this.CreateEmptyAsync(changeLogFileName, language: language, cancellationToken: cancellationToken);
         }
 
-        return await this._storage.LoadAsync(changeLogFileName, cancellationToken);
+        return await this._storage.LoadAsync(
+            changeLogFileName,
+            language: language,
+            cancellationToken: cancellationToken
+        );
     }
 
     private static ChangeLogUnreleased RequireUnreleased(ChangeLogDocument document)

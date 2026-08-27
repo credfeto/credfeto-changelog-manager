@@ -380,7 +380,7 @@ public sealed class ChangeLogLinterTests : TestBase
     private static ChangeLogDocument Parse(string content)
     {
         ChangeLogParser parser = new();
-        return parser.ParseAsync(content, default).GetAwaiter().GetResult();
+        return parser.ParseAsync(content, language: Language, cancellationToken: default).GetAwaiter().GetResult();
     }
 
     [Fact]

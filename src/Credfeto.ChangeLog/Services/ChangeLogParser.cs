@@ -11,22 +11,26 @@ namespace Credfeto.ChangeLog.Services;
 
 public sealed class ChangeLogParser : IChangeLogParser
 {
-    public ValueTask<ChangeLogDocument> ParseAsync(string content, CancellationToken cancellationToken) =>
-        ValueTask.FromResult(Parse(content.SplitToLines()));
+    public ValueTask<ChangeLogDocument> ParseAsync(
+        string content,
+        ChangeLogLanguage language,
+        CancellationToken cancellationToken
+    ) => ValueTask.FromResult(Parse(lines: content.SplitToLines(), language: language));
 
-    private static ChangeLogDocument Parse(IReadOnlyList<string> lines)
+    private static ChangeLogDocument Parse(IReadOnlyList<string> lines, ChangeLogLanguage language)
     {
-        int unreleasedStart = lines.FindUnreleasedStart();
+        int unreleasedStart = lines.FindUnreleasedStart(language);
         if (unreleasedStart < 0)
         {
             return new(HeaderLines: [.. lines], Unreleased: null, Releases: [], TrailingLines: []);
         }
 
-        int unreleasedEnd = lines.FindUnreleasedEnd(unreleasedStart);
+        int unreleasedEnd = lines.FindUnreleasedEnd(unreleasedStart: unreleasedStart, language: language);
         ChangeLogUnreleased unreleased = ParseUnreleased(lines, start: unreleasedStart, end: unreleasedEnd);
         (ImmutableArray<ChangeLogRelease> releases, ImmutableArray<string> trailingLines) = ParseReleases(
-            lines,
-            start: unreleasedEnd
+            lines: lines,
+            start: unreleasedEnd,
+            language: language
         );
         return new(
             HeaderLines: CollectLines(lines, start: 0, end: unreleasedStart),
@@ -201,7 +205,8 @@ public sealed class ChangeLogParser : IChangeLogParser
 
     private static (ImmutableArray<ChangeLogRelease> Releases, ImmutableArray<string> TrailingLines) ParseReleases(
         IReadOnlyList<string> lines,
-        int start
+        int start,
+        ChangeLogLanguage language
     )
     {
         List<ChangeLogRelease> releases = [];
@@ -209,7 +214,7 @@ public sealed class ChangeLogParser : IChangeLogParser
 
         for (int i = start; i < lines.Count; i++)
         {
-            ProcessReleaseLine(line: lines[i], lineIndex: i, releases: releases, state: state);
+            ProcessReleaseLine(line: lines[i], lineIndex: i, releases: releases, state: state, language: language);
         }
 
         state.Flush(releases);
@@ -220,7 +225,8 @@ public sealed class ChangeLogParser : IChangeLogParser
         string line,
         int lineIndex,
         List<ChangeLogRelease> releases,
-        ReleaseParseState state
+        ReleaseParseState state,
+        ChangeLogLanguage language
     )
     {
         if (state.InTrailerMode)
@@ -232,7 +238,7 @@ public sealed class ChangeLogParser : IChangeLogParser
             state.EnterTrailerMode();
             state.TrailingLines.Add(line);
         }
-        else if (line.IsVersionHeader() && !Unreleased.IsUnreleasedHeader(line))
+        else if (line.IsVersionHeader() && !Unreleased.IsUnreleasedHeader(line: line, language: language))
         {
             state.Flush(releases);
             state.StartRelease(line: line, lineNumber: lineIndex + 1);

@@ -45,14 +45,41 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
     private static void MockChangeLogStorageLoad(IChangeLogStorage storage, ChangeLogDocument document)
     {
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+        storage
+            .LoadAsync(Arg.Any<string>(), Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>())
+            .Returns(ValueTask.FromResult(document));
     }
 
     private static void MockChangeLogStorageSave(IChangeLogStorage storage)
     {
         storage
-            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
+            .SaveAsync(
+                Arg.Any<string>(),
+                Arg.Any<ChangeLogDocument>(),
+                Arg.Any<ChangeLogLanguage>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(ValueTask.CompletedTask);
+    }
+
+    private static SavedDocumentCapture MockChangeLogStorageSaveCapturing(IChangeLogStorage storage)
+    {
+        SavedDocumentCapture capture = new();
+        storage
+            .SaveAsync(
+                Arg.Any<string>(),
+                Arg.Do<ChangeLogDocument>(d => capture.Document = d),
+                Arg.Any<ChangeLogLanguage>(),
+                Arg.Any<CancellationToken>()
+            )
+            .Returns(ValueTask.CompletedTask);
+
+        return capture;
+    }
+
+    private sealed class SavedDocumentCapture
+    {
+        public ChangeLogDocument? Document { get; set; }
     }
 
     [Fact]
@@ -80,10 +107,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
         MockChangeLogStorageLoad(storage, document);
 
-        ChangeLogDocument? saved = null;
-        storage
-            .SaveAsync(Arg.Any<string>(), Arg.Do<ChangeLogDocument>(d => saved = d), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.CompletedTask);
+        SavedDocumentCapture capture = MockChangeLogStorageSaveCapturing(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
@@ -101,6 +125,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         string expectedDate = MockDateTimeSources
             .Past.GetLocalNow()
             .ToString(format: Language.DateFormat, formatProvider: CultureInfo.InvariantCulture);
+        ChangeLogDocument? saved = capture.Document;
         Assert.NotNull(saved);
         Assert.False(saved.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
         Assert.Equal(expected: expectedDate, actual: saved.Releases[0].Date, comparer: StringComparer.Ordinal);
@@ -145,8 +170,15 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
             cancellationToken: cancellationTokenSource.Token
         );
 
-        await storage.Received(1).LoadAsync(tempFile, Arg.Any<CancellationToken>());
-        await storage.Received(1).SaveAsync(tempFile, Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>());
+        await storage.Received(1).LoadAsync(tempFile, Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>());
+        await storage
+            .Received(1)
+            .SaveAsync(
+                tempFile,
+                Arg.Any<ChangeLogDocument>(),
+                Arg.Any<ChangeLogLanguage>(),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     [Fact]
@@ -174,10 +206,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
         MockChangeLogStorageLoad(storage, document);
 
-        ChangeLogDocument? saved = null;
-        storage
-            .SaveAsync(Arg.Any<string>(), Arg.Do<ChangeLogDocument>(d => saved = d), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.CompletedTask);
+        SavedDocumentCapture capture = MockChangeLogStorageSaveCapturing(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
@@ -191,8 +220,16 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
             cancellationToken: cancellationTokenSource.Token
         );
 
-        await storage.Received(1).LoadAsync(tempFile, Arg.Any<CancellationToken>());
-        await storage.Received(1).SaveAsync(tempFile, Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>());
+        await storage.Received(1).LoadAsync(tempFile, Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>());
+        await storage
+            .Received(1)
+            .SaveAsync(
+                tempFile,
+                Arg.Any<ChangeLogDocument>(),
+                Arg.Any<ChangeLogLanguage>(),
+                Arg.Any<CancellationToken>()
+            );
+        ChangeLogDocument? saved = capture.Document;
         Assert.NotNull(saved);
         Assert.False(saved.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
         Assert.Equal(

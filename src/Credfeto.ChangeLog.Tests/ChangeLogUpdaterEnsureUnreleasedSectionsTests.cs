@@ -33,7 +33,11 @@ public sealed class ChangeLogUpdaterEnsureUnreleasedSectionsTests : TestBase
     {
         ChangeLogParser parser = new();
         return parser
-            .ParseAsync(string.IsNullOrEmpty(content) ? TemplateFile.Build(Language) : content, default)
+            .ParseAsync(
+                content: string.IsNullOrEmpty(content) ? TemplateFile.Build(Language) : content,
+                language: Language,
+                cancellationToken: default
+            )
             .GetAwaiter()
             .GetResult();
     }
@@ -41,7 +45,10 @@ public sealed class ChangeLogUpdaterEnsureUnreleasedSectionsTests : TestBase
     private static string Serialise(ChangeLogDocument document)
     {
         ChangeLogSerialiser serialiser = new();
-        return serialiser.SerialiseAsync(document, default).GetAwaiter().GetResult();
+        return serialiser
+            .SerialiseAsync(document, language: Language, cancellationToken: default)
+            .GetAwaiter()
+            .GetResult();
     }
 
     public static TheoryData<string, string> EnsureUnreleasedSectionsCases =>

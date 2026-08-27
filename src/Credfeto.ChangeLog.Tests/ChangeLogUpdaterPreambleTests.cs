@@ -39,13 +39,13 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     private static ValueTask<ChangeLogDocument> ParseAsync(string content)
     {
         ChangeLogParser parser = new();
-        return parser.ParseAsync(content, default);
+        return parser.ParseAsync(content, language: Language, cancellationToken: default);
     }
 
     private static ValueTask<string> SerialiseAsync(ChangeLogDocument document)
     {
         ChangeLogSerialiser serialiser = new();
-        return serialiser.SerialiseAsync(document, default);
+        return serialiser.SerialiseAsync(document, language: Language, cancellationToken: default);
     }
 
     private static void AssertContainsPreamble(string result)

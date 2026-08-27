@@ -17,6 +17,10 @@ namespace Credfeto.ChangeLog.Benchmark.Tests.Bench;
 )]
 public class MoveTrailingBlanksBenchmark
 {
+    private static readonly ChangeLogLanguage Language = new ChangeLogLanguageFactory().Get(
+        ChangeLogLanguageFactory.English
+    );
+
     private static readonly string ManyTrailingBlanksChangeLog = BuildChangeLog(trailingBlankLines: 200);
 
     [Benchmark]
@@ -65,7 +69,7 @@ public class MoveTrailingBlanksBenchmark
     )]
     private static ChangeLogDocument ParseSync(string content) =>
         new ChangeLogParser()
-            .ParseAsync(content: content, cancellationToken: CancellationToken.None)
+            .ParseAsync(content: content, language: Language, cancellationToken: CancellationToken.None)
             .GetAwaiter()
             .GetResult();
 }

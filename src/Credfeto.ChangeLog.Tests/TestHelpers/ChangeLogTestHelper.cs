@@ -6,8 +6,16 @@ namespace Credfeto.ChangeLog.Tests.TestHelpers;
 
 internal static class ChangeLogTestHelper
 {
-    internal static ValueTask<ChangeLogDocument> ParseAsync(string content)
+    private static readonly ChangeLogLanguage EnglishLanguage = new ChangeLogLanguageFactory().Get(
+        ChangeLogLanguageFactory.English
+    );
+
+    internal static ValueTask<ChangeLogDocument> ParseAsync(string content, ChangeLogLanguage? language = null)
     {
-        return new ChangeLogParser().ParseAsync(content, default);
+        return new ChangeLogParser().ParseAsync(
+            content: content,
+            language: language ?? EnglishLanguage,
+            cancellationToken: default
+        );
     }
 }

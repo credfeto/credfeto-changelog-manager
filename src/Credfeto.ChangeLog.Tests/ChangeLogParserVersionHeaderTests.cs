@@ -92,8 +92,13 @@ public sealed class ChangeLogParserVersionHeaderTests : TestBase
 
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
 
+        ChangeLogLanguage language = new ChangeLogLanguageFactory().Get(ChangeLogLanguageFactory.English);
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(changeLog);
-        string serialised = await new ChangeLogSerialiser().SerialiseAsync(document, cancellationToken);
+        string serialised = await new ChangeLogSerialiser().SerialiseAsync(
+            document,
+            language: language,
+            cancellationToken: cancellationToken
+        );
         ChangeLogDocument reparsed = await ChangeLogTestHelper.ParseAsync(serialised);
 
         ChangeLogRelease release = reparsed.Releases[0];

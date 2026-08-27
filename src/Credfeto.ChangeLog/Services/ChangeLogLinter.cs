@@ -25,7 +25,11 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         CancellationToken cancellationToken
     )
     {
-        ChangeLogDocument document = await this._storage.LoadAsync(changeLogFileName, cancellationToken);
+        ChangeLogDocument document = await this._storage.LoadAsync(
+            changeLogFileName,
+            language: language,
+            cancellationToken: cancellationToken
+        );
 
         return Lint(document: document, language: language);
     }

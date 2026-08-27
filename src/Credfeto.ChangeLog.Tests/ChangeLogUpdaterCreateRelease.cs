@@ -40,13 +40,16 @@ public sealed class ChangeLogUpdaterCreateRelease : TestBase
     private static ChangeLogDocument Parse(string content)
     {
         ChangeLogParser parser = new();
-        return parser.ParseAsync(content, default).GetAwaiter().GetResult();
+        return parser.ParseAsync(content, language: Language, cancellationToken: default).GetAwaiter().GetResult();
     }
 
     private static string Serialise(ChangeLogDocument document)
     {
         ChangeLogSerialiser serialiser = new();
-        return serialiser.SerialiseAsync(document, default).GetAwaiter().GetResult();
+        return serialiser
+            .SerialiseAsync(document, language: Language, cancellationToken: default)
+            .GetAwaiter()
+            .GetResult();
     }
 
     [Fact]

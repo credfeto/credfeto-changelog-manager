@@ -96,7 +96,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     )]
     private static ChangeLogDocument ParseSync(string content) =>
         new ChangeLogParser()
-            .ParseAsync(content: content, cancellationToken: CancellationToken.None)
+            .ParseAsync(content: content, language: Language, cancellationToken: CancellationToken.None)
             .GetAwaiter()
             .GetResult();
 }
