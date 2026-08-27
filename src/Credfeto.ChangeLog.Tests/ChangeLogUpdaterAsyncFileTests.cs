@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -46,6 +45,8 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
     [Fact]
     public async Task CreateReleaseWithPendingFalseUsesCurrentDate()
     {
+        using CancellationTokenSource cancellationTokenSource = new();
+
         const string changeLog = """
             # Changelog
 
@@ -63,21 +64,30 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
             """;
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(changeLog);
-        TimeProvider timeProvider = MockDateTimeSources.Past;
-        ChangeLogDocument result = ChangeLogUpdater.CreateRelease(
-            document: document,
+        IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
+        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+
+        ChangeLogDocument? saved = null;
+        storage
+            .SaveAsync(Arg.Any<string>(), Arg.Do<ChangeLogDocument>(d => saved = d), Arg.Any<CancellationToken>())
+            .Returns(ValueTask.CompletedTask);
+
+        ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
+
+        await updater.CreateReleaseAsync(
+            changeLogFileName: "test-release.md",
+            language: Language,
             version: "1.0.0",
             pending: false,
-            language: Language,
-            timeProvider: timeProvider
+            cancellationToken: cancellationTokenSource.Token
         );
 
-        string expectedDate = timeProvider
-            .GetLocalNow()
-            .LocalDateTime.ToString(format: Language.DateFormat, provider: CultureInfo.InvariantCulture);
-
-        Assert.False(result.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
-        Assert.Equal(expected: expectedDate, actual: result.Releases[0].Date, comparer: StringComparer.Ordinal);
+        // MockDateTimeSources.Past is the fixed instant 1975-03-16T00:00:00Z; asserting the
+        // literal keeps this independent of ChangeLogUpdater.CurrentDate's own expression, so a
+        // bug there can't compute the same (wrong) value on both sides of the assertion.
+        Assert.NotNull(saved);
+        Assert.False(saved.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
+        Assert.Equal(expected: "1975-03-16", actual: saved.Releases[0].Date, comparer: StringComparer.Ordinal);
     }
 
     [Fact]

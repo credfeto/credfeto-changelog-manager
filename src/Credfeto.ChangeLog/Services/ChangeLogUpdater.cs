@@ -82,13 +82,8 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     )
     {
         ChangeLogDocument document = await this._storage.LoadAsync(changeLogFileName, cancellationToken);
-        ChangeLogDocument updated = CreateRelease(
-            document: document,
-            version: version,
-            pending: pending,
-            language: language,
-            timeProvider: this._timeProvider
-        );
+        string date = pending ? "TBD" : CurrentDate(language: language, timeProvider: this._timeProvider);
+        ChangeLogDocument updated = CreateRelease(document: document, version: version, date: date);
         ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
         await this._storage.SaveAsync(changeLogFileName, document: withPreamble, cancellationToken: cancellationToken);
     }
@@ -139,13 +134,7 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         return ReplaceSection(document: document, unreleased: unreleased, updated: updated);
     }
 
-    public static ChangeLogDocument CreateRelease(
-        ChangeLogDocument document,
-        string version,
-        bool pending,
-        ChangeLogLanguage language,
-        TimeProvider timeProvider
-    )
+    public static ChangeLogDocument CreateRelease(ChangeLogDocument document, string version, string date)
     {
         ChangeLogUnreleased unreleased = RequireUnreleased(document);
         ValidateVersionNotExists(releases: document.Releases, version: version);
@@ -156,7 +145,6 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
             throw new EmptyChangeLogException("No changes for the release");
         }
 
-        string date = pending ? "TBD" : CurrentDate(language: language, timeProvider: timeProvider);
         ChangeLogRelease newRelease = new(Version: version, Date: date, LineNumber: 0, Sections: releaseSections);
         ImmutableArray<ChangeLogRelease> releases = PrependRelease(newRelease: newRelease, existing: document.Releases);
         ChangeLogUnreleased cleared = ClearUnreleasedEntries(unreleased);
@@ -270,7 +258,7 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     {
         bool requestedParsed = Version.TryParse(version, out Version? requested);
 
-        foreach (string existingVersion in releases.Select(release => release.Version))
+        foreach (string existingVersion in releases.AsValueEnumerable().Select(release => release.Version))
         {
             if (existingVersion.EqualsOrdinal(version))
             {
@@ -313,7 +301,5 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     }
 
     private static string CurrentDate(ChangeLogLanguage language, TimeProvider timeProvider) =>
-        timeProvider
-            .GetLocalNow()
-            .LocalDateTime.ToString(format: language.DateFormat, provider: CultureInfo.InvariantCulture);
+        timeProvider.GetLocalNow().ToString(format: language.DateFormat, formatProvider: CultureInfo.InvariantCulture);
 }

@@ -1,6 +1,7 @@
 using System;
 using Credfeto.ChangeLog.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Credfeto.ChangeLog;
 
@@ -8,8 +9,11 @@ public static class ChangeLogSetup
 {
     public static IServiceCollection AddChangeLog(this IServiceCollection services)
     {
+        // TryAdd: a host that already registered its own TimeProvider (e.g. a FakeTimeProvider in
+        // tests) keeps that registration instead of this library silently overriding it.
+        services.TryAddSingleton(TimeProvider.System);
+
         return services
-            .AddSingleton(TimeProvider.System)
             .AddSingleton<IChangeLogParser, ChangeLogParser>()
             .AddSingleton<IChangeLogSerialiser, ChangeLogSerialiser>()
             .AddSingleton<IChangeLogLanguageFactory, ChangeLogLanguageFactory>()

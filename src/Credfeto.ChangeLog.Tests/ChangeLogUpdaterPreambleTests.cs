@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
 using FunFair.Test.Common;
-using FunFair.Test.Infrastructure.Mocks;
 using Xunit;
 
 namespace Credfeto.ChangeLog.Tests;
@@ -92,13 +91,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     {
         string result = await SerialiseAsync(
             ChangeLogFixer.EnsurePreamble(
-                ChangeLogUpdater.CreateRelease(
-                    await ParseAsync(ChangeLogWithoutPreamble),
-                    "1.0.0",
-                    pending: true,
-                    Language,
-                    MockDateTimeSources.Past
-                )
+                ChangeLogUpdater.CreateRelease(await ParseAsync(ChangeLogWithoutPreamble), "1.0.0", "TBD")
             )
         );
 
