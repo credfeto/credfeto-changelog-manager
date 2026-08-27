@@ -12,7 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
-- ChangeLogUpdater no longer suppresses SonarAnalyzer S3267 (release-version validation now iterates release.Version directly instead of the full release object) or FunFair FFS0001 (release dates now come from an injected System.TimeProvider instead of DateTime.Now); ChangeLogChecker and FileSystemChangeLogStorage are now public rather than suppressing CA1812 (issue #364). BREAKING: ChangeLogUpdater's constructor now requires a TimeProvider (CreateReleaseAsync resolves the date via the injected provider); ChangeLogUpdater.CreateRelease is now a pure function that takes a pre-computed date string instead of a language/timeProvider pair
+- No longer suppresses analyzer findings that flagged real correctness/testability issues: release dates now come from an injected time source rather than DateTime.Now (making release timestamps deterministic and testable), and previously-internal service types are now public where they need to be for consumers to construct them directly (issue #364). BREAKING: ChangeLogUpdater's constructor now requires a TimeProvider argument
 ### Changed
 ### Deprecated
 ### Removed
