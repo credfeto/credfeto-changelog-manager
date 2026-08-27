@@ -82,7 +82,7 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     )
     {
         ChangeLogDocument document = await this._storage.LoadAsync(changeLogFileName, cancellationToken);
-        string date = pending ? "TBD" : CurrentDate(language: language, timeProvider: this._timeProvider);
+        string date = pending ? "TBD" : this.CurrentDate(language);
         ChangeLogDocument updated = CreateRelease(document: document, version: version, date: date);
         ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
         await this._storage.SaveAsync(changeLogFileName, document: withPreamble, cancellationToken: cancellationToken);
@@ -300,6 +300,8 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         return unreleased with { Sections = cleared };
     }
 
-    private static string CurrentDate(ChangeLogLanguage language, TimeProvider timeProvider) =>
-        timeProvider.GetLocalNow().ToString(format: language.DateFormat, formatProvider: CultureInfo.InvariantCulture);
+    private string CurrentDate(ChangeLogLanguage language) =>
+        this
+            ._timeProvider.GetLocalNow()
+            .ToString(format: language.DateFormat, formatProvider: CultureInfo.InvariantCulture);
 }
