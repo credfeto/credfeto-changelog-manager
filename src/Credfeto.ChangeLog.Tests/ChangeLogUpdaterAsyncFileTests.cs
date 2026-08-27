@@ -173,7 +173,11 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(simpleChangeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
         MockChangeLogStorageLoad(storage, document);
-        MockChangeLogStorageSave(storage);
+
+        ChangeLogDocument? saved = null;
+        storage
+            .SaveAsync(Arg.Any<string>(), Arg.Do<ChangeLogDocument>(d => saved = d), Arg.Any<CancellationToken>())
+            .Returns(ValueTask.CompletedTask);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
@@ -189,6 +193,13 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         await storage.Received(1).LoadAsync(tempFile, Arg.Any<CancellationToken>());
         await storage.Received(1).SaveAsync(tempFile, Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>());
+        Assert.NotNull(saved);
+        Assert.False(saved.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
+        Assert.Equal(
+            expected: ChangeLogRelease.PendingDate,
+            actual: saved.Releases[0].Date,
+            comparer: StringComparer.Ordinal
+        );
     }
 
     [Fact]

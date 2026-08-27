@@ -565,4 +565,35 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
             e => e.Message.Contains(value: "## [1.0.0]", comparisonType: StringComparison.Ordinal)
         );
     }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public static void NullOrWhitespaceDateThrows(string? date)
+    {
+        const string changeLog =
+            @"# Changelog
+All notable changes to this project will be documented in this file.
+
+<!--
+Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
+-->
+
+## [Unreleased]
+### Added
+- New content
+### Fixed
+### Changed
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+## [0.0.0] - Project created";
+
+        // ! Intentionally passing null/empty/whitespace to exercise CreateRelease's guard.
+        Assert.ThrowsAny<ArgumentException>(() => ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", date!));
+    }
 }
