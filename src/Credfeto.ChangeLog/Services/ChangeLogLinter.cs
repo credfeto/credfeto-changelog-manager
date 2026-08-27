@@ -74,18 +74,18 @@ public sealed class ChangeLogLinter : IChangeLogLinter
     // whatever else governs that content — this rule owns only the comment's own leading gap.
     private static void CheckBlankLinesBeforeTrailerComment(ChangeLogUnreleased unreleased, List<LintError> errors)
     {
-        int commentIndex = unreleased.TrailingLines.FindLeadingHtmlCommentIndex();
+        int blankLineCount = unreleased.TrailingLines.CountBlankLinesBeforeHtmlComment();
 
-        if (commentIndex is < 0 or 1)
+        if (blankLineCount is < 0 or 1)
         {
             return;
         }
 
-        string detail = commentIndex == 0 ? "Missing" : "Extra";
         errors.Add(
-            new(
-                LineNumber: unreleased.LineNumber,
-                Message: $"{detail} blank line(s) before deployment trailer comment; expected exactly one blank line"
+            BlankLineCountError(
+                lineNumber: unreleased.LineNumber,
+                blankLineCount: blankLineCount,
+                subject: "deployment trailer comment"
             )
         );
     }
@@ -265,14 +265,23 @@ public sealed class ChangeLogLinter : IChangeLogLinter
     {
         foreach (ChangeLogRelease release in releases.AsValueEnumerable().Where(r => r.BlankLinesBeforeHeading != 1))
         {
-            string detail = release.BlankLinesBeforeHeading == 0 ? "Missing" : "Extra";
             errors.Add(
-                new(
-                    LineNumber: release.LineNumber,
-                    Message: $"{detail} blank line(s) before release heading '## [{release.Version}]'; expected exactly one blank line"
+                BlankLineCountError(
+                    lineNumber: release.LineNumber,
+                    blankLineCount: release.BlankLinesBeforeHeading,
+                    subject: $"release heading '## [{release.Version}]'"
                 )
             );
         }
+    }
+
+    private static LintError BlankLineCountError(int lineNumber, int blankLineCount, string subject)
+    {
+        string detail = blankLineCount == 0 ? "Missing" : "Extra";
+        return new(
+            LineNumber: lineNumber,
+            Message: $"{detail} blank line(s) before {subject}; expected exactly one blank line"
+        );
     }
 
     private static void CheckReleaseDates(

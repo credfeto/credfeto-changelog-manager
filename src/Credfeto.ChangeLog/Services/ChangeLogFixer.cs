@@ -146,13 +146,13 @@ public sealed class ChangeLogFixer : IChangeLogFixer
         in ImmutableArray<string> trailingLines
     )
     {
-        int commentIndex = trailingLines.FindLeadingHtmlCommentIndex();
+        int blankLineCount = trailingLines.CountBlankLinesBeforeHtmlComment();
 
-        if (commentIndex is < 0 or 1)
+        if (blankLineCount is < 0 or 1)
         {
             return trailingLines;
         }
 
-        return [string.Empty, .. trailingLines[commentIndex..]];
+        return [string.Empty, .. trailingLines[blankLineCount..]];
     }
 }
