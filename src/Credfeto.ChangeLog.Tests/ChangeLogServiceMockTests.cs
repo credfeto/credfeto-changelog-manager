@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
-using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
 using FunFair.Test.Infrastructure.Mocks;
 using NSubstitute;
@@ -55,6 +54,18 @@ public sealed class ChangeLogServiceMockTests : TestBase
         return new ChangeLogParser().ParseAsync(content, default).GetAwaiter().GetResult();
     }
 
+    private static void MockChangeLogStorageLoad(IChangeLogStorage storage, ChangeLogDocument document)
+    {
+        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+    }
+
+    private static void MockChangeLogStorageSave(IChangeLogStorage storage)
+    {
+        storage
+            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
+            .Returns(ValueTask.CompletedTask);
+    }
+
     // ─── ChangeLogReader ──────────────────────────────────────────────────────────
 
     [Fact]
@@ -64,7 +75,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        ChangeLogStorageMockHelper.SetupLoad(storage, document);
+        MockChangeLogStorageLoad(storage, document);
 
         ChangeLogReader reader = new(storage);
 
@@ -98,7 +109,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(changeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        ChangeLogStorageMockHelper.SetupLoad(storage, document);
+        MockChangeLogStorageLoad(storage, document);
 
         ChangeLogReader reader = new(storage);
 
@@ -137,8 +148,8 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(contentWithBlankLines);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        ChangeLogStorageMockHelper.SetupLoad(storage, document);
-        ChangeLogStorageMockHelper.SetupSave(storage);
+        MockChangeLogStorageLoad(storage, document);
+        MockChangeLogStorageSave(storage);
 
         ChangeLogFixer fixer = new(storage);
 
@@ -161,7 +172,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        ChangeLogStorageMockHelper.SetupLoad(storage, document);
+        MockChangeLogStorageLoad(storage, document);
 
         ChangeLogLinter linter = new(storage);
 
@@ -187,7 +198,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(invalidContent);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        ChangeLogStorageMockHelper.SetupLoad(storage, document);
+        MockChangeLogStorageLoad(storage, document);
 
         ChangeLogLinter linter = new(storage);
 
@@ -211,8 +222,8 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        ChangeLogStorageMockHelper.SetupLoad(storage, document);
-        ChangeLogStorageMockHelper.SetupSave(storage);
+        MockChangeLogStorageLoad(storage, document);
+        MockChangeLogStorageSave(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
@@ -249,8 +260,8 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        ChangeLogStorageMockHelper.SetupLoad(storage, document);
-        ChangeLogStorageMockHelper.SetupSave(storage);
+        MockChangeLogStorageLoad(storage, document);
+        MockChangeLogStorageSave(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 

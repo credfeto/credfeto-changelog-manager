@@ -309,10 +309,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
             return;
         }
 
-        if (
-            release.Date.EqualsOrdinal(ChangeLogUpdater.PendingReleaseDate)
-            || release.Date.EqualsOrdinal(ProjectCreatedDate)
-        )
+        if (release.Date.EqualsOrdinal(ChangeLogRelease.PendingDate) || release.Date.EqualsOrdinal(ProjectCreatedDate))
         {
             return;
         }

@@ -94,7 +94,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
                 ChangeLogUpdater.CreateRelease(
                     await ParseAsync(ChangeLogWithoutPreamble),
                     "1.0.0",
-                    ChangeLogUpdater.PendingReleaseDate
+                    ChangeLogRelease.PendingDate
                 )
             )
         );

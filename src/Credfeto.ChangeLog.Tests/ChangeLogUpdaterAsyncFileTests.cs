@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -42,6 +43,18 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         this._serviceProvider.Dispose();
     }
 
+    private static void MockChangeLogStorageLoad(IChangeLogStorage storage, ChangeLogDocument document)
+    {
+        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+    }
+
+    private static void MockChangeLogStorageSave(IChangeLogStorage storage)
+    {
+        storage
+            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
+            .Returns(ValueTask.CompletedTask);
+    }
+
     [Fact]
     public async Task CreateReleaseWithPendingFalseUsesCurrentDate()
     {
@@ -65,7 +78,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(changeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        ChangeLogStorageMockHelper.SetupLoad(storage, document);
+        MockChangeLogStorageLoad(storage, document);
 
         ChangeLogDocument? saved = null;
         storage
@@ -82,12 +95,15 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
             cancellationToken: cancellationTokenSource.Token
         );
 
-        // MockDateTimeSources.Past is the fixed instant 1975-03-16T00:00:00Z; asserting the
-        // literal keeps this independent of ChangeLogUpdater.CurrentDate's own expression, so a
-        // bug there can't compute the same (wrong) value on both sides of the assertion.
+        // Derived straight from MockDateTimeSources.Past.GetLocalNow() (per this repo's Test Date
+        // Values rule) rather than via ChangeLogUpdater.CurrentDate itself, so a bug in that
+        // method's own TimeProvider access can't compute the same (wrong) value on both sides.
+        string expectedDate = MockDateTimeSources
+            .Past.GetLocalNow()
+            .ToString(format: Language.DateFormat, formatProvider: CultureInfo.InvariantCulture);
         Assert.NotNull(saved);
         Assert.False(saved.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
-        Assert.Equal(expected: "1975-03-16", actual: saved.Releases[0].Date, comparer: StringComparer.Ordinal);
+        Assert.Equal(expected: expectedDate, actual: saved.Releases[0].Date, comparer: StringComparer.Ordinal);
     }
 
     [Fact]
@@ -113,8 +129,8 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(simpleChangeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        ChangeLogStorageMockHelper.SetupLoad(storage, document);
-        ChangeLogStorageMockHelper.SetupSave(storage);
+        MockChangeLogStorageLoad(storage, document);
+        MockChangeLogStorageSave(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
@@ -156,8 +172,8 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(simpleChangeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        ChangeLogStorageMockHelper.SetupLoad(storage, document);
-        ChangeLogStorageMockHelper.SetupSave(storage);
+        MockChangeLogStorageLoad(storage, document);
+        MockChangeLogStorageSave(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
