@@ -42,6 +42,18 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         this._serviceProvider.Dispose();
     }
 
+    private static void SetupLoad(IChangeLogStorage storage, ChangeLogDocument document)
+    {
+        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+    }
+
+    private static void SetupSave(IChangeLogStorage storage)
+    {
+        storage
+            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
+            .Returns(ValueTask.CompletedTask);
+    }
+
     [Fact]
     public async Task CreateReleaseWithPendingFalseUsesCurrentDate()
     {
@@ -65,7 +77,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(changeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+        SetupLoad(storage: storage, document: document);
 
         ChangeLogDocument? saved = null;
         storage
@@ -113,10 +125,8 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(simpleChangeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
-        storage
-            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.CompletedTask);
+        SetupLoad(storage: storage, document: document);
+        SetupSave(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
@@ -158,10 +168,8 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(simpleChangeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
-        storage
-            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.CompletedTask);
+        SetupLoad(storage: storage, document: document);
+        SetupSave(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 

@@ -82,7 +82,7 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     )
     {
         ChangeLogDocument document = await this._storage.LoadAsync(changeLogFileName, cancellationToken);
-        string date = pending ? "TBD" : this.CurrentDate(language);
+        string date = pending ? FileConstants.PendingReleaseDate : this.CurrentDate(language);
         ChangeLogDocument updated = CreateRelease(document: document, version: version, date: date);
         ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
         await this._storage.SaveAsync(changeLogFileName, document: withPreamble, cancellationToken: cancellationToken);

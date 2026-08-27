@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Extensions;
 using Credfeto.ChangeLog.Models;
 using ZLinq;
@@ -300,7 +301,6 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         }
     }
 
-    private const string PendingReleaseDate = "TBD";
     private const string ProjectCreatedDate = "Project created";
 
     private static void CheckReleaseDate(ChangeLogRelease release, ChangeLogLanguage language, List<LintError> errors)
@@ -310,7 +310,10 @@ public sealed class ChangeLogLinter : IChangeLogLinter
             return;
         }
 
-        if (release.Date.EqualsOrdinal(PendingReleaseDate) || release.Date.EqualsOrdinal(ProjectCreatedDate))
+        if (
+            release.Date.EqualsOrdinal(FileConstants.PendingReleaseDate)
+            || release.Date.EqualsOrdinal(ProjectCreatedDate)
+        )
         {
             return;
         }
