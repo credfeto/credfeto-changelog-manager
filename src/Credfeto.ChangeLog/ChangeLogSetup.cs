@@ -1,3 +1,4 @@
+using System;
 using Credfeto.ChangeLog.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,6 +9,7 @@ public static class ChangeLogSetup
     public static IServiceCollection AddChangeLog(this IServiceCollection services)
     {
         return services
+            .AddSingleton(TimeProvider.System)
             .AddSingleton<IChangeLogParser, ChangeLogParser>()
             .AddSingleton<IChangeLogSerialiser, ChangeLogSerialiser>()
             .AddSingleton<IChangeLogLanguageFactory, ChangeLogLanguageFactory>()

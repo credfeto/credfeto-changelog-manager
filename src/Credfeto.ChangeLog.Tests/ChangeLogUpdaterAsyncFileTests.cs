@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -9,6 +10,7 @@ using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
 using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
+using FunFair.Test.Infrastructure.Mocks;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Xunit;
@@ -61,20 +63,21 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
             """;
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(changeLog);
+        TimeProvider timeProvider = MockDateTimeSources.Past;
         ChangeLogDocument result = ChangeLogUpdater.CreateRelease(
             document: document,
             version: "1.0.0",
             pending: false,
-            language: Language
+            language: Language,
+            timeProvider: timeProvider
         );
 
-        // A non-pending release should have a date that is a valid date string (not "TBD")
+        string expectedDate = timeProvider
+            .GetLocalNow()
+            .LocalDateTime.ToString(format: Language.DateFormat, provider: CultureInfo.InvariantCulture);
+
         Assert.False(result.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
-        Assert.NotEqual(expected: "TBD", actual: result.Releases[0].Date, comparer: StringComparer.Ordinal);
-        Assert.False(
-            string.IsNullOrEmpty(result.Releases[0].Date),
-            userMessage: "Expected a date to be set on the release"
-        );
+        Assert.Equal(expected: expectedDate, actual: result.Releases[0].Date, comparer: StringComparer.Ordinal);
     }
 
     [Fact]
@@ -105,7 +108,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
             .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.CompletedTask);
 
-        ChangeLogUpdater updater = new(storage, new ChangeLogParser());
+        ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
         string tempFile = Path.Combine(this.TempFolder, "test.md");
         await File.WriteAllTextAsync(tempFile, string.Empty, cancellationTokenSource.Token);
@@ -150,7 +153,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
             .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.CompletedTask);
 
-        ChangeLogUpdater updater = new(storage, new ChangeLogParser());
+        ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
         string tempFile = Path.Combine(this.TempFolder, "test-release.md");
 

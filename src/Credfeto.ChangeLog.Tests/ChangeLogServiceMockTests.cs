@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
 using FunFair.Test.Common;
+using FunFair.Test.Infrastructure.Mocks;
 using NSubstitute;
 using Xunit;
 
@@ -216,7 +217,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
             .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.CompletedTask);
 
-        ChangeLogUpdater updater = new(storage, new ChangeLogParser());
+        ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
         string tempFile = System.IO.Path.GetTempFileName();
         try
@@ -256,7 +257,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
             .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.CompletedTask);
 
-        ChangeLogUpdater updater = new(storage, new ChangeLogParser());
+        ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
         string tempFile = System.IO.Path.GetTempFileName();
         try

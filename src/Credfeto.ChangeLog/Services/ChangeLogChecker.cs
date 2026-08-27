@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -15,12 +14,7 @@ using ZLinq;
 
 namespace Credfeto.ChangeLog.Services;
 
-[SuppressMessage(
-    category: "Microsoft.Performance",
-    checkId: "CA1812: Avoid uninstantiated internal classes",
-    Justification = "Registered in DI"
-)]
-internal sealed class ChangeLogChecker : IChangeLogChecker
+public sealed class ChangeLogChecker : IChangeLogChecker
 {
     private readonly IChangeLogStorage _loader;
 

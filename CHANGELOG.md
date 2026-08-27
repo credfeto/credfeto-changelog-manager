@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+- ChangeLogUpdater no longer suppresses SonarAnalyzer S3267 (release-version validation now iterates release.Version directly instead of the full release object) or FunFair FFS0001 (release dates now come from an injected System.TimeProvider instead of DateTime.Now); ChangeLogChecker and FileSystemChangeLogStorage are now public rather than suppressing CA1812 (issue #364). BREAKING: ChangeLogUpdater's constructor now requires a TimeProvider, and the public static ChangeLogUpdater.CreateRelease gained a required timeProvider parameter
 ### Changed
 ### Deprecated
 ### Removed
