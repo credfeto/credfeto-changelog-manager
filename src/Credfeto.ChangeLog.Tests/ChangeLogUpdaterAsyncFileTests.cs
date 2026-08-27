@@ -214,9 +214,10 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
     // between the two (e.g. the blank line before the trailer comment moving out of
     // step) fails this test even though CreateEmptyAsyncCreatesFileMatchingTemplate
     // above would not (that test compares a fresh file to TemplateFile.Build, which
-    // moves in lockstep with any such bug). See also ChangeLogLinterTests/
-    // ChangeLogFixerTests for the rule that now actively enforces this blank line on
-    // pre-existing files, not just newly generated ones.
+    // moves in lockstep with any such bug). Add/remove never touch TrailingLines here,
+    // so this does not exercise ChangeLogFixer.EnsureBlankLineBeforeTrailerComment; see
+    // ChangeLogLinterTests/ChangeLogFixerTests instead for the rule that actively
+    // enforces this blank line on pre-existing files via lint/--fix.
     [Fact]
     public async Task AddThenRemoveEntryOnNewFileMatchesPristineSkeleton()
     {
