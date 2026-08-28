@@ -12,6 +12,5 @@ public sealed record ChangeLogLanguage(
     string DateFormat
 )
 {
-    public string UnreleasedHeader { get; } =
-        ChangeLogHeadingConstants.VersionHeaderPrefix + UnreleasedSectionName + "]";
+    public string UnreleasedHeader => ChangeLogHeadingConstants.VersionHeaderPrefix + this.UnreleasedSectionName + "]";
 }
