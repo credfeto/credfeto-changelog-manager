@@ -38,8 +38,10 @@ public static class TemplateFile
             .Append('\n')
             .Append("<!--\n")
             .Append(
-                "Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch\n"
+                "Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from ["
             )
+            .Append(language.UnreleasedSectionName)
+            .Append("] into here as they are merged into the appropriate release branch\n")
             .Append("-->\n")
             .Append('\n')
             .Append("## [0.0.0] - Project created")

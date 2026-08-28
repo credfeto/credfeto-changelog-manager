@@ -9,4 +9,7 @@ public sealed record ChangeLogLanguage(
     string UnreleasedSectionName,
     ImmutableArray<string> SectionOrder,
     string DateFormat
-);
+)
+{
+    public string UnreleasedHeader => "## [" + this.UnreleasedSectionName + "]";
+}

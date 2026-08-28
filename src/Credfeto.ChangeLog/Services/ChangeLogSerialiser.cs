@@ -52,8 +52,7 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
         ChangeLogLanguage language
     )
     {
-        string header = "## [" + language.UnreleasedSectionName + "]";
-        lines.Add(header);
+        lines.Add(language.UnreleasedHeader);
 
         foreach (ChangeLogSection section in unreleased.Sections)
         {
