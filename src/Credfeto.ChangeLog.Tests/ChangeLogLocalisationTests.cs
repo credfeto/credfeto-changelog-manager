@@ -30,9 +30,12 @@ public sealed class ChangeLogLocalisationTests : TestBase
     }
 
     [Theory]
-    [InlineData(ChangeLogLanguageFactory.Russian)]
-    [InlineData(ChangeLogLanguageFactory.Polish)]
-    public static async Task LocalisedTemplate_RoundTripsThroughSerialiseAndReparseAsync(string languageCode)
+    [InlineData(ChangeLogLanguageFactory.Russian, "## [Новое]")]
+    [InlineData(ChangeLogLanguageFactory.Polish, "## [Niewydane]")]
+    public static async Task LocalisedTemplate_RoundTripsThroughSerialiseAndReparseAsync(
+        string languageCode,
+        string expectedHeader
+    )
     {
         ChangeLogLanguage language = GetLanguage(languageCode);
 
@@ -41,13 +44,13 @@ public sealed class ChangeLogLocalisationTests : TestBase
         ChangeLogDocument reparsed = await ChangeLogTestHelper.ParseAsync(serialised, language);
 
         Assert.NotNull(reparsed.Unreleased);
-        Assert.Contains(language.UnreleasedHeader, serialised, StringComparison.Ordinal);
+        Assert.Contains(expectedHeader, serialised, StringComparison.Ordinal);
     }
 
     [Theory]
     [InlineData(ChangeLogLanguageFactory.Russian)]
     [InlineData(ChangeLogLanguageFactory.Polish)]
-    public static async Task LocalisedTemplate_LintDoesNotReportMissingUnreleasedSectionAsync(string languageCode)
+    public static async Task LocalisedTemplate_LintReportsNoErrorsAsync(string languageCode)
     {
         ChangeLogLanguage language = GetLanguage(languageCode);
 
@@ -55,6 +58,6 @@ public sealed class ChangeLogLocalisationTests : TestBase
 
         IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(document: document, language: language);
 
-        Assert.DoesNotContain(errors, e => StringComparer.Ordinal.Equals(e.Message, "Missing [Unreleased] section"));
+        Assert.Empty(errors);
     }
 }
