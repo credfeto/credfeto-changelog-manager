@@ -24,18 +24,22 @@ public sealed class ChangeLogParser : IChangeLogParser
 
     private static ChangeLogDocument Parse(IReadOnlyList<string> lines, ChangeLogLanguage language)
     {
-        int unreleasedStart = lines.FindUnreleasedStart(language);
+        string unreleasedHeader = language.UnreleasedHeader;
+        int unreleasedStart = lines.FindUnreleasedStart(unreleasedHeader);
         if (unreleasedStart < 0)
         {
             return new(HeaderLines: [.. lines], Unreleased: null, Releases: [], TrailingLines: []);
         }
 
-        int unreleasedEnd = lines.FindUnreleasedEnd(unreleasedStart: unreleasedStart, language: language);
+        int unreleasedEnd = lines.FindUnreleasedEnd(
+            unreleasedStart: unreleasedStart,
+            unreleasedHeader: unreleasedHeader
+        );
         ChangeLogUnreleased unreleased = ParseUnreleased(lines, start: unreleasedStart, end: unreleasedEnd);
         (ImmutableArray<ChangeLogRelease> releases, ImmutableArray<string> trailingLines) = ParseReleases(
             lines: lines,
             start: unreleasedEnd,
-            language: language
+            unreleasedHeader: unreleasedHeader
         );
         return new(
             HeaderLines: CollectLines(lines, start: 0, end: unreleasedStart),
@@ -211,12 +215,11 @@ public sealed class ChangeLogParser : IChangeLogParser
     private static (ImmutableArray<ChangeLogRelease> Releases, ImmutableArray<string> TrailingLines) ParseReleases(
         IReadOnlyList<string> lines,
         int start,
-        ChangeLogLanguage language
+        string unreleasedHeader
     )
     {
         List<ChangeLogRelease> releases = [];
         ReleaseParseState state = new();
-        string unreleasedHeader = language.UnreleasedHeader;
 
         for (int i = start; i < lines.Count; i++)
         {
@@ -250,9 +253,7 @@ public sealed class ChangeLogParser : IChangeLogParser
             state.EnterTrailerMode();
             state.TrailingLines.Add(line);
         }
-        else if (
-            line.IsVersionHeader() && !Unreleased.IsUnreleasedHeader(line: line, unreleasedHeader: unreleasedHeader)
-        )
+        else if (line.IsReleaseHeader(unreleasedHeader))
         {
             state.Flush(releases);
             state.StartRelease(line: line, lineNumber: lineIndex + 1);

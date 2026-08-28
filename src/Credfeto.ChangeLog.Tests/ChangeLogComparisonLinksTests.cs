@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using Credfeto.ChangeLog.Models;
-using Credfeto.ChangeLog.Services;
+using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
 using Xunit;
 
@@ -43,21 +43,10 @@ public sealed class ChangeLogComparisonLinksTests : TestBase
         [1.0.0]: https://github.com/owner/repo/releases/tag/v1.0.0
         """;
 
-    private static readonly ChangeLogLanguage Language = new ChangeLogLanguageFactory().Get(
-        ChangeLogLanguageFactory.English
-    );
+    private static ValueTask<ChangeLogDocument> ParseAsync(string content) => ChangeLogTestHelper.ParseAsync(content);
 
-    private static ValueTask<ChangeLogDocument> ParseAsync(string content)
-    {
-        ChangeLogParser parser = new();
-        return parser.ParseAsync(content, language: Language, cancellationToken: default);
-    }
-
-    private static ValueTask<string> SerialiseAsync(ChangeLogDocument document)
-    {
-        ChangeLogSerialiser serialiser = new();
-        return serialiser.SerialiseAsync(document, language: Language, cancellationToken: default);
-    }
+    private static ValueTask<string> SerialiseAsync(ChangeLogDocument document) =>
+        ChangeLogTestHelper.SerialiseAsync(document);
 
     [Fact]
     public async Task ParseCapturesComparisonLinksInTrailingLinesAsync()

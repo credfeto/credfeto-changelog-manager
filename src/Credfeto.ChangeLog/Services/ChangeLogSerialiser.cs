@@ -16,11 +16,11 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
         CancellationToken cancellationToken
     )
     {
-        string serialised = SerialiseCore(document: document, language: language);
+        string serialised = SerialiseCore(document: document, unreleasedHeader: language.UnreleasedHeader);
         return ValueTask.FromResult(serialised);
     }
 
-    private static string SerialiseCore(ChangeLogDocument document, ChangeLogLanguage language)
+    private static string SerialiseCore(ChangeLogDocument document, string unreleasedHeader)
     {
         List<string> lines = [];
         lines.AddRange(document.HeaderLines);
@@ -31,7 +31,7 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
                 unreleased: document.Unreleased,
                 lines: lines,
                 hasFollowingRelease: !document.Releases.IsEmpty,
-                language: language
+                unreleasedHeader: unreleasedHeader
             );
         }
 
@@ -49,10 +49,10 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
         ChangeLogUnreleased unreleased,
         List<string> lines,
         bool hasFollowingRelease,
-        ChangeLogLanguage language
+        string unreleasedHeader
     )
     {
-        lines.Add(language.UnreleasedHeader);
+        lines.Add(unreleasedHeader);
 
         foreach (ChangeLogSection section in unreleased.Sections)
         {

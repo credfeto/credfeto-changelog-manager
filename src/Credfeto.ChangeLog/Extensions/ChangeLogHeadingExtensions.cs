@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Credfeto.ChangeLog.Helpers;
+using Credfeto.ChangeLog.Constants;
 
 namespace Credfeto.ChangeLog.Extensions;
 
 public static class ChangeLogHeadingExtensions
 {
     private const string CHANGE_TYPE_HEADING_PREFIX = "### ";
-    private const string VERSION_HEADER_PREFIX = "## [";
     private const string REFERENCE_LINK_SEPARATOR = "]: ";
 
     public static bool IsComparisonLink(this string line)
@@ -24,7 +23,15 @@ public static class ChangeLogHeadingExtensions
 
     public static bool IsVersionHeader(this string line)
     {
-        return line.StartsWith(value: VERSION_HEADER_PREFIX, comparisonType: StringComparison.Ordinal);
+        return line.StartsWith(
+            value: ChangeLogHeadingConstants.VersionHeaderPrefix,
+            comparisonType: StringComparison.Ordinal
+        );
+    }
+
+    public static bool IsReleaseHeader(this string line, string unreleasedHeader)
+    {
+        return line.IsVersionHeader() && !line.EqualsOrdinal(unreleasedHeader);
     }
 
     public static string GetChangeTypeName(this string line)
@@ -37,13 +44,11 @@ public static class ChangeLogHeadingExtensions
         return CHANGE_TYPE_HEADING_PREFIX + name;
     }
 
-    public static int FindUnreleasedStart(this IReadOnlyList<string> lines, ChangeLogLanguage language)
+    public static int FindUnreleasedStart(this IReadOnlyList<string> lines, string unreleasedHeader)
     {
-        string unreleasedHeader = language.UnreleasedHeader;
-
         for (int i = 0; i < lines.Count; i++)
         {
-            if (Unreleased.IsUnreleasedHeader(line: lines[i], unreleasedHeader: unreleasedHeader))
+            if (lines[i].EqualsOrdinal(unreleasedHeader))
             {
                 return i;
             }
@@ -52,20 +57,11 @@ public static class ChangeLogHeadingExtensions
         return -1;
     }
 
-    public static int FindUnreleasedEnd(
-        this IReadOnlyList<string> lines,
-        int unreleasedStart,
-        ChangeLogLanguage language
-    )
+    public static int FindUnreleasedEnd(this IReadOnlyList<string> lines, int unreleasedStart, string unreleasedHeader)
     {
-        string unreleasedHeader = language.UnreleasedHeader;
-
         for (int i = unreleasedStart + 1; i < lines.Count; i++)
         {
-            if (
-                lines[i].IsVersionHeader()
-                && !Unreleased.IsUnreleasedHeader(line: lines[i], unreleasedHeader: unreleasedHeader)
-            )
+            if (lines[i].IsReleaseHeader(unreleasedHeader))
             {
                 return i;
             }

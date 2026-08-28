@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
+using Credfeto.ChangeLog.Constants;
 
 namespace Credfeto.ChangeLog;
 
@@ -11,5 +12,5 @@ public sealed record ChangeLogLanguage(
     string DateFormat
 )
 {
-    public string UnreleasedHeader => "## [" + this.UnreleasedSectionName + "]";
+    public string UnreleasedHeader => ChangeLogHeadingConstants.VersionHeaderPrefix + this.UnreleasedSectionName + "]";
 }

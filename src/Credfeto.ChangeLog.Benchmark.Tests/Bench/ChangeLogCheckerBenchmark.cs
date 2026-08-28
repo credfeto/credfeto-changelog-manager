@@ -26,10 +26,6 @@ public class ChangeLogCheckerBenchmark
 
     private const string ORIGIN_BRANCH_NAME = "origin/main";
 
-    private static readonly ChangeLogLanguage Language = new ChangeLogLanguageFactory().Get(
-        ChangeLogLanguageFactory.English
-    );
-
     private const string CHANGE_LOG_WITH_RELEASES = """
         # Changelog
         All notable changes to this project will be documented in this file.
@@ -103,7 +99,7 @@ public class ChangeLogCheckerBenchmark
         return checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: ORIGIN_BRANCH_NAME,
-            language: Language,
+            language: BenchmarkLanguage.English,
             cancellationToken: CancellationToken.None
         );
     }
@@ -117,7 +113,7 @@ public class ChangeLogCheckerBenchmark
         return checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: ORIGIN_BRANCH_NAME,
-            language: Language,
+            language: BenchmarkLanguage.English,
             cancellationToken: CancellationToken.None
         );
     }
