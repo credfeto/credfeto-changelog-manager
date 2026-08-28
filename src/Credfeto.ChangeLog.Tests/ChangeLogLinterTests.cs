@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
+using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
 using Xunit;
 
@@ -379,8 +380,7 @@ public sealed class ChangeLogLinterTests : TestBase
 
     private static ChangeLogDocument Parse(string content)
     {
-        ChangeLogParser parser = new();
-        return parser.ParseAsync(content, language: Language, cancellationToken: default).GetAwaiter().GetResult();
+        return ChangeLogTestHelper.ParseAsync(content, Language).GetAwaiter().GetResult();
     }
 
     [Fact]

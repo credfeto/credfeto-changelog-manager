@@ -12,12 +12,17 @@ namespace Credfeto.ChangeLog.Tests;
 
 public sealed class ChangeLogLocalisationTests : TestBase
 {
+    private static ChangeLogLanguage GetLanguage(string languageCode)
+    {
+        return new ChangeLogLanguageFactory().Get(languageCode);
+    }
+
     [Theory]
     [InlineData(ChangeLogLanguageFactory.Russian)]
     [InlineData(ChangeLogLanguageFactory.Polish)]
     public static async Task LocalisedTemplate_ParsesWithNonNullUnreleasedSectionAsync(string languageCode)
     {
-        ChangeLogLanguage language = new ChangeLogLanguageFactory().Get(languageCode);
+        ChangeLogLanguage language = GetLanguage(languageCode);
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(TemplateFile.Build(language), language);
 
@@ -29,7 +34,7 @@ public sealed class ChangeLogLocalisationTests : TestBase
     [InlineData(ChangeLogLanguageFactory.Polish)]
     public static async Task LocalisedTemplate_RoundTripsThroughSerialiseAndReparseAsync(string languageCode)
     {
-        ChangeLogLanguage language = new ChangeLogLanguageFactory().Get(languageCode);
+        ChangeLogLanguage language = GetLanguage(languageCode);
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(TemplateFile.Build(language), language);
         string serialised = await ChangeLogTestHelper.SerialiseAsync(document, language);
@@ -44,7 +49,7 @@ public sealed class ChangeLogLocalisationTests : TestBase
     [InlineData(ChangeLogLanguageFactory.Polish)]
     public static async Task LocalisedTemplate_LintDoesNotReportMissingUnreleasedSectionAsync(string languageCode)
     {
-        ChangeLogLanguage language = new ChangeLogLanguageFactory().Get(languageCode);
+        ChangeLogLanguage language = GetLanguage(languageCode);
 
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(TemplateFile.Build(language), language);
 

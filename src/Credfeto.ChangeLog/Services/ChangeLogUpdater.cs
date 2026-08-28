@@ -133,7 +133,7 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         );
     }
 
-    private async Task SaveWithPreambleAsync(
+    private ValueTask SaveWithPreambleAsync(
         string changeLogFileName,
         ChangeLogDocument document,
         ChangeLogLanguage language,
@@ -141,7 +141,7 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     )
     {
         ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(document);
-        await this._storage.SaveAsync(
+        return this._storage.SaveAsync(
             changeLogFileName,
             document: withPreamble,
             language: language,

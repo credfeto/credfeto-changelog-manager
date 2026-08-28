@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
+using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
 using Xunit;
 
@@ -38,14 +39,12 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 
     private static ValueTask<ChangeLogDocument> ParseAsync(string content)
     {
-        ChangeLogParser parser = new();
-        return parser.ParseAsync(content, language: Language, cancellationToken: default);
+        return ChangeLogTestHelper.ParseAsync(content, Language);
     }
 
     private static ValueTask<string> SerialiseAsync(ChangeLogDocument document)
     {
-        ChangeLogSerialiser serialiser = new();
-        return serialiser.SerialiseAsync(document, language: Language, cancellationToken: default);
+        return ChangeLogTestHelper.SerialiseAsync(document, Language);
     }
 
     private static void AssertContainsPreamble(string result)

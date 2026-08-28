@@ -62,24 +62,19 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
             .Returns(ValueTask.CompletedTask);
     }
 
-    private static SavedDocumentCapture MockChangeLogStorageSaveCapturing(IChangeLogStorage storage)
+    private static ChangeLogDocument?[] MockChangeLogStorageSaveCapturing(IChangeLogStorage storage)
     {
-        SavedDocumentCapture capture = new();
+        ChangeLogDocument?[] captured = new ChangeLogDocument?[1];
         storage
             .SaveAsync(
                 Arg.Any<string>(),
-                Arg.Do<ChangeLogDocument>(d => capture.Document = d),
+                Arg.Do<ChangeLogDocument>(d => captured[0] = d),
                 Arg.Any<ChangeLogLanguage>(),
                 Arg.Any<CancellationToken>()
             )
             .Returns(ValueTask.CompletedTask);
 
-        return capture;
-    }
-
-    private sealed class SavedDocumentCapture
-    {
-        public ChangeLogDocument? Document { get; set; }
+        return captured;
     }
 
     [Fact]
@@ -107,7 +102,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
         MockChangeLogStorageLoad(storage, document);
 
-        SavedDocumentCapture capture = MockChangeLogStorageSaveCapturing(storage);
+        ChangeLogDocument?[] captured = MockChangeLogStorageSaveCapturing(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
@@ -125,7 +120,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         string expectedDate = MockDateTimeSources
             .Past.GetLocalNow()
             .ToString(format: Language.DateFormat, formatProvider: CultureInfo.InvariantCulture);
-        ChangeLogDocument? saved = capture.Document;
+        ChangeLogDocument? saved = captured[0];
         Assert.NotNull(saved);
         Assert.False(saved.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
         Assert.Equal(expected: expectedDate, actual: saved.Releases[0].Date, comparer: StringComparer.Ordinal);
@@ -206,7 +201,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
         MockChangeLogStorageLoad(storage, document);
 
-        SavedDocumentCapture capture = MockChangeLogStorageSaveCapturing(storage);
+        ChangeLogDocument?[] captured = MockChangeLogStorageSaveCapturing(storage);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
@@ -229,7 +224,7 @@ public sealed class ChangeLogUpdaterAsyncFileTests : LoggingFolderCleanupTestBas
                 Arg.Any<ChangeLogLanguage>(),
                 Arg.Any<CancellationToken>()
             );
-        ChangeLogDocument? saved = capture.Document;
+        ChangeLogDocument? saved = captured[0];
         Assert.NotNull(saved);
         Assert.False(saved.Releases.IsEmpty, userMessage: "Expected at least one release to be created");
         Assert.Equal(
