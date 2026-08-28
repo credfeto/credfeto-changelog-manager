@@ -1,8 +1,6 @@
-using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.ChangeLog.Exceptions;
 using Credfeto.ChangeLog.Models;
-using Credfeto.ChangeLog.Services;
 using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
 using Xunit;
@@ -90,14 +88,8 @@ public sealed class ChangeLogParserVersionHeaderTests : TestBase
     {
         string changeLog = BuildChangeLog("## [1.2.3] [YANKED]");
 
-        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
-
         ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(changeLog);
-        string serialised = await new ChangeLogSerialiser().SerialiseAsync(
-            document,
-            language: ChangeLogTestHelper.EnglishLanguage,
-            cancellationToken: cancellationToken
-        );
+        string serialised = await ChangeLogTestHelper.SerialiseAsync(document);
         ChangeLogDocument reparsed = await ChangeLogTestHelper.ParseAsync(serialised);
 
         ChangeLogRelease release = reparsed.Releases[0];

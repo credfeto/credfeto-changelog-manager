@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Extensions;
 using Credfeto.ChangeLog.Helpers;
-using Credfeto.ChangeLog.Models;
 using LibGit2Sharp;
 using ZLinq;
 
@@ -16,11 +15,11 @@ namespace Credfeto.ChangeLog.Services;
 
 public sealed class ChangeLogChecker : IChangeLogChecker
 {
-    private readonly IChangeLogStorage _loader;
+    private readonly IChangeLogReader _reader;
 
-    public ChangeLogChecker(IChangeLogStorage loader)
+    public ChangeLogChecker(IChangeLogReader reader)
     {
-        this._loader = loader;
+        this._reader = reader;
     }
 
     public async Task<bool> ChangeLogModifiedInReleaseSectionAsync(
@@ -31,9 +30,8 @@ public sealed class ChangeLogChecker : IChangeLogChecker
     )
     {
         changeLogFileName = GetFullChangeLogFilePath(changeLogFileName);
-        int? position = await FindFirstReleaseVersionPositionAsync(
+        int? position = await this._reader.FindFirstReleaseVersionPositionAsync(
             changeLogFileName: changeLogFileName,
-            loader: this._loader,
             language: language,
             cancellationToken: cancellationToken
         );
@@ -100,22 +98,6 @@ public sealed class ChangeLogChecker : IChangeLogChecker
         Console.WriteLine("Could not find change in diff");
 
         return true;
-    }
-
-    private static async Task<int?> FindFirstReleaseVersionPositionAsync(
-        string changeLogFileName,
-        IChangeLogStorage loader,
-        ChangeLogLanguage language,
-        CancellationToken cancellationToken
-    )
-    {
-        ChangeLogDocument document = await loader.LoadAsync(
-            changeLogFileName,
-            language: language,
-            cancellationToken: cancellationToken
-        );
-
-        return document.Releases.IsEmpty ? null : document.Releases[0].LineNumber;
     }
 
     private static Branch FindOriginBranch(Repository repo, string originBranchName)
