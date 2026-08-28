@@ -216,10 +216,17 @@ public sealed class ChangeLogParser : IChangeLogParser
     {
         List<ChangeLogRelease> releases = [];
         ReleaseParseState state = new();
+        string unreleasedHeader = language.UnreleasedHeader;
 
         for (int i = start; i < lines.Count; i++)
         {
-            ProcessReleaseLine(line: lines[i], lineIndex: i, releases: releases, state: state, language: language);
+            ProcessReleaseLine(
+                line: lines[i],
+                lineIndex: i,
+                releases: releases,
+                state: state,
+                unreleasedHeader: unreleasedHeader
+            );
         }
 
         state.Flush(releases);
@@ -231,7 +238,7 @@ public sealed class ChangeLogParser : IChangeLogParser
         int lineIndex,
         List<ChangeLogRelease> releases,
         ReleaseParseState state,
-        ChangeLogLanguage language
+        string unreleasedHeader
     )
     {
         if (state.InTrailerMode)
@@ -243,7 +250,9 @@ public sealed class ChangeLogParser : IChangeLogParser
             state.EnterTrailerMode();
             state.TrailingLines.Add(line);
         }
-        else if (line.IsVersionHeader() && !Unreleased.IsUnreleasedHeader(line: line, language: language))
+        else if (
+            line.IsVersionHeader() && !Unreleased.IsUnreleasedHeader(line: line, unreleasedHeader: unreleasedHeader)
+        )
         {
             state.Flush(releases);
             state.StartRelease(line: line, lineNumber: lineIndex + 1);

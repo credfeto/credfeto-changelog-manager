@@ -60,10 +60,9 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
             cancellationToken: cancellationToken
         );
         ChangeLogDocument updated = AddEntry(document: document, type: type, message: message);
-        ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
-        await this._storage.SaveAsync(
-            changeLogFileName,
-            document: withPreamble,
+        await this.SaveWithPreambleAsync(
+            changeLogFileName: changeLogFileName,
+            document: updated,
             language: language,
             cancellationToken: cancellationToken
         );
@@ -83,10 +82,9 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
             cancellationToken: cancellationToken
         );
         ChangeLogDocument updated = RemoveEntry(document: document, type: type, message: message);
-        ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
-        await this._storage.SaveAsync(
-            changeLogFileName,
-            document: withPreamble,
+        await this.SaveWithPreambleAsync(
+            changeLogFileName: changeLogFileName,
+            document: updated,
             language: language,
             cancellationToken: cancellationToken
         );
@@ -107,10 +105,9 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         );
         string date = pending ? ChangeLogRelease.PendingDate : this.CurrentDate(language);
         ChangeLogDocument updated = CreateRelease(document: document, version: version, date: date);
-        ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
-        await this._storage.SaveAsync(
-            changeLogFileName,
-            document: withPreamble,
+        await this.SaveWithPreambleAsync(
+            changeLogFileName: changeLogFileName,
+            document: updated,
             language: language,
             cancellationToken: cancellationToken
         );
@@ -128,7 +125,22 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
             cancellationToken: cancellationToken
         );
         ChangeLogDocument updated = EnsureUnreleasedSections(document: document, language: language);
-        ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(updated);
+        await this.SaveWithPreambleAsync(
+            changeLogFileName: changeLogFileName,
+            document: updated,
+            language: language,
+            cancellationToken: cancellationToken
+        );
+    }
+
+    private async Task SaveWithPreambleAsync(
+        string changeLogFileName,
+        ChangeLogDocument document,
+        ChangeLogLanguage language,
+        CancellationToken cancellationToken
+    )
+    {
+        ChangeLogDocument withPreamble = ChangeLogFixer.EnsurePreamble(document);
         await this._storage.SaveAsync(
             changeLogFileName,
             document: withPreamble,

@@ -62,7 +62,7 @@ public sealed class ChangeLogLocalisationTests : TestBase
         ChangeLogDocument reparsed = Parse(serialised, language);
 
         Assert.NotNull(reparsed.Unreleased);
-        Assert.Contains("## [" + language.UnreleasedSectionName + "]", serialised, StringComparison.Ordinal);
+        Assert.Contains(language.UnreleasedHeader, serialised, StringComparison.Ordinal);
     }
 
     [Theory]

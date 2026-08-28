@@ -39,9 +39,11 @@ public static class ChangeLogHeadingExtensions
 
     public static int FindUnreleasedStart(this IReadOnlyList<string> lines, ChangeLogLanguage language)
     {
+        string unreleasedHeader = language.UnreleasedHeader;
+
         for (int i = 0; i < lines.Count; i++)
         {
-            if (Unreleased.IsUnreleasedHeader(line: lines[i], language: language))
+            if (Unreleased.IsUnreleasedHeader(line: lines[i], unreleasedHeader: unreleasedHeader))
             {
                 return i;
             }
@@ -56,9 +58,14 @@ public static class ChangeLogHeadingExtensions
         ChangeLogLanguage language
     )
     {
+        string unreleasedHeader = language.UnreleasedHeader;
+
         for (int i = unreleasedStart + 1; i < lines.Count; i++)
         {
-            if (lines[i].IsVersionHeader() && !Unreleased.IsUnreleasedHeader(line: lines[i], language: language))
+            if (
+                lines[i].IsVersionHeader()
+                && !Unreleased.IsUnreleasedHeader(line: lines[i], unreleasedHeader: unreleasedHeader)
+            )
             {
                 return i;
             }
