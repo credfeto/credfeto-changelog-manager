@@ -15,7 +15,12 @@ public sealed class ChangeLogParser : IChangeLogParser
         string content,
         ChangeLogLanguage language,
         CancellationToken cancellationToken
-    ) => ValueTask.FromResult(Parse(lines: content.SplitToLines(), language: language));
+    )
+    {
+        IReadOnlyList<string> lines = content.SplitToLines();
+        ChangeLogDocument document = Parse(lines: lines, language: language);
+        return ValueTask.FromResult(document);
+    }
 
     private static ChangeLogDocument Parse(IReadOnlyList<string> lines, ChangeLogLanguage language)
     {

@@ -6,6 +6,7 @@ internal static class Unreleased
 {
     public static bool IsUnreleasedHeader(string line, ChangeLogLanguage language)
     {
-        return StringComparer.Ordinal.Equals(x: line, y: "## [" + language.UnreleasedSectionName + "]");
+        string expectedHeader = "## [" + language.UnreleasedSectionName + "]";
+        return StringComparer.Ordinal.Equals(x: line, y: expectedHeader);
     }
 }

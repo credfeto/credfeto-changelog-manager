@@ -14,7 +14,11 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
         ChangeLogDocument document,
         ChangeLogLanguage language,
         CancellationToken cancellationToken
-    ) => ValueTask.FromResult(SerialiseCore(document: document, language: language));
+    )
+    {
+        string serialised = SerialiseCore(document: document, language: language);
+        return ValueTask.FromResult(serialised);
+    }
 
     private static string SerialiseCore(ChangeLogDocument document, ChangeLogLanguage language)
     {
@@ -48,7 +52,8 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
         ChangeLogLanguage language
     )
     {
-        lines.Add("## [" + language.UnreleasedSectionName + "]");
+        string header = "## [" + language.UnreleasedSectionName + "]";
+        lines.Add(header);
 
         foreach (ChangeLogSection section in unreleased.Sections)
         {
