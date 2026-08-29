@@ -51,48 +51,31 @@ public sealed class ChangeLogParser : IChangeLogParser
 
     private static ChangeLogUnreleased ParseUnreleased(IReadOnlyList<string> lines, int start, int end)
     {
-        List<ChangeLogSection> sections = [];
-        List<string> trailer = [];
-        string? currentName = null;
-        List<string> currentEntries = [];
-        int blanksBeforeFirstSection = 0;
-        int currentSectionLine = 0;
+        UnreleasedParseState state = new();
 
         for (int i = start + 1; i < end; i++)
         {
-            if (
-                !ProcessUnreleasedLine(
-                    lines: lines,
-                    lineIndex: i,
-                    end: end,
-                    sections: sections,
-                    currentName: ref currentName,
-                    currentSectionLine: ref currentSectionLine,
-                    currentEntries: currentEntries,
-                    trailer: trailer,
-                    blanksBeforeFirstSection: ref blanksBeforeFirstSection
-                )
-            )
+            if (!ProcessUnreleasedLine(lines: lines, lineIndex: i, end: end, state: state))
             {
                 break;
             }
         }
 
-        FlushSection(sections: sections, name: currentName, lineNumber: currentSectionLine, entries: currentEntries);
+        state.FlushSection();
         MoveTrailingBlanksFromLastSection(
-            sections: sections,
-            trailer: trailer,
-            blanksBeforeFirstSection: blanksBeforeFirstSection
+            sections: state.Sections,
+            trailer: state.Trailer,
+            blanksBeforeFirstSection: state.BlanksBeforeFirstSection
         );
         return new(
             LineNumber: start + 1,
-            Sections: [.. sections],
-            TrailingLines: [.. trailer],
+            Sections: [.. state.Sections],
+            TrailingLines: [.. state.Trailer],
             // trailer is always a contiguous suffix of the [start + 1, end) line range (every
             // other path, sections/entries, blanksBeforeFirstSection, accounts for every line
             // before it), so its own start line is derived directly from that range rather than
             // reconstructed from section/entry counts; see MoveTrailingBlanksFromLastSection.
-            TrailingLinesStartLineNumber: end - trailer.Count + 1
+            TrailingLinesStartLineNumber: end - state.Trailer.Count + 1
         );
     }
 
@@ -138,63 +121,39 @@ public sealed class ChangeLogParser : IChangeLogParser
         IReadOnlyList<string> lines,
         int lineIndex,
         int end,
-        List<ChangeLogSection> sections,
-        ref string? currentName,
-        ref int currentSectionLine,
-        List<string> currentEntries,
-        List<string> trailer,
-        ref int blanksBeforeFirstSection
+        UnreleasedParseState state
     )
     {
         string line = lines[lineIndex];
 
         if (line.StartsWithHtmlComment())
         {
-            MoveTrailingBlanks(source: currentEntries, destination: trailer);
-            CollectTrailer(lines: lines, from: lineIndex, to: end, trailer: trailer);
+            MoveTrailingBlanks(source: state.CurrentEntries, destination: state.Trailer);
+            CollectTrailer(lines: lines, from: lineIndex, to: end, trailer: state.Trailer);
             return false;
         }
 
         if (line.IsChangeTypeHeading())
         {
-            FlushSection(
-                sections: sections,
-                name: currentName,
-                lineNumber: currentSectionLine,
-                entries: currentEntries
-            );
-            currentName = line.GetChangeTypeName();
-            currentSectionLine = lineIndex + 1;
-            currentEntries.Clear();
-            blanksBeforeFirstSection = 0;
+            state.FlushSection();
+            state.CurrentName = line.GetChangeTypeName();
+            state.CurrentSectionLine = lineIndex + 1;
+            state.BlanksBeforeFirstSection = 0;
         }
-        else if (currentName is not null)
+        else if (state.CurrentName is not null)
         {
-            currentEntries.Add(line);
+            state.CurrentEntries.Add(line);
         }
         else if (string.IsNullOrWhiteSpace(line))
         {
-            blanksBeforeFirstSection++;
+            state.BlanksBeforeFirstSection++;
         }
         else
         {
-            blanksBeforeFirstSection = 0;
+            state.BlanksBeforeFirstSection = 0;
         }
 
         return true;
-    }
-
-    private static void FlushSection(
-        List<ChangeLogSection> sections,
-        string? name,
-        int lineNumber,
-        List<string> entries
-    )
-    {
-        if (name is not null)
-        {
-            sections.Add(new(Name: name, LineNumber: lineNumber, Entries: [.. entries]));
-        }
     }
 
     // Assumes destination is empty: blanks are appended in original order, so a non-empty
@@ -324,6 +283,28 @@ public sealed class ChangeLogParser : IChangeLogParser
 
         int blankLines = unreleased.TrailingLines.CountTrailingBlankLines();
         return releases.SetItem(index: 0, releases[0] with { BlankLinesBeforeHeading = blankLines });
+    }
+
+    private sealed class UnreleasedParseState
+    {
+        public string? CurrentName { get; set; }
+        public int CurrentSectionLine { get; set; }
+        public List<string> CurrentEntries { get; } = [];
+        public int BlanksBeforeFirstSection { get; set; }
+        public List<ChangeLogSection> Sections { get; } = [];
+        public List<string> Trailer { get; } = [];
+
+        public void FlushSection()
+        {
+            if (this.CurrentName is not null)
+            {
+                this.Sections.Add(
+                    new(Name: this.CurrentName, LineNumber: this.CurrentSectionLine, Entries: [.. this.CurrentEntries])
+                );
+            }
+
+            this.CurrentEntries.Clear();
+        }
     }
 
     private sealed class ReleaseParseState
