@@ -56,6 +56,7 @@ public sealed class ChangeLogParser : IChangeLogParser
         string? currentName = null;
         List<string> currentEntries = [];
         int blanksBeforeFirstSection = 0;
+        int currentSectionLine = 0;
 
         for (int i = start + 1; i < end; i++)
         {
@@ -66,6 +67,7 @@ public sealed class ChangeLogParser : IChangeLogParser
                     end: end,
                     sections: sections,
                     currentName: ref currentName,
+                    currentSectionLine: ref currentSectionLine,
                     currentEntries: currentEntries,
                     trailer: trailer,
                     blanksBeforeFirstSection: ref blanksBeforeFirstSection
@@ -76,7 +78,7 @@ public sealed class ChangeLogParser : IChangeLogParser
             }
         }
 
-        FlushSection(sections: sections, name: currentName, entries: currentEntries);
+        FlushSection(sections: sections, name: currentName, lineNumber: currentSectionLine, entries: currentEntries);
         MoveTrailingBlanksFromLastSection(
             sections: sections,
             trailer: trailer,
@@ -138,6 +140,7 @@ public sealed class ChangeLogParser : IChangeLogParser
         int end,
         List<ChangeLogSection> sections,
         ref string? currentName,
+        ref int currentSectionLine,
         List<string> currentEntries,
         List<string> trailer,
         ref int blanksBeforeFirstSection
@@ -154,8 +157,14 @@ public sealed class ChangeLogParser : IChangeLogParser
 
         if (line.IsChangeTypeHeading())
         {
-            FlushSection(sections: sections, name: currentName, entries: currentEntries);
+            FlushSection(
+                sections: sections,
+                name: currentName,
+                lineNumber: currentSectionLine,
+                entries: currentEntries
+            );
             currentName = line.GetChangeTypeName();
+            currentSectionLine = lineIndex + 1;
             currentEntries.Clear();
             blanksBeforeFirstSection = 0;
         }
@@ -175,11 +184,16 @@ public sealed class ChangeLogParser : IChangeLogParser
         return true;
     }
 
-    private static void FlushSection(List<ChangeLogSection> sections, string? name, List<string> entries)
+    private static void FlushSection(
+        List<ChangeLogSection> sections,
+        string? name,
+        int lineNumber,
+        List<string> entries
+    )
     {
         if (name is not null)
         {
-            sections.Add(new(Name: name, LineNumber: 0, Entries: [.. entries]));
+            sections.Add(new(Name: name, LineNumber: lineNumber, Entries: [.. entries]));
         }
     }
 
