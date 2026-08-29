@@ -99,6 +99,7 @@ public class ChangeLogCheckerBenchmark
         return checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: ORIGIN_BRANCH_NAME,
+            language: BenchmarkLanguage.English,
             cancellationToken: CancellationToken.None
         );
     }
@@ -112,6 +113,7 @@ public class ChangeLogCheckerBenchmark
         return checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: ORIGIN_BRANCH_NAME,
+            language: BenchmarkLanguage.English,
             cancellationToken: CancellationToken.None
         );
     }

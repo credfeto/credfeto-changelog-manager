@@ -6,5 +6,9 @@ namespace Credfeto.ChangeLog;
 
 public interface IChangeLogParser
 {
-    ValueTask<ChangeLogDocument> ParseAsync(string content, CancellationToken cancellationToken);
+    ValueTask<ChangeLogDocument> ParseAsync(
+        string content,
+        ChangeLogLanguage language,
+        CancellationToken cancellationToken
+    );
 }

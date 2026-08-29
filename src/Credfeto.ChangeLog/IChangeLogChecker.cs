@@ -8,6 +8,7 @@ public interface IChangeLogChecker
     Task<bool> ChangeLogModifiedInReleaseSectionAsync(
         string changeLogFileName,
         string originBranchName,
+        ChangeLogLanguage language,
         CancellationToken cancellationToken
     );
 }

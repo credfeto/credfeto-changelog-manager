@@ -65,7 +65,11 @@ public class MoveTrailingBlanksBenchmark
     )]
     private static ChangeLogDocument ParseSync(string content) =>
         new ChangeLogParser()
-            .ParseAsync(content: content, cancellationToken: CancellationToken.None)
+            .ParseAsync(
+                content: content,
+                language: BenchmarkLanguage.English,
+                cancellationToken: CancellationToken.None
+            )
             .GetAwaiter()
             .GetResult();
 }

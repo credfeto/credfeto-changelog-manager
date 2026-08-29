@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Credfeto.ChangeLog.Exceptions;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
+using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
 using Xunit;
 
@@ -39,14 +40,12 @@ public sealed class ChangeLogUpdaterCreateRelease : TestBase
 
     private static ChangeLogDocument Parse(string content)
     {
-        ChangeLogParser parser = new();
-        return parser.ParseAsync(content, default).GetAwaiter().GetResult();
+        return ChangeLogTestHelper.ParseAsync(content, Language).GetAwaiter().GetResult();
     }
 
     private static string Serialise(ChangeLogDocument document)
     {
-        ChangeLogSerialiser serialiser = new();
-        return serialiser.SerialiseAsync(document, default).GetAwaiter().GetResult();
+        return ChangeLogTestHelper.SerialiseAsync(document, Language).GetAwaiter().GetResult();
     }
 
     [Fact]

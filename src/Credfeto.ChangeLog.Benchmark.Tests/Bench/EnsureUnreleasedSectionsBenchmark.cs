@@ -60,23 +60,25 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-    private static readonly ChangeLogLanguage Language = new ChangeLogLanguageFactory().Get(
-        ChangeLogLanguageFactory.English
-    );
-
     private static readonly ChangeLogDocument CorrectOrderDocument = ParseSync(CORRECT_ORDER_CHANGELOG);
     private static readonly ChangeLogDocument OutOfOrderDocument = ParseSync(OUT_OF_ORDER_CHANGELOG);
 
     [Benchmark]
     public ChangeLogDocument EnsureUnreleasedSections_AllSectionsCorrect()
     {
-        return ChangeLogUpdater.EnsureUnreleasedSections(document: CorrectOrderDocument, language: Language);
+        return ChangeLogUpdater.EnsureUnreleasedSections(
+            document: CorrectOrderDocument,
+            language: BenchmarkLanguage.English
+        );
     }
 
     [Benchmark]
     public ChangeLogDocument EnsureUnreleasedSections_OutOfOrderAndMissing()
     {
-        return ChangeLogUpdater.EnsureUnreleasedSections(document: OutOfOrderDocument, language: Language);
+        return ChangeLogUpdater.EnsureUnreleasedSections(
+            document: OutOfOrderDocument,
+            language: BenchmarkLanguage.English
+        );
     }
 
     [SuppressMessage(
@@ -96,7 +98,11 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     )]
     private static ChangeLogDocument ParseSync(string content) =>
         new ChangeLogParser()
-            .ParseAsync(content: content, cancellationToken: CancellationToken.None)
+            .ParseAsync(
+                content: content,
+                language: BenchmarkLanguage.English,
+                cancellationToken: CancellationToken.None
+            )
             .GetAwaiter()
             .GetResult();
 }

@@ -133,6 +133,6 @@ public sealed class ChangeLogSerialiserTests : TestBase
 
     private static ValueTask<string> SerialiseAsync(ChangeLogDocument document)
     {
-        return new ChangeLogSerialiser().SerialiseAsync(document, default);
+        return ChangeLogTestHelper.SerialiseAsync(document, Language);
     }
 }

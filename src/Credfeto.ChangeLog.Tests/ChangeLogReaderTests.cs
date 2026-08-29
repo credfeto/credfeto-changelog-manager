@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
+using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
 using Xunit;
 
@@ -327,11 +328,8 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
         Assert.Equal(expected: string.Empty, actual: result);
     }
 
-    private static ChangeLogDocument Parse(string content)
-    {
-        ChangeLogParser parser = new();
-        return parser.ParseAsync(content, default).GetAwaiter().GetResult();
-    }
+    private static ChangeLogDocument Parse(string content) =>
+        ChangeLogTestHelper.ParseAsync(content).GetAwaiter().GetResult();
 
     private static string ExtractReleaseNotes(string changeLog, string version)
     {

@@ -10,10 +10,17 @@ namespace Credfeto.ChangeLog.Services;
 
 public sealed class ChangeLogSerialiser : IChangeLogSerialiser
 {
-    public ValueTask<string> SerialiseAsync(ChangeLogDocument document, CancellationToken cancellationToken) =>
-        ValueTask.FromResult(SerialiseCore(document));
+    public ValueTask<string> SerialiseAsync(
+        ChangeLogDocument document,
+        ChangeLogLanguage language,
+        CancellationToken cancellationToken
+    )
+    {
+        string serialised = SerialiseCore(document: document, unreleasedHeader: language.UnreleasedHeader);
+        return ValueTask.FromResult(serialised);
+    }
 
-    private static string SerialiseCore(ChangeLogDocument document)
+    private static string SerialiseCore(ChangeLogDocument document, string unreleasedHeader)
     {
         List<string> lines = [];
         lines.AddRange(document.HeaderLines);
@@ -23,7 +30,8 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
             SerialiseUnreleased(
                 unreleased: document.Unreleased,
                 lines: lines,
-                hasFollowingRelease: !document.Releases.IsEmpty
+                hasFollowingRelease: !document.Releases.IsEmpty,
+                unreleasedHeader: unreleasedHeader
             );
         }
 
@@ -40,10 +48,11 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
     private static void SerialiseUnreleased(
         ChangeLogUnreleased unreleased,
         List<string> lines,
-        bool hasFollowingRelease
+        bool hasFollowingRelease,
+        string unreleasedHeader
     )
     {
-        lines.Add("## [Unreleased]");
+        lines.Add(unreleasedHeader);
 
         foreach (ChangeLogSection section in unreleased.Sections)
         {

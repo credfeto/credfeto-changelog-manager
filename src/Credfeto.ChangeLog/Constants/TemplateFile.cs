@@ -17,7 +17,9 @@ public static class TemplateFile
     public static string Build(ChangeLogLanguage language)
     {
         return new StringBuilder()
-            .Append("# Changelog\n")
+            .Append("# ")
+            .Append(language.DocumentTitle)
+            .Append('\n')
             .Append("All notable changes to this project will be documented in this file.\n")
             .Append('\n')
             .Append(PreambleLine1)
@@ -29,15 +31,16 @@ public static class TemplateFile
             .Append("Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release\n")
             .Append("-->\n")
             .Append('\n')
-            .Append("## [")
-            .Append(FileConstants.Unreleased)
-            .Append("]\n")
+            .Append(language.UnreleasedHeader)
+            .Append('\n')
             .AppendSectionHeadings(language.SectionOrder)
             .Append('\n')
             .Append("<!--\n")
             .Append(
-                "Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch\n"
+                "Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from ["
             )
+            .Append(language.UnreleasedSectionName)
+            .Append("] into here as they are merged into the appropriate release branch\n")
             .Append("-->\n")
             .Append('\n')
             .Append("## [0.0.0] - Project created")

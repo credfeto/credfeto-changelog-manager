@@ -25,7 +25,11 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         CancellationToken cancellationToken
     )
     {
-        ChangeLogDocument document = await this._storage.LoadAsync(changeLogFileName, cancellationToken);
+        ChangeLogDocument document = await this._storage.LoadAsync(
+            changeLogFileName,
+            language: language,
+            cancellationToken: cancellationToken
+        );
 
         return Lint(document: document, language: language);
     }
@@ -44,7 +48,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
     {
         if (document.Unreleased is null)
         {
-            errors.Add(new(LineNumber: 1, Message: "Missing [Unreleased] section"));
+            errors.Add(new(LineNumber: 1, Message: $"Missing [{language.UnreleasedSectionName}] section"));
             return;
         }
 
@@ -57,7 +61,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         ChangeLogLanguage language
     )
     {
-        CheckDuplicateSections(sections: unreleased.Sections, errors: errors);
+        CheckDuplicateSections(sections: unreleased.Sections, errors: errors, language: language);
         CheckUnknownSections(sections: unreleased.Sections, errors: errors, language: language);
         CheckSectionOrderAndPresence(
             sections: unreleased.Sections,
@@ -90,7 +94,11 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         errors.Add(error);
     }
 
-    private static void CheckDuplicateSections(in ImmutableArray<ChangeLogSection> sections, List<LintError> errors)
+    private static void CheckDuplicateSections(
+        in ImmutableArray<ChangeLogSection> sections,
+        List<LintError> errors,
+        ChangeLogLanguage language
+    )
     {
         HashSet<string> seen = new(StringComparer.Ordinal);
 
@@ -99,7 +107,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
             errors.Add(
                 new(
                     LineNumber: section.LineNumber,
-                    Message: $"Section '### {section.Name}' is duplicated in [Unreleased]"
+                    Message: $"Section '### {section.Name}' is duplicated in [{language.UnreleasedSectionName}]"
                 )
             );
         }
@@ -118,7 +126,10 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         )
         {
             errors.Add(
-                new(LineNumber: section.LineNumber, Message: $"Unknown section '### {section.Name}' in [Unreleased]")
+                new(
+                    LineNumber: section.LineNumber,
+                    Message: $"Unknown section '### {section.Name}' in [{language.UnreleasedSectionName}]"
+                )
             );
         }
     }
@@ -139,6 +150,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
                 required: required,
                 unreleasedLineNumber: unreleasedLineNumber,
                 errors: errors,
+                language: language,
                 lastFoundIndex: ref lastFoundIndex
             );
         }
@@ -149,6 +161,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         string required,
         int unreleasedLineNumber,
         List<LintError> errors,
+        ChangeLogLanguage language,
         ref int lastFoundIndex
     )
     {
@@ -159,7 +172,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
             errors.Add(
                 new(
                     LineNumber: unreleasedLineNumber,
-                    Message: $"Missing required section '### {required}' in [Unreleased]"
+                    Message: $"Missing required section '### {required}' in [{language.UnreleasedSectionName}]"
                 )
             );
         }
@@ -168,7 +181,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
             errors.Add(
                 new(
                     LineNumber: sections[pos].LineNumber,
-                    Message: $"Section '### {required}' is out of order in [Unreleased]"
+                    Message: $"Section '### {required}' is out of order in [{language.UnreleasedSectionName}]"
                 )
             );
         }

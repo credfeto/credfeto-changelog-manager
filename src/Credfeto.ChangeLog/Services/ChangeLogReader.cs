@@ -20,20 +20,30 @@ public sealed class ChangeLogReader : IChangeLogReader
     public async ValueTask<string> ExtractReleaseNotesFromFileAsync(
         string changeLogFileName,
         string version,
+        ChangeLogLanguage language,
         CancellationToken cancellationToken
     )
     {
-        ChangeLogDocument document = await this._storage.LoadAsync(changeLogFileName, cancellationToken);
+        ChangeLogDocument document = await this._storage.LoadAsync(
+            changeLogFileName,
+            language: language,
+            cancellationToken: cancellationToken
+        );
 
         return FormatSections(FindSections(document: document, version: version));
     }
 
     public async ValueTask<int?> FindFirstReleaseVersionPositionAsync(
         string changeLogFileName,
+        ChangeLogLanguage language,
         CancellationToken cancellationToken
     )
     {
-        ChangeLogDocument document = await this._storage.LoadAsync(changeLogFileName, cancellationToken);
+        ChangeLogDocument document = await this._storage.LoadAsync(
+            changeLogFileName,
+            language: language,
+            cancellationToken: cancellationToken
+        );
 
         return document.Releases.IsEmpty ? null : document.Releases[0].LineNumber;
     }

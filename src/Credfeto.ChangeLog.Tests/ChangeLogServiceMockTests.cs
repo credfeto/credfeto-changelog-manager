@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
+using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
 using FunFair.Test.Infrastructure.Mocks;
 using NSubstitute;
@@ -51,18 +52,25 @@ public sealed class ChangeLogServiceMockTests : TestBase
     )]
     private static ChangeLogDocument Parse(string content)
     {
-        return new ChangeLogParser().ParseAsync(content, default).GetAwaiter().GetResult();
+        return ChangeLogTestHelper.ParseAsync(content, Language).GetAwaiter().GetResult();
     }
 
     private static void MockChangeLogStorageLoad(IChangeLogStorage storage, ChangeLogDocument document)
     {
-        storage.LoadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(ValueTask.FromResult(document));
+        storage
+            .LoadAsync(Arg.Any<string>(), Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>())
+            .Returns(ValueTask.FromResult(document));
     }
 
     private static void MockChangeLogStorageSave(IChangeLogStorage storage)
     {
         storage
-            .SaveAsync(Arg.Any<string>(), Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>())
+            .SaveAsync(
+                Arg.Any<string>(),
+                Arg.Any<ChangeLogDocument>(),
+                Arg.Any<ChangeLogLanguage>(),
+                Arg.Any<CancellationToken>()
+            )
             .Returns(ValueTask.CompletedTask);
     }
 
@@ -82,13 +90,14 @@ public sealed class ChangeLogServiceMockTests : TestBase
         string result = await reader.ExtractReleaseNotesFromFileAsync(
             changeLogFileName: "CHANGELOG.md",
             version: string.Empty,
+            language: Language,
             cancellationToken: cancellationTokenSource.Token
         );
 
         Assert.Contains("### Added", result, System.StringComparison.Ordinal);
         Assert.Contains("- Added item", result, System.StringComparison.Ordinal);
 
-        await storage.Received(1).LoadAsync("CHANGELOG.md", Arg.Any<CancellationToken>());
+        await storage.Received(1).LoadAsync("CHANGELOG.md", Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -115,13 +124,14 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         int? result = await reader.FindFirstReleaseVersionPositionAsync(
             changeLogFileName: "CHANGELOG.md",
+            language: Language,
             cancellationToken: cancellationTokenSource.Token
         );
 
         Assert.NotNull(result);
         Assert.Equal(expected: document.Releases[0].LineNumber, actual: result.Value);
 
-        await storage.Received(1).LoadAsync("CHANGELOG.md", Arg.Any<CancellationToken>());
+        await storage.Received(1).LoadAsync("CHANGELOG.md", Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>());
     }
 
     // ─── ChangeLogFixer ───────────────────────────────────────────────────────────
@@ -159,8 +169,15 @@ public sealed class ChangeLogServiceMockTests : TestBase
             cancellationToken: cancellationTokenSource.Token
         );
 
-        await storage.Received(1).LoadAsync("CHANGELOG.md", Arg.Any<CancellationToken>());
-        await storage.Received(1).SaveAsync("CHANGELOG.md", Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>());
+        await storage.Received(1).LoadAsync("CHANGELOG.md", Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>());
+        await storage
+            .Received(1)
+            .SaveAsync(
+                "CHANGELOG.md",
+                Arg.Any<ChangeLogDocument>(),
+                Arg.Any<ChangeLogLanguage>(),
+                Arg.Any<CancellationToken>()
+            );
     }
 
     // ─── ChangeLogLinter ──────────────────────────────────────────────────────────
@@ -183,7 +200,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
         );
 
         Assert.Empty(errors);
-        await storage.Received(1).LoadAsync("CHANGELOG.md", Arg.Any<CancellationToken>());
+        await storage.Received(1).LoadAsync("CHANGELOG.md", Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -210,7 +227,7 @@ public sealed class ChangeLogServiceMockTests : TestBase
 
         LintError error = Assert.Single(errors);
         Assert.Equal(expected: "Missing [Unreleased] section", actual: error.Message);
-        await storage.Received(1).LoadAsync("CHANGELOG.md", Arg.Any<CancellationToken>());
+        await storage.Received(1).LoadAsync("CHANGELOG.md", Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>());
     }
 
     // ─── ChangeLogUpdater ─────────────────────────────────────────────────────────
@@ -243,12 +260,13 @@ public sealed class ChangeLogServiceMockTests : TestBase
             System.IO.File.Delete(tempFile);
         }
 
-        await storage.Received(1).LoadAsync(tempFile, Arg.Any<CancellationToken>());
+        await storage.Received(1).LoadAsync(tempFile, Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>());
         await storage
             .Received(1)
             .SaveAsync(
                 tempFile,
                 Arg.Is<ChangeLogDocument>(d => d is object && d.Unreleased is object),
+                Arg.Any<ChangeLogLanguage>(),
                 Arg.Any<CancellationToken>()
             );
     }
@@ -279,7 +297,14 @@ public sealed class ChangeLogServiceMockTests : TestBase
             System.IO.File.Delete(tempFile);
         }
 
-        await storage.Received(1).LoadAsync(tempFile, Arg.Any<CancellationToken>());
-        await storage.Received(1).SaveAsync(tempFile, Arg.Any<ChangeLogDocument>(), Arg.Any<CancellationToken>());
+        await storage.Received(1).LoadAsync(tempFile, Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>());
+        await storage
+            .Received(1)
+            .SaveAsync(
+                tempFile,
+                Arg.Any<ChangeLogDocument>(),
+                Arg.Any<ChangeLogLanguage>(),
+                Arg.Any<CancellationToken>()
+            );
     }
 }

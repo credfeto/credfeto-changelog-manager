@@ -23,9 +23,18 @@ public sealed class ChangeLogFixer : IChangeLogFixer
         CancellationToken cancellationToken
     )
     {
-        ChangeLogDocument document = await this._storage.LoadAsync(changeLogFileName, cancellationToken);
+        ChangeLogDocument document = await this._storage.LoadAsync(
+            changeLogFileName,
+            language: language,
+            cancellationToken: cancellationToken
+        );
         ChangeLogDocument corrected = Fix(document: document, language: language);
-        await this._storage.SaveAsync(changeLogFileName, document: corrected, cancellationToken: cancellationToken);
+        await this._storage.SaveAsync(
+            changeLogFileName,
+            document: corrected,
+            language: language,
+            cancellationToken: cancellationToken
+        );
     }
 
     public static ChangeLogDocument Fix(ChangeLogDocument document, ChangeLogLanguage language)

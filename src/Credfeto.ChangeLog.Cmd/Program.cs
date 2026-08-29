@@ -53,6 +53,7 @@ public static class Program
             await ExtractChangeLogTextForVersionAsync(
                 options: options,
                 detector: detector,
+                language: effectiveLanguage,
                 reader: services.GetRequiredService<IChangeLogReader>(),
                 cancellationToken: cancellationToken
             );
@@ -142,6 +143,7 @@ public static class Program
             await CheckInsertPositionAsync(
                 options: options,
                 detector: detector,
+                language: language,
                 checker: services.GetRequiredService<IChangeLogChecker>(),
                 cancellationToken: cancellationToken
             );
@@ -167,6 +169,7 @@ public static class Program
             await OutputUnreleasedContentAsync(
                 options: options,
                 detector: detector,
+                language: language,
                 reader: services.GetRequiredService<IChangeLogReader>(),
                 cancellationToken: cancellationToken
             );
@@ -293,6 +296,7 @@ public static class Program
     private static async Task OutputUnreleasedContentAsync(
         Options options,
         IChangeLogDetector detector,
+        ChangeLogLanguage language,
         IChangeLogReader reader,
         CancellationToken cancellationToken
     )
@@ -305,6 +309,7 @@ public static class Program
         string text = await reader.ExtractReleaseNotesFromFileAsync(
             changeLogFileName: changeLog,
             version: "0.0.0.0-unreleased",
+            language: language,
             cancellationToken: cancellationToken
         );
         Console.WriteLine(text);
@@ -335,6 +340,7 @@ public static class Program
     private static async Task CheckInsertPositionAsync(
         Options options,
         IChangeLogDetector detector,
+        ChangeLogLanguage language,
         IChangeLogChecker checker,
         CancellationToken cancellationToken
     )
@@ -346,6 +352,7 @@ public static class Program
         bool valid = await checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLog,
             originBranchName: originBranchName,
+            language: language,
             cancellationToken: cancellationToken
         );
 
@@ -410,6 +417,7 @@ public static class Program
     private static async Task ExtractChangeLogTextForVersionAsync(
         Options options,
         IChangeLogDetector detector,
+        ChangeLogLanguage language,
         IChangeLogReader reader,
         CancellationToken cancellationToken
     )
@@ -423,6 +431,7 @@ public static class Program
         string text = await reader.ExtractReleaseNotesFromFileAsync(
             changeLogFileName: changeLog,
             version: version,
+            language: language,
             cancellationToken: cancellationToken
         );
 

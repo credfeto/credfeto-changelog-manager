@@ -18,6 +18,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
 {
     private readonly ServiceProvider _serviceProvider;
     private readonly IChangeLogChecker _checker;
+    private readonly ChangeLogLanguage _language;
 
     public ChangeLogCheckerTests(ITestOutputHelper output)
         : base(output)
@@ -26,6 +27,9 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         services.AddChangeLog();
         this._serviceProvider = services.BuildServiceProvider();
         this._checker = this._serviceProvider.GetRequiredService<IChangeLogChecker>();
+        this._language = this
+            ._serviceProvider.GetRequiredService<IChangeLogLanguageFactory>()
+            .Get(ChangeLogLanguageFactory.English);
     }
 
     public void Dispose()
@@ -71,6 +75,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: branchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -91,6 +96,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
                     "nonexistent-CHANGELOG.md"
                 ),
                 originBranchName: "origin/main",
+                language: this._language,
                 cancellationToken: cancellationToken
             );
         });
@@ -111,6 +117,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: branchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -133,6 +140,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
             await this._checker.ChangeLogModifiedInReleaseSectionAsync(
                 changeLogFileName: changeLogPath,
                 originBranchName: "nonexistent/branch",
+                language: this._language,
                 cancellationToken: cancellationToken
             );
         });
@@ -163,6 +171,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: originBranchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -208,6 +217,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: originBranchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -262,6 +272,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: originBranchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -311,6 +322,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: originBranchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -351,6 +363,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: originBranchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -392,6 +405,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: originBranchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -437,6 +451,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: originBranchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -482,6 +497,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: originBranchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -527,6 +543,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: originBranchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -561,6 +578,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: originBranchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -595,6 +613,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
             changeLogFileName: changeLogPath,
             originBranchName: originBranchName,
+            language: this._language,
             cancellationToken: cancellationToken
         );
 
@@ -626,6 +645,7 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
             await this._checker.ChangeLogModifiedInReleaseSectionAsync(
                 changeLogFileName: changeLogPath,
                 originBranchName: originBranchName,
+                language: this._language,
                 cancellationToken: cancellationToken
             );
         });

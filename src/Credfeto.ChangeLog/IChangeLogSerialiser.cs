@@ -6,5 +6,9 @@ namespace Credfeto.ChangeLog;
 
 public interface IChangeLogSerialiser
 {
-    ValueTask<string> SerialiseAsync(ChangeLogDocument document, CancellationToken cancellationToken);
+    ValueTask<string> SerialiseAsync(
+        ChangeLogDocument document,
+        ChangeLogLanguage language,
+        CancellationToken cancellationToken
+    );
 }

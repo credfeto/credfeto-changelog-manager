@@ -8,8 +8,13 @@ public interface IChangeLogReader
     ValueTask<string> ExtractReleaseNotesFromFileAsync(
         string changeLogFileName,
         string version,
+        ChangeLogLanguage language,
         CancellationToken cancellationToken
     );
 
-    ValueTask<int?> FindFirstReleaseVersionPositionAsync(string changeLogFileName, CancellationToken cancellationToken);
+    ValueTask<int?> FindFirstReleaseVersionPositionAsync(
+        string changeLogFileName,
+        ChangeLogLanguage language,
+        CancellationToken cancellationToken
+    );
 }

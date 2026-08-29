@@ -3,6 +3,7 @@ using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Exceptions;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
+using Credfeto.ChangeLog.Tests.TestHelpers;
 using FunFair.Test.Common;
 using Xunit;
 
@@ -31,17 +32,15 @@ public sealed class ChangeLogUpdaterAddEntryTests : TestBase
 
     private static ChangeLogDocument ParseOrCreate(string content)
     {
-        ChangeLogParser parser = new();
-        return parser
-            .ParseAsync(string.IsNullOrEmpty(content) ? TemplateFile.Build(Language) : content, default)
+        return ChangeLogTestHelper
+            .ParseAsync(string.IsNullOrEmpty(content) ? TemplateFile.Build(Language) : content, Language)
             .GetAwaiter()
             .GetResult();
     }
 
     private static string Serialise(ChangeLogDocument document)
     {
-        ChangeLogSerialiser serialiser = new();
-        return serialiser.SerialiseAsync(document, default).GetAwaiter().GetResult();
+        return ChangeLogTestHelper.SerialiseAsync(document, Language).GetAwaiter().GetResult();
     }
 
     [Fact]
