@@ -14,6 +14,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Fixed
 - Release dates are now computed via an injectable time source (deterministic and testable) rather than the system clock directly, and ChangeLogChecker/FileSystemChangeLogStorage are now public types rather than internal (issue #364). BREAKING: ChangeLogUpdater's constructor now requires a TimeProvider argument, and the static ChangeLogUpdater.CreateRelease now takes a plain date string (validated non-empty) instead of a pending flag plus language - pass the new public ChangeLogRelease.PendingDate constant to request a pending release
 - Non-English ChangeLogLanguage definitions are now usable: the parser and serialiser thread the active ChangeLogLanguage through the [Unreleased]/document-title parse and serialise path instead of hardcoding the English literal (issue #333). BREAKING: IChangeLogParser.ParseAsync, IChangeLogSerialiser.SerialiseAsync, IChangeLogStorage.LoadAsync/SaveAsync, IChangeLogChecker.ChangeLogModifiedInReleaseSectionAsync, and IChangeLogReader.ExtractReleaseNotesFromFileAsync/FindFirstReleaseVersionPositionAsync now all require a ChangeLogLanguage parameter
+- Lint errors for [Unreleased] sections now report the real heading line number instead of always reporting Line 0
 ### Changed
 ### Deprecated
 ### Removed

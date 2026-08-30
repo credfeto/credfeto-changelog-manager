@@ -130,6 +130,7 @@ public sealed class ChangeLogLinterTests : TestBase
             e =>
                 e.Message.Contains(value: "### Added", comparisonType: StringComparison.Ordinal)
                 && e.Message.Contains(value: "duplicated", comparisonType: StringComparison.Ordinal)
+                && e.LineNumber == 7
         );
     }
 
@@ -158,6 +159,7 @@ public sealed class ChangeLogLinterTests : TestBase
             e =>
                 e.Message.Contains(value: "### Custom", comparisonType: StringComparison.Ordinal)
                 && e.Message.Contains(value: "Unknown", comparisonType: StringComparison.Ordinal)
+                && e.LineNumber == 10
         );
     }
 
@@ -223,6 +225,7 @@ public sealed class ChangeLogLinterTests : TestBase
                     value: "Blank line after heading '### Added'",
                     comparisonType: StringComparison.Ordinal
                 )
+                && e.LineNumber == 5
         );
     }
 
@@ -440,7 +443,8 @@ public sealed class ChangeLogLinterTests : TestBase
 
         Assert.Contains(
             errors,
-            e => e.Message.Contains(value: "out of order", comparisonType: StringComparison.Ordinal)
+            e =>
+                e.Message.Contains(value: "out of order", comparisonType: StringComparison.Ordinal) && e.LineNumber == 4
         );
     }
 
