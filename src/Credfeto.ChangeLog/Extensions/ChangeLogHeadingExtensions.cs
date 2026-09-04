@@ -77,16 +77,11 @@ public static class ChangeLogHeadingExtensions
 
     public static bool EqualsOrdinal(this string str, string other)
     {
-        return str.EqualsUsing(other, comparer: StringComparer.Ordinal);
+        return StringComparer.Ordinal.Equals(x: str, y: other);
     }
 
     public static bool EqualsOrdinalIgnoreCase(this string str, string other)
     {
-        return str.EqualsUsing(other, comparer: StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static bool EqualsUsing(this string str, string other, StringComparer comparer)
-    {
-        return comparer.Equals(x: str, y: other);
+        return StringComparer.OrdinalIgnoreCase.Equals(x: str, y: other);
     }
 }
