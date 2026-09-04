@@ -79,4 +79,9 @@ public static class ChangeLogHeadingExtensions
     {
         return StringComparer.Ordinal.Equals(x: str, y: other);
     }
+
+    public static bool EqualsOrdinalIgnoreCase(this string str, string other)
+    {
+        return StringComparer.OrdinalIgnoreCase.Equals(x: str, y: other);
+    }
 }
