@@ -263,7 +263,7 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     {
         for (int i = 0; i < sections.Length; i++)
         {
-            if (sections[i].Name.EqualsOrdinal(name))
+            if (sections[i].Name.EqualsOrdinalIgnoreCase(name))
             {
                 return i;
             }
@@ -300,7 +300,7 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     {
         ImmutableArray<ChangeLogSection> sections =
         [
-            .. unreleased.Sections.Select(s => s.Name.EqualsOrdinal(updated.Name) ? updated : s),
+            .. unreleased.Sections.Select(s => s.Name.EqualsOrdinalIgnoreCase(updated.Name) ? updated : s),
         ];
         return document with { Unreleased = unreleased with { Sections = sections } };
     }
