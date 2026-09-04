@@ -317,6 +317,42 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Theory]
+    [InlineData("")]
+    [InlineData("1.0.0.1-master")]
+    public static void ReadUnReleasedSectionWithWhitespaceOnlyEntryExcludesItFromReleaseNotes(string version)
+    {
+        string changeLog =
+            $@"# Changelog
+All notable changes to this project will be documented in this file.
+
+<!--
+Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
+-->
+
+## [Unreleased]
+### Added
+- Something was added.
+{"   "}
+### Fixed
+### Changed
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+## [0.0.0] - Project created
+";
+
+        string result = ExtractReleaseNotes(changeLog: changeLog, version: version);
+        const string expected =
+            @"### Added
+- Something was added.";
+
+        Assert.Equal(expected.ToLocalEndLine(), actual: result);
+    }
+
+    [Theory]
     [InlineData("7.0")]
     [InlineData("8.1.0")]
     [InlineData("9.2.3.0")]

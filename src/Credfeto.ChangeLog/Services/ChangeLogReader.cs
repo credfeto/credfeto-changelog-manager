@@ -109,7 +109,7 @@ public sealed class ChangeLogReader : IChangeLogReader
 
         foreach (string entry in section.Entries)
         {
-            if (string.IsNullOrEmpty(entry))
+            if (string.IsNullOrWhiteSpace(entry))
             {
                 continue;
             }
