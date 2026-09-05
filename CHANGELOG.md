@@ -16,6 +16,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Non-English ChangeLogLanguage definitions are now usable: the parser and serialiser thread the active ChangeLogLanguage through the [Unreleased]/document-title parse and serialise path instead of hardcoding the English literal (issue #333). BREAKING: IChangeLogParser.ParseAsync, IChangeLogSerialiser.SerialiseAsync, IChangeLogStorage.LoadAsync/SaveAsync, IChangeLogChecker.ChangeLogModifiedInReleaseSectionAsync, and IChangeLogReader.ExtractReleaseNotesFromFileAsync/FindFirstReleaseVersionPositionAsync now all require a ChangeLogLanguage parameter
 - Lint errors for [Unreleased] sections now report the real heading line number instead of always reporting Line 0
 - ChangeLogReader.AppendSection now excludes whitespace-only entries the same way it already excludes blank ones, so extracted release notes no longer contain a section heading followed by a blank/whitespace line (issue #375)
+- Entry type matching for the add and remove commands (e.g. added, ADDED) is now resolved case-insensitively against the canonical section heading (e.g. ### Added) instead of requiring exact-case input (issue #300)
 ### Changed
 ### Deprecated
 ### Removed

@@ -263,7 +263,7 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
     {
         for (int i = 0; i < sections.Length; i++)
         {
-            if (sections[i].Name.EqualsOrdinal(name))
+            if (sections[i].Name.EqualsOrdinalIgnoreCase(name))
             {
                 return i;
             }
