@@ -18,6 +18,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - ChangeLogReader.AppendSection now excludes whitespace-only entries the same way it already excludes blank ones, so extracted release notes no longer contain a section heading followed by a blank/whitespace line (issue #375)
 - Entry type matching for the add and remove commands (e.g. added, ADDED) is now resolved case-insensitively against the canonical section heading (e.g. ### Added) instead of requiring exact-case input (issue #300)
 ### Changed
+- Dependencies - Updated Credfeto.Enumeration to 1.2.153.2254
 ### Deprecated
 ### Removed
 ### Deployment Changes
