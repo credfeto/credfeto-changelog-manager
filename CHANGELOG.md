@@ -14,6 +14,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Fixed
 ### Changed
 - Dependencies - Updated Meziantou.Analyzer to 3.0.231
+- Dependencies - Updated Microsoft.Extensions to 10.0.12
 ### Deprecated
 ### Removed
 ### Deployment Changes
