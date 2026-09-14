@@ -43,11 +43,34 @@ public sealed class ChangeLogUpdaterEnsureUnreleasedSectionsTests : TestBase
         return ChangeLogTestHelper.SerialiseAsync(document, Language).GetAwaiter().GetResult();
     }
 
-    public static TheoryData<string, string> EnsureUnreleasedSectionsCases =>
-        new()
+    public static TheoryData<string, string> EnsureUnreleasedSectionsCases
+    {
+        get
         {
+            (string Existing, string Expected)[] cases =
+            [
+                CaseAllSectionsPresentInCanonicalOrder(),
+                CaseMissingSectionsAreAdded(),
+                CaseSectionsInWrongOrderAreReordered(),
+                CaseMissingSectionsAddedWithContentPreserved(),
+                CaseEmptyContentUsesTemplate(),
+                CaseCustomSectionIsPreservedAtEnd(),
+            ];
+
+            TheoryData<string, string> data = [];
+
+            foreach ((string existing, string expected) in cases)
             {
-                @"# Changelog
+                data.Add(existing, expected);
+            }
+
+            return data;
+        }
+    }
+
+    private static (string Existing, string Expected) CaseAllSectionsPresentInCanonicalOrder() =>
+        (
+            @"# Changelog
 All notable changes to this project will be documented in this file.
 
 <!--
@@ -67,7 +90,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
 ## [0.0.0] - Project created",
-                @"# Changelog
+            @"# Changelog
 All notable changes to this project will be documented in this file.
 
 <!--
@@ -88,9 +111,11 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 
 ## [0.0.0] - Project created"
-            },
-            {
-                @"# Changelog
+        );
+
+    private static (string Existing, string Expected) CaseMissingSectionsAreAdded() =>
+        (
+            @"# Changelog
 All notable changes to this project will be documented in this file.
 
 <!--
@@ -108,7 +133,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
 ## [0.0.0] - Project created",
-                @"# Changelog
+            @"# Changelog
 All notable changes to this project will be documented in this file.
 
 <!--
@@ -129,9 +154,11 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 
 ## [0.0.0] - Project created"
-            },
-            {
-                @"# Changelog
+        );
+
+    private static (string Existing, string Expected) CaseSectionsInWrongOrderAreReordered() =>
+        (
+            @"# Changelog
 All notable changes to this project will be documented in this file.
 
 <!--
@@ -151,7 +178,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
 ## [0.0.0] - Project created",
-                @"# Changelog
+            @"# Changelog
 All notable changes to this project will be documented in this file.
 
 <!--
@@ -172,9 +199,11 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 
 ## [0.0.0] - Project created"
-            },
-            {
-                @"# Changelog
+        );
+
+    private static (string Existing, string Expected) CaseMissingSectionsAddedWithContentPreserved() =>
+        (
+            @"# Changelog
 All notable changes to this project will be documented in this file.
 
 <!--
@@ -194,7 +223,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
 ## [0.0.0] - Project created",
-                @"# Changelog
+            @"# Changelog
 All notable changes to this project will be documented in this file.
 
 <!--
@@ -218,10 +247,12 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 
 ## [0.0.0] - Project created"
-            },
-            {
-                string.Empty,
-                @"# Changelog
+        );
+
+    private static (string Existing, string Expected) CaseEmptyContentUsesTemplate() =>
+        (
+            string.Empty,
+            @"# Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
@@ -245,9 +276,11 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 
 ## [0.0.0] - Project created"
-            },
-            {
-                @"# Changelog
+        );
+
+    private static (string Existing, string Expected) CaseCustomSectionIsPreservedAtEnd() =>
+        (
+            @"# Changelog
 All notable changes to this project will be documented in this file.
 
 <!--
@@ -265,7 +298,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
 ## [0.0.0] - Project created",
-                @"# Changelog
+            @"# Changelog
 All notable changes to this project will be documented in this file.
 
 <!--
@@ -289,8 +322,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 
 ## [0.0.0] - Project created"
-            },
-        };
+        );
 
     [Theory]
     [MemberData(nameof(EnsureUnreleasedSectionsCases))]
