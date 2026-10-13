@@ -19,7 +19,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated xunit.analyzers to 2.2.0
 - Dependencies - Updated xunit.v3 to 4.0.2
 - Dependencies - Updated Microsoft.VisualStudio.Threading.Analyzers to 18.12.1
-- Dependencies - Updated Meziantou.Analyzer to 3.0.301
+- Dependencies - Updated Meziantou.Analyzer to 3.0.302
 ### Deprecated
 ### Removed
 ### Deployment Changes
