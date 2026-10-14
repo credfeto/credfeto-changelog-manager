@@ -13,6 +13,16 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
+### Deprecated
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+
+## [1.10.207] - 2026-10-14
+### Changed
 - Dependencies - Updated Microsoft.Sbom.Targets to 4.1.13
 - Dependencies - Updated SonarAnalyzer.CSharp to 10.35.0.4138
 - Dependencies - Updated Roslynator.Analyzers to 5.0.1
@@ -22,13 +32,6 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Meziantou.Analyzer to 3.0.303
 - Dependencies - Updated Microsoft.Extensions to 10.0.13
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.19.2499
-### Deprecated
-### Removed
-### Deployment Changes
-
-<!--
-Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
--->
 
 ## [1.10.206] - 2026-09-15
 ### Changed
