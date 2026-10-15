@@ -13,7 +13,6 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
-- SDK - Updated DotNet SDK to 10.0.402
 ### Deprecated
 ### Removed
 ### Deployment Changes
@@ -21,6 +20,10 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 <!--
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
+
+## [1.10.208] - 2026-10-15
+### Changed
+- SDK - Updated DotNet SDK to 10.0.402
 
 ## [1.10.207] - 2026-10-14
 ### Changed
