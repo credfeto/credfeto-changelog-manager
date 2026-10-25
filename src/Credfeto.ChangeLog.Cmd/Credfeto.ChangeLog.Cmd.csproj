@@ -69,7 +69,7 @@
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" IncludeAssets="compile;runtime" />
     <PackageReference Include="Credfeto.Enumeration.Source.Generation.Attributes" Version="1.2.154.2267" IncludeAssets="compile;runtime" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" IncludeAssets="compile;runtime" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" IncludeAssets="compile;runtime" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AsyncFixer" Version="2.1.0" PrivateAssets="All" ExcludeAssets="runtime" />
