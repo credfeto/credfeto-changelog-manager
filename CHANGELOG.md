@@ -13,11 +13,6 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
-- Dependencies - Updated FunFair.CodeAnalysis to 7.2.20.2501
-- Dependencies - Updated Meziantou.Analyzer to 3.0.317
-- Dependencies - Updated Nullable.Extended.Analyzer to 1.18.0
-- Dependencies - Updated Microsoft.Extensions to 10.0.14
-- SDK - Updated DotNet SDK to 10.0.403
 ### Deprecated
 ### Removed
 ### Deployment Changes
@@ -25,6 +20,14 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 <!--
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
+
+## [1.10.209] - 2026-10-26
+### Changed
+- Dependencies - Updated FunFair.CodeAnalysis to 7.2.20.2501
+- Dependencies - Updated Meziantou.Analyzer to 3.0.317
+- Dependencies - Updated Nullable.Extended.Analyzer to 1.18.0
+- Dependencies - Updated Microsoft.Extensions to 10.0.14
+- SDK - Updated DotNet SDK to 10.0.403
 
 ## [1.10.208] - 2026-10-15
 ### Changed
