@@ -13,9 +13,9 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
-- Dependencies - Updated Nullable.Extended.Analyzer to 1.18.2
 - Dependencies - Updated FunFair.Test to 6.4.7.2960
 - Dependencies - Updated FunFair.Test.Source.Generator to 6.4.7.2960
+- Dependencies - Updated Nullable.Extended.Analyzer to 1.19.0
 ### Deprecated
 ### Removed
 ### Deployment Changes
