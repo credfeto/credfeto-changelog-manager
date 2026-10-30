@@ -17,6 +17,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated FunFair.Test.Source.Generator to 6.4.7.2960
 - Dependencies - Updated Nullable.Extended.Analyzer to 1.19.0
 - Dependencies - Updated ZLinq to 1.6.1
+- Dependencies - Updated Credfeto.Enumeration to 1.2.156.2472
 ### Deprecated
 ### Removed
 ### Deployment Changes
