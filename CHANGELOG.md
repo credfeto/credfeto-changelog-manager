@@ -18,6 +18,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Nullable.Extended.Analyzer to 1.19.0
 - Dependencies - Updated ZLinq to 1.6.1
 - Dependencies - Updated Credfeto.Enumeration to 1.2.156.2472
+- Dependencies - Updated Meziantou.Analyzer to 3.0.318
 ### Deprecated
 ### Removed
 ### Deployment Changes
