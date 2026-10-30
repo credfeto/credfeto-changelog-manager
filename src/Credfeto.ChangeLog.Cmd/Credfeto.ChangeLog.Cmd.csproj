@@ -9,7 +9,7 @@
     <DebuggerSupport>true</DebuggerSupport>
     <Description>Changelog manager dotnet tool.</Description>
     <DisableImplicitNuGetFallbackFolder>true</DisableImplicitNuGetFallbackFolder>
-    <EnableMicrosoftExtensionsConfigurationBinderSourceGenerator>true</EnableMicrosoftExtensionsConfigurationBinderSourceGenerator>
+    <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnablePackageValidation>true</EnablePackageValidation>
     <EnableRequestDelegateGenerator>true</EnableRequestDelegateGenerator>
@@ -64,17 +64,17 @@
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Credfeto.ChangeLog\Credfeto.ChangeLog.csproj" />
+    <ProjectReference Include="../Credfeto.ChangeLog/Credfeto.ChangeLog.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" IncludeAssets="compile;runtime" />
-    <PackageReference Include="Credfeto.Enumeration.Source.Generation.Attributes" Version="1.2.154.2267" IncludeAssets="compile;runtime" />
+    <PackageReference Include="Credfeto.Enumeration.Source.Generation.Attributes" Version="1.2.156.2472" IncludeAssets="compile;runtime" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.14" IncludeAssets="compile;runtime" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AsyncFixer" Version="2.1.0" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="codecracker.CSharp" Version="1.1.0" PrivateAssets="All" ExcludeAssets="runtime" />
-    <PackageReference Include="Credfeto.Enumeration.Source.Generation" Version="1.2.154.2267" PrivateAssets="All" ExcludeAssets="runtime" />
+    <PackageReference Include="Credfeto.Enumeration.Source.Generation" Version="1.2.156.2472" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="Credfeto.Exceptions.SourceGenerator" Version="0.0.2.54" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="Credfeto.Version.Information.Generator" Version="1.0.138.1557" PrivateAssets="All" ExcludeAssets="runtime" />
     <PackageReference Include="CSharpIsNullAnalyzer" Version="0.2.19" PrivateAssets="all" ExcludeAssets="runtime" />
