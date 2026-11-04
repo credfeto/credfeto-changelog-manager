@@ -131,7 +131,7 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
 
     private static Dictionary<string, ChangeLogSection> BuildSectionMap(in ImmutableArray<ChangeLogSection> sections)
     {
-        Dictionary<string, ChangeLogSection> map = new(System.StringComparer.Ordinal);
+        Dictionary<string, ChangeLogSection> map = [with(System.StringComparer.Ordinal)];
 
         foreach (ChangeLogSection section in sections)
         {
@@ -161,7 +161,7 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
     )
     {
         HashSet<string> known = new(sectionOrder, System.StringComparer.Ordinal);
-        HashSet<string> added = new(System.StringComparer.Ordinal);
+        HashSet<string> added = [with(System.StringComparer.Ordinal)];
 
         foreach (
             ChangeLogSection section in sections

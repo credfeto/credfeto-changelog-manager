@@ -100,7 +100,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         ChangeLogLanguage language
     )
     {
-        HashSet<string> seen = new(StringComparer.Ordinal);
+        HashSet<string> seen = [with(StringComparer.Ordinal)];
 
         foreach (ChangeLogSection section in sections.AsValueEnumerable().Where(s => !seen.Add(s.Name)))
         {
