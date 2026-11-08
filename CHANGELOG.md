@@ -12,12 +12,15 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+- Changelog parser now uses an explicit StringComparison when comparing strings, fixing analyzer warning MA0001
 ### Changed
 - Dependencies - Updated Credfeto.Enumeration to 1.2.158.2511
 - SDK - Updated DotNet SDK to 11.0.100-rc.3.26522.148
-- TBD - to be finalized after review
+- Target .NET 11 - all projects now target net11.0 and build with the .NET 11.0.100-rc.3 SDK
+- Build - enabled the runtime-async compiler feature so async code runs on the .NET 11 runtime async path
 ### Deprecated
 ### Removed
+- Redundant Microsoft.Extensions.DependencyInjection.Abstractions package reference, which is already provided by the framework
 ### Deployment Changes
 
 <!--
