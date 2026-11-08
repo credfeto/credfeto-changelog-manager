@@ -372,7 +372,7 @@ public sealed class ChangeLogParser : IChangeLogParser
                 rest = rest[..^YANKED_SUFFIX.Length].Trim();
             }
 
-            if (rest.StartsWith(value: '-'))
+            if (rest.StartsWith(value: '-', comparisonType: StringComparison.Ordinal))
             {
                 rest = rest[1..].Trim();
             }
