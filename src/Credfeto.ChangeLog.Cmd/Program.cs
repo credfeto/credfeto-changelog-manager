@@ -100,6 +100,24 @@ public static class Program
         );
     }
 
+    private static Task RunSelfTestAsync()
+    {
+        SelfTestRunner.Run(
+            buildServiceProvider: BuildValidatedServiceProvider,
+            output: Console.Out,
+            error: Console.Error
+        );
+
+        return Task.CompletedTask;
+    }
+
+    private static ServiceProvider BuildValidatedServiceProvider()
+    {
+        return new ServiceCollection()
+            .AddChangeLog()
+            .BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
+    }
+
     private static ChangeLogLanguage ResolveEffectiveLanguage(Options options, IServiceProvider services)
     {
         ChangeLogLanguage language = services
@@ -498,6 +516,8 @@ public static class Program
         return Parser
             .Default.ParseArguments<Options>(args)
             .WithNotParsed(NotParsed)
-            .WithParsedAsync(options => ParsedOkAsync(options, serviceProvider));
+            .WithParsedAsync(options =>
+                options.SelfTest ? RunSelfTestAsync() : ParsedOkAsync(options, serviceProvider)
+            );
     }
 }

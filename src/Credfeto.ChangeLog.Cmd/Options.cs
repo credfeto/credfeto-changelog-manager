@@ -105,4 +105,12 @@ public sealed class Options
         HelpText = "When used with --lint, rewrite the file to fix formatting issues"
     )]
     public bool Fix { get; init; }
+
+    [Option(
+        longName: "self-test",
+        Group = "Commands",
+        Required = false,
+        HelpText = "Verify the tool's dependencies load, without touching any file, then exit"
+    )]
+    public bool SelfTest { get; init; }
 }
