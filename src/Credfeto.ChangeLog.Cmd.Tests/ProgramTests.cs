@@ -180,6 +180,29 @@ public sealed class ProgramTests : TestBase
     }
 
     [Fact]
+    public async Task Main_SelfTestInDirectoryWithoutChangelog_ReturnsSuccessAndCreatesNoFiles()
+    {
+        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        string savedDir = Environment.CurrentDirectory;
+
+        try
+        {
+            Environment.CurrentDirectory = tempDir;
+
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main(["--self-test"]);
+            Assert.Equal(expected: 0, actual: result);
+            Assert.Empty(Directory.EnumerateFileSystemEntries(tempDir));
+        }
+        finally
+        {
+            Environment.CurrentDirectory = savedDir;
+            Directory.Delete(path: tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task Main_AddEntry_ReturnsSuccess()
     {
         string tempFile = await CreateTempChangeLogAsync(VALID_CHANGELOG);

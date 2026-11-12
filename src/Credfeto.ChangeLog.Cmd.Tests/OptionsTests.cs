@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CommandLine;
 using FunFair.Test.Common;
 using Xunit;
 
@@ -89,6 +90,24 @@ public sealed class OptionsTests : TestBase
     {
         Options options = new() { Fix = true };
         Assert.True(options.Fix, userMessage: "Expected Fix to be true");
+    }
+
+    [Fact]
+    public void SelfTestPropertyIsSetCorrectly()
+    {
+        Options options = new() { SelfTest = true };
+        Assert.True(options.SelfTest, userMessage: "Expected SelfTest to be true");
+    }
+
+    [Fact]
+    public void SelfTestSwitchIsParsedAsCommand()
+    {
+        using Parser parser = new();
+
+        ParserResult<Options> result = parser.ParseArguments<Options>(["--self-test"]);
+
+        Assert.Equal(expected: ParserResultType.Parsed, actual: result.Tag);
+        Assert.True(result.Value.SelfTest, userMessage: "Expected --self-test to set SelfTest");
     }
 
     [Fact]

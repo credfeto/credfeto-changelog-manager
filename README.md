@@ -184,6 +184,20 @@ Notes
 - Assumes that all entries have been committed to the local repo.
 - All changes in non-committed (staged and unstaged) files are ignored.
 
+### Self-test
+
+Checks that the tool and all of its dependencies load correctly, without reading or writing any file, running git or accessing the network.
+Useful as a container or install health check.
+
+```shell
+dotnet changelog --self-test
+```
+
+Notes:
+
+- Exits with `0` and prints `Self-test passed` when everything loads.
+- Exits with a non-zero exit code and writes a single `SELF-TEST FAILED: <reason>` line to stderr if anything fails to load.
+
 ## Contributors
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->

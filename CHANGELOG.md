@@ -11,6 +11,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ## [Unreleased]
 ### Security
 ### Added
+- Added a --self-test switch that proves the tool can start: it resolves all services without touching files, git or the network, and exits non-zero with a one-line reason on stderr if it cannot (#398)
 ### Fixed
 - Changelog parser now uses an explicit StringComparison when comparing strings, fixing analyzer warning MA0001
 ### Changed
