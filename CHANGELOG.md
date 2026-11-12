@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 - Added a --self-test switch that proves the tool can start: it resolves all services without touching files, git or the network, and exits non-zero with a one-line reason on stderr if it cannot (#398)
+- Added a changelog manager MCP server (stdio dotnet tool) exposing changelog operations as MCP tools
 ### Fixed
 - Changelog parser now uses an explicit StringComparison when comparing strings, fixing analyzer warning MA0001
 ### Changed
