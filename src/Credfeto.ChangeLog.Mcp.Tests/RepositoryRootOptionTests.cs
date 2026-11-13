@@ -31,58 +31,42 @@ public sealed class RepositoryRootOptionTests : ToolTestBase
         Assert.Equal(expected: this.RepositoryFolder, actual: RepositoryRootOption.Parse(this.RepositoryFolder));
     }
 
-    [Fact]
-    public void RelativePathIsRejected()
+    [Theory]
+    [InlineData("repo", false)]
+    // A leading space fails the absolute-path check on every OS; Windows would strip a trailing one
+    [InlineData(" ", true)]
+    public void NonAbsolutePathIsRejectedWithoutTrimming(string prefix, bool appendRepositoryFolder)
     {
-        RepositoryRootException exception = Assert.Throws<RepositoryRootException>(() =>
-            RepositoryRootOption.Parse("repo")
-        );
-
-        Assert.Equal(expected: "CHANGELOG_MCP_REPO_ROOT must be an absolute path: \"repo\"", actual: exception.Message);
-    }
-
-    [Fact]
-    public void MissingDirectoryIsRejected()
-    {
-        string missing = Path.Combine(path1: this.TempFolder, path2: "missing");
+        string path = appendRepositoryFolder ? prefix + this.RepositoryFolder : prefix;
 
         RepositoryRootException exception = Assert.Throws<RepositoryRootException>(() =>
-            RepositoryRootOption.Parse(missing)
+            RepositoryRootOption.Parse(path)
         );
 
         Assert.Equal(
-            expected: $"CHANGELOG_MCP_REPO_ROOT must name an existing directory: \"{missing}\"",
+            expected: $"CHANGELOG_MCP_REPO_ROOT must be an absolute path: \"{path}\"",
             actual: exception.Message
         );
     }
 
-    [Fact]
-    public void SurroundingWhitespaceIsNotTrimmedAndIsVisibleInTheError()
+    [Theory]
+    [InlineData("missing", false)]
+    [InlineData(CHANGELOG, true)]
+    public void PathThatIsNotAnExistingDirectoryIsRejected(string name, bool existsAsFile)
     {
-        // A leading space fails the absolute-path check on every OS; Windows would strip a trailing one
-        string padded = " " + this.RepositoryFolder;
+        string path = Path.Combine(path1: this.RepositoryFolder, path2: name);
+
+        if (existsAsFile)
+        {
+            File.WriteAllText(path: path, contents: "# Changelog");
+        }
 
         RepositoryRootException exception = Assert.Throws<RepositoryRootException>(() =>
-            RepositoryRootOption.Parse(padded)
+            RepositoryRootOption.Parse(path)
         );
 
         Assert.Equal(
-            expected: $"CHANGELOG_MCP_REPO_ROOT must be an absolute path: \"{padded}\"",
-            actual: exception.Message
-        );
-    }
-
-    [Fact]
-    public void FileIsRejected()
-    {
-        File.WriteAllText(path: this.ChangeLogPath, contents: "# Changelog");
-
-        RepositoryRootException exception = Assert.Throws<RepositoryRootException>(() =>
-            RepositoryRootOption.Parse(this.ChangeLogPath)
-        );
-
-        Assert.Equal(
-            expected: $"CHANGELOG_MCP_REPO_ROOT must name an existing directory: \"{this.ChangeLogPath}\"",
+            expected: $"CHANGELOG_MCP_REPO_ROOT must name an existing directory: \"{path}\"",
             actual: exception.Message
         );
     }
