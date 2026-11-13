@@ -1,7 +1,6 @@
 using Credfeto.ChangeLog.Mcp.Paths;
 using Credfeto.ChangeLog.Mcp.Tools;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using ModelContextProtocol.Server;
 
 namespace Credfeto.ChangeLog.Mcp;
@@ -44,15 +43,11 @@ public static class ServerSetup
             );
         }
 
-        return services
-            .Replace(
-                ServiceDescriptor.Singleton<IChangeLogDetector>(new RepositoryRootChangeLogDetector(repositoryRoot))
+        return services.AddSingleton(
+            ChangeLogPathResolver.FromRepositoryRoot(
+                repositoryRoot: repositoryRoot,
+                detector: new RepositoryRootChangeLogDetector(repositoryRoot)
             )
-            .AddSingleton(provider =>
-                ChangeLogPathResolver.FromRepositoryRoot(
-                    repositoryRoot: repositoryRoot,
-                    detector: provider.GetRequiredService<IChangeLogDetector>()
-                )
-            );
+        );
     }
 }
