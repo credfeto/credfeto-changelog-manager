@@ -46,6 +46,20 @@ public sealed class ChangeLogCheckInsertToolTests : ToolTestBase
         Assert.True(condition: Property(json: text, name: "valid").GetBoolean(), userMessage: text);
     }
 
+    [Theory]
+    [InlineData("\r\n")]
+    [InlineData("\n")]
+    public async Task ChangeOnlyInUnreleasedIsValidWhateverTheFixtureLineEndingsAsync(string lineEnding)
+    {
+        await this.CreateOriginBranchAsync(RELEASED.ReplaceLineEndings(lineEnding));
+        await this.AddEntryAsync(type: "Added", message: "A feature");
+        this.CommitChangeLog("Add entry");
+
+        string text = await this.CallSuccessfullyAsync(name: "changelog_check_insert", arguments: []);
+
+        Assert.True(condition: Property(json: text, name: "valid").GetBoolean(), userMessage: text);
+    }
+
     [Fact]
     public async Task MissingBranchIsAnErrorAsync()
     {
@@ -56,9 +70,14 @@ public sealed class ChangeLogCheckInsertToolTests : ToolTestBase
         await this.CallFailingAsync(name: "changelog_check_insert", arguments: [Text("branch", "origin/missing")]);
     }
 
-    private async Task CreateOriginBranchAsync()
+    private Task CreateOriginBranchAsync()
     {
-        await this.WriteChangeLogAsync(RELEASED);
+        return this.CreateOriginBranchAsync(RELEASED);
+    }
+
+    private async Task CreateOriginBranchAsync(string changeLog)
+    {
+        await this.WriteChangeLogAsync(changeLog);
         Commit initial = this.CommitChangeLog("Initial commit");
 
         using Repository repository = new(this.RepositoryFolder);
