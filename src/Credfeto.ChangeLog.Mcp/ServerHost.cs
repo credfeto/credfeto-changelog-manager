@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +10,23 @@ namespace Credfeto.ChangeLog.Mcp;
 
 public static class ServerHost
 {
+    public static async Task<int> RunAsync(Stream input, Stream output)
+    {
+        // Stdout carries the protocol; anything the library writes to the console must not corrupt it
+        Console.SetOut(Console.Error);
+
+        using ShutdownSignal shutdown = new();
+        await using Stream ownedInput = input;
+        await using Stream ownedOutput = output;
+
+        return await RunAsync(
+            workingDirectory: Environment.CurrentDirectory,
+            input: ownedInput,
+            output: ownedOutput,
+            stopRequested: shutdown.Requested
+        );
+    }
+
     public static async Task<int> RunAsync(
         string workingDirectory,
         Stream input,
