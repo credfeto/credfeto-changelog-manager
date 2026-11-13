@@ -124,7 +124,7 @@ public sealed class ServerHostTests : ToolTestBase
 
         Assert.NotEqual(expected: 0, actual: exitCode);
         Assert.Equal(
-            expected: "CHANGELOG_MCP_REPO_ROOT must be an absolute path: relative/repo" + Environment.NewLine,
+            expected: "CHANGELOG_MCP_REPO_ROOT must be an absolute path: \"relative/repo\"" + Environment.NewLine,
             actual: error.ToString()
         );
         Assert.Empty(output.Text);
@@ -148,7 +148,7 @@ public sealed class ServerHostTests : ToolTestBase
 
         Assert.NotEqual(expected: 0, actual: exitCode);
         Assert.Equal(
-            expected: "CHANGELOG_MCP_REPO_ROOT must be an absolute path: relative/repo" + Environment.NewLine,
+            expected: "CHANGELOG_MCP_REPO_ROOT must be an absolute path: \"relative/repo\"" + Environment.NewLine,
             actual: error.ToString()
         );
         Assert.Empty(output.Text);
