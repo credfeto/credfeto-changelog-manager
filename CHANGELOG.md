@@ -11,6 +11,18 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ## [Unreleased]
 ### Security
 ### Added
+### Fixed
+### Changed
+### Deprecated
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+
+## [1.10.215] - 2026-11-13
+### Added
 - Added a --self-test switch that proves the tool can start: it resolves all services without touching files, git or the network, and exits non-zero with a one-line reason on stderr if it cannot (#398)
 - Added a changelog MCP server, a stdio dotnet tool (Credfeto.ChangeLog.Mcp, command changelog-mcp) that lets MCP clients manage CHANGELOG.md through changelog_add, changelog_remove, changelog_unreleased, changelog_extract, changelog_create_release, changelog_check_insert and changelog_lint tools, so AI agents can maintain changelog entries without hand-editing the file (#400)
 ### Fixed
@@ -20,14 +32,8 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - SDK - Updated DotNet SDK to 11.0.100-rc.3.26522.148
 - Target .NET 11 - all projects now target net11.0 and build with the .NET 11.0.100-rc.3 SDK
 - Build - enabled the runtime-async compiler feature so async code runs on the .NET 11 runtime async path
-### Deprecated
 ### Removed
 - Redundant Microsoft.Extensions.DependencyInjection.Abstractions package reference, which is already provided by the framework
-### Deployment Changes
-
-<!--
-Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
--->
 
 ## [1.10.213] - 2026-11-04
 ### Changed
