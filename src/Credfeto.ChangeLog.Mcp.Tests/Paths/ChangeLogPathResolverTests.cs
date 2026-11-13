@@ -58,10 +58,7 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
     {
         string root = this.CreateNestedRoot();
 
-        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(
-            repositoryRoot: root,
-            detector: new FixedChangeLogDetector(null)
-        );
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root);
 
         Assert.Equal(expected: root, actual: resolver.RepositoryRoot);
     }
@@ -71,10 +68,7 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
     {
         string root = this.CreateNestedRoot();
 
-        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(
-            repositoryRoot: root + Path.DirectorySeparatorChar,
-            detector: new FixedChangeLogDetector(null)
-        );
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root + Path.DirectorySeparatorChar);
 
         Assert.Equal(expected: root, actual: resolver.RepositoryRoot);
     }
@@ -86,10 +80,7 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
     {
         string root = this.CreateNestedRoot();
 
-        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(
-            repositoryRoot: root,
-            detector: new FixedChangeLogDetector(null)
-        );
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root);
 
         Assert.Equal(
             expected: Path.GetFullPath(Path.Combine(path1: root, path2: changeLog)),
@@ -103,10 +94,7 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
         string root = this.CreateNestedRoot();
         string changeLog = Path.Combine(path1: root, path2: CHANGELOG);
 
-        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(
-            repositoryRoot: root,
-            detector: new FixedChangeLogDetector(null)
-        );
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root);
 
         Assert.Equal(expected: changeLog, actual: resolver.Resolve(changeLog));
     }
@@ -119,10 +107,7 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
     {
         string root = this.CreateNestedRoot();
 
-        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(
-            repositoryRoot: root,
-            detector: new FixedChangeLogDetector(null)
-        );
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root);
 
         Assert.Throws<ChangeLogPathException>(() => resolver.Resolve(changeLog));
     }
@@ -135,10 +120,7 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
         Directory.CreateDirectory(outside);
         Directory.CreateSymbolicLink(path: Path.Combine(path1: root, path2: "linked"), pathToTarget: outside);
 
-        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(
-            repositoryRoot: root,
-            detector: new FixedChangeLogDetector(null)
-        );
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root);
 
         Assert.Throws<ChangeLogPathException>(() => resolver.Resolve("linked/CHANGELOG.md"));
     }
@@ -150,10 +132,7 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
         string changeLog = Path.Combine(path1: root, path2: CHANGELOG);
         File.WriteAllText(path: changeLog, contents: "# Changelog");
 
-        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(
-            repositoryRoot: root,
-            detector: new RepositoryRootChangeLogDetector(root)
-        );
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root);
 
         Assert.Equal(expected: changeLog, actual: resolver.Resolve(null));
     }
@@ -163,10 +142,7 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
     {
         string root = this.CreateNestedRoot();
 
-        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(
-            repositoryRoot: root,
-            detector: new RepositoryRootChangeLogDetector(root)
-        );
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root);
 
         ChangeLogPathException exception = Assert.Throws<ChangeLogPathException>(() => resolver.Resolve(null));
 
