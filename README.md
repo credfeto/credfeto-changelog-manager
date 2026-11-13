@@ -236,7 +236,9 @@ For example, in a client that reads an `mcpServers` configuration:
 
 When `CHANGELOG_MCP_REPO_ROOT` is set it must be an absolute path to an existing folder.
 Otherwise the server writes an error to stderr and exits with a non-zero exit code without starting.
-The folder is used as the repository root as given; the server does not search above it for a git repository.
+The folder is used as the repository root as given: the server does not search above it, and it does not need to contain `.git`, to start or to resolve changelog paths.
+`changelog_check_insert` compares the changelog with git history, so it needs the changelog to be inside a git working tree; it finds the git repository by searching upwards from the changelog's folder.
+Set `CHANGELOG_MCP_REPO_ROOT` to the root of that git repository so the paths the tools report agree with the paths git uses.
 
 When `CHANGELOG_MCP_REPO_ROOT` is not set, or is empty or only whitespace, start the server from inside the repository instead.
 The server then uses the nearest folder containing `.git` at or above the folder it was started in as the repository root.
