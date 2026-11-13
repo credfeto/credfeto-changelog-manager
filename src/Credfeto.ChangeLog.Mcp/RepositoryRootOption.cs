@@ -15,7 +15,7 @@ public static class RepositoryRootOption
 
     public static string? Parse(string? value)
     {
-        if (string.IsNullOrEmpty(value))
+        if (string.IsNullOrWhiteSpace(value))
         {
             return null;
         }

@@ -9,16 +9,14 @@ public sealed class RepositoryRootOptionTests : ToolTestBase
     public RepositoryRootOptionTests(ITestOutputHelper output)
         : base(output) { }
 
-    [Fact]
-    public void UnsetMeansNoRoot()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("\t")]
+    public static void UnsetEmptyOrWhitespaceMeansNoRoot(string? value)
     {
-        Assert.Null(RepositoryRootOption.Parse(null));
-    }
-
-    [Fact]
-    public void EmptyMeansNoRoot()
-    {
-        Assert.Null(RepositoryRootOption.Parse(string.Empty));
+        Assert.Null(RepositoryRootOption.Parse(value));
     }
 
     [Fact]
