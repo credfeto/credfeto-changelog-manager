@@ -6,6 +6,7 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Benchmark.Tests;
 
+[Collection(SerialBenchmarks.NAME)]
 public sealed class ChangeLogCheckerBenchmarkTests : LoggingTestBase
 {
     // Baseline measured after adding a `paths` filter to the diff comparison in ChangeLogChecker (issue #331),

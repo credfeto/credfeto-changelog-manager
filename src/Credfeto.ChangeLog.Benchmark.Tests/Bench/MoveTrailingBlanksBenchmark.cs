@@ -7,7 +7,7 @@ using Credfeto.ChangeLog.Services;
 
 namespace Credfeto.ChangeLog.Benchmark.Tests.Bench;
 
-[SimpleJob]
+[InProcess]
 [MemoryDiagnoser(false)]
 [SuppressMessage(category: "codecracker.CSharp", checkId: "CC0091:MarkMembersAsStatic", Justification = "Benchmark")]
 [SuppressMessage(

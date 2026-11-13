@@ -13,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Credfeto.ChangeLog.Benchmark.Tests.Bench;
 
-[SimpleJob]
+[InProcess]
 [MemoryDiagnoser(false)]
 [SuppressMessage(
     category: "FunFair.CodeAnalysis",

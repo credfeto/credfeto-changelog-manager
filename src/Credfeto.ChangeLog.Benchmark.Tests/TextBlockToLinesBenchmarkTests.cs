@@ -6,6 +6,7 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Benchmark.Tests;
 
+[Collection(SerialBenchmarks.NAME)]
 public sealed class TextBlockToLinesBenchmarkTests : LoggingTestBase
 {
     // Baseline measured against the pre-optimisation nested Split/SelectMany chain in
