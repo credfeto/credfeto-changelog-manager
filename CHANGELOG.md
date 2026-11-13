@@ -17,6 +17,8 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Meziantou.Analyzer to 3.0.340
 - Dependencies - Updated Philips.CodeAnalysis.MaintainabilityAnalyzers to 2.2.0
 - Dependencies - Updated SonarAnalyzer.CSharp to 10.36.0.15337
+- SDK - Updated DotNet SDK to 11.0.100
+- TBD - to be finalized after review
 ### Deprecated
 ### Removed
 ### Deployment Changes
