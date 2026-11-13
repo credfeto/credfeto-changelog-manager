@@ -33,10 +33,10 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
 
     protected string ChangeLogPath => Path.Combine(path1: this.RepositoryFolder, path2: CHANGELOG);
 
-    protected ServiceProvider BuildServices(IChangeLogDetector? detector = null)
+    protected ServiceProvider BuildServices(IChangeLogDetector? detector = null, string? repositoryRoot = null)
     {
         return new ServiceCollection()
-            .AddChangeLogMcpServer(workingDirectory: this.RepositoryFolder, repositoryRoot: null)
+            .AddChangeLogMcpServer(workingDirectory: this.RepositoryFolder, repositoryRoot: repositoryRoot)
             .AddSingleton(detector ?? new FixedChangeLogDetector(this.ChangeLogPath))
             .BuildServiceProvider();
     }
@@ -52,10 +52,11 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
     protected async Task<(string Text, bool IsError)> CallAsync(
         string name,
         IReadOnlyList<KeyValuePair<string, JsonElement>> arguments,
-        IChangeLogDetector? detector = null
+        IChangeLogDetector? detector = null,
+        string? repositoryRoot = null
     )
     {
-        await using ServiceProvider services = this.BuildServices(detector);
+        await using ServiceProvider services = this.BuildServices(detector: detector, repositoryRoot: repositoryRoot);
         ChangeLogTool tool = GetTool(services: services, name: name);
 
         CallToolResult result = await tool.CallAsync(arguments: arguments, cancellationToken: this.CancellationToken());
@@ -67,10 +68,15 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
 
     protected async Task<string> CallSuccessfullyAsync(
         string name,
-        IReadOnlyList<KeyValuePair<string, JsonElement>> arguments
+        IReadOnlyList<KeyValuePair<string, JsonElement>> arguments,
+        string? repositoryRoot = null
     )
     {
-        (string text, bool isError) = await this.CallAsync(name: name, arguments: arguments);
+        (string text, bool isError) = await this.CallAsync(
+            name: name,
+            arguments: arguments,
+            repositoryRoot: repositoryRoot
+        );
 
         Assert.False(condition: isError, userMessage: text);
 
