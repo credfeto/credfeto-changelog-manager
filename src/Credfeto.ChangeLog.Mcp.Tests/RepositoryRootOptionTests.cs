@@ -9,6 +9,12 @@ public sealed class RepositoryRootOptionTests : ToolTestBase
     public RepositoryRootOptionTests(ITestOutputHelper output)
         : base(output) { }
 
+    [Fact]
+    public static void EnvironmentVariableNameIsTheDocumentedName()
+    {
+        Assert.Equal(expected: "CHANGELOG_MCP_REPO_ROOT", actual: RepositoryRootOption.EnvironmentVariable);
+    }
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
