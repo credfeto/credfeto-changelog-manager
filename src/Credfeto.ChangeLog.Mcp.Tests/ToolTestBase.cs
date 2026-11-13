@@ -33,6 +33,15 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
 
     protected string ChangeLogPath => Path.Combine(path1: this.RepositoryFolder, path2: CHANGELOG);
 
+    // A folder inside the test repository, so any walk up to the enclosing .git would be visible
+    protected string CreateNestedRoot()
+    {
+        string root = Path.Combine(path1: this.RepositoryFolder, path2: "nested");
+        Directory.CreateDirectory(root);
+
+        return root;
+    }
+
     protected ServiceProvider BuildServices(IChangeLogDetector? detector = null, string? repositoryRoot = null)
     {
         return new ServiceCollection()
