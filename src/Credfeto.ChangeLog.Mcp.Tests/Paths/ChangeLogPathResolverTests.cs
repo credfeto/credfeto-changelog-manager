@@ -74,6 +74,22 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
     }
 
     [Theory]
+    [InlineData("repo", "nested")]
+    [InlineData("repo/nested", "")]
+    public void RepositoryRootReachedThroughARelativeLinkIsTheFolderItNames(string linkTarget, string belowLink)
+    {
+        string root = this.CreateNestedRoot();
+        string link = Path.Combine(path1: this.TempFolder, path2: "linked");
+        Directory.CreateSymbolicLink(path: link, pathToTarget: linkTarget);
+
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(
+            Path.Combine(path1: link, path2: belowLink)
+        );
+
+        Assert.Equal(expected: root, actual: resolver.RepositoryRoot);
+    }
+
+    [Theory]
     [InlineData("CHANGELOG.md")]
     [InlineData("docs/CHANGELOG.md")]
     public void RelativeChangeLogResolvesAgainstTheRepositoryRoot(string changeLog)
