@@ -1,12 +1,12 @@
 using System;
 using System.IO;
+using Credfeto.ChangeLog.Mcp.Constants;
 using Credfeto.ChangeLog.Mcp.Exceptions;
 
 namespace Credfeto.ChangeLog.Mcp.Paths;
 
 public sealed class ChangeLogPathResolver
 {
-    private const string CHANGELOG_FILE_NAME = "CHANGELOG.md";
     private const string GIT_FOLDER_NAME = ".git";
 
     private readonly IChangeLogDetector _detector;
@@ -45,7 +45,7 @@ public sealed class ChangeLogPathResolver
         if (!this.IsInsideRepository(fullPath) || !IsChangeLogFileName(fullPath) || this.PassesThroughLink(fullPath))
         {
             throw new ChangeLogPathException(
-                "The changelog must be a file named " + CHANGELOG_FILE_NAME + " inside the repository"
+                "The changelog must be a file named " + FileConstants.ChangeLogFileName + " inside the repository"
             );
         }
 
@@ -78,7 +78,7 @@ public sealed class ChangeLogPathResolver
 
     private static bool IsChangeLogFileName(string fullPath)
     {
-        return StringComparer.Ordinal.Equals(x: Path.GetFileName(fullPath), y: CHANGELOG_FILE_NAME);
+        return StringComparer.Ordinal.Equals(x: Path.GetFileName(fullPath), y: FileConstants.ChangeLogFileName);
     }
 
     // A link inside the repository could point anywhere, so the file and every folder between it
