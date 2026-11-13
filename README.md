@@ -238,7 +238,7 @@ When `CHANGELOG_MCP_REPO_ROOT` is set it must be an absolute path to an existing
 Otherwise the server writes an error to stderr and exits with a non-zero exit code without starting.
 The folder is used as the repository root as given; the server does not search above it for a git repository.
 
-When `CHANGELOG_MCP_REPO_ROOT` is not set, or is empty, start the server from inside the repository instead.
+When `CHANGELOG_MCP_REPO_ROOT` is not set, or is empty or only whitespace, start the server from inside the repository instead.
 The server then uses the nearest folder containing `.git` at or above the folder it was started in as the repository root.
 
 ### Tools
