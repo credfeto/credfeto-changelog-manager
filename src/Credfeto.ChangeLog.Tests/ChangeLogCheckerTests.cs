@@ -336,7 +336,10 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
     public async Task ChangeLogModifiedInReleaseSectionReturnsTrueWhenChangelogModifiedWithoutTrailingNewline()
     {
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
-        byte[] changeLogBytes = Encoding.UTF8.GetBytes(CHANGE_LOG_WITH_RELEASES);
+
+        // The raw literal takes the source checkout's line endings; match the update's explicit "\n" endings so
+        // only the intended lines differ.
+        byte[] changeLogBytes = Encoding.UTF8.GetBytes(CHANGE_LOG_WITH_RELEASES.ReplaceLineEndings("\n"));
         (string changeLogPath, string originBranchName, Repository repo) =
             await GitRepositoryHelpers.CreateRepoWithOriginBranchAsync(
                 this.TempFolder,
