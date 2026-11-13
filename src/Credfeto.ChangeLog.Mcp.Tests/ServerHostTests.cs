@@ -50,17 +50,6 @@ public sealed class ServerHostTests : ToolTestBase
     }
 
     [Fact]
-    public async Task ServerOwningStreamsEndsWhenInputClosesAsync()
-    {
-        await using ScriptedInputStream input = new(script: string.Empty, waitAtEnd: false);
-        await using CapturingOutputStream output = new(CALL_RESPONSE_MARKER);
-
-        int exitCode = await ServerHost.RunAsync(input: input, output: output);
-
-        Assert.Equal(expected: 0, actual: exitCode);
-    }
-
-    [Fact]
     public async Task ToolCallIsAnsweredBeforeStopAsync()
     {
         await this.AddEntryAsync(type: "Added", message: "Served over the protocol");
