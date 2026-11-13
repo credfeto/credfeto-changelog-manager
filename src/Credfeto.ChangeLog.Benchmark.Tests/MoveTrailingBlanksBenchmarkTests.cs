@@ -15,7 +15,7 @@ public sealed class MoveTrailingBlanksBenchmarkTests : LoggingTestBase
     // growth) — this baseline guards against allocation regressions, not the CPU-time win, which was
     // measured separately: ParseAsync over a 200-trailing-blank-line fixture averaged ~13.5us/op after
     // the fix vs ~18.3us/op before it (BenchmarkDotNet SimpleJob, allocations identical at ~24.5KB/op
-    // in both cases).
+    // in both cases; the benchmarks now run [InProcess]).
     // This limit includes a 25% margin to allow for minor variation across machines.
     private const long MAX_ALLOCATED_BYTES_MANY_TRAILING_BLANKS = 30650;
 

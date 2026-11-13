@@ -7,7 +7,7 @@ namespace Credfeto.ChangeLog.Mcp.Tools;
 
 public static class JsonResult
 {
-    public const string CHANGELOG_PROPERTY = "changeLog";
+    private const string CHANGELOG_PROPERTY = "changeLog";
 
     public static string Create(string changeLog, Action<Utf8JsonWriter> writeProperties)
     {

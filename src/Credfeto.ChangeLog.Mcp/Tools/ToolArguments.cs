@@ -20,11 +20,12 @@ public sealed class ToolArguments
         IEnumerable<KeyValuePair<string, JsonElement>>? arguments
     )
     {
+        HashSet<string> names = [with(StringComparer.Ordinal), .. schema.Select(property => property.Name)];
         Dictionary<string, JsonElement> values = [with(StringComparer.Ordinal)];
 
         foreach (KeyValuePair<string, JsonElement> argument in arguments ?? [])
         {
-            if (!schema.Any(property => StringComparer.Ordinal.Equals(x: property.Name, y: argument.Key)))
+            if (!names.Contains(argument.Key))
             {
                 throw new ToolArgumentException(
                     "Unknown parameter; this tool takes: "
