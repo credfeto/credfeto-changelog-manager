@@ -53,22 +53,15 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
         Assert.Equal(expected: root, actual: resolver.RepositoryRoot);
     }
 
-    [Fact]
-    public void RepositoryRootIsUsedWithoutSearchingUpwards()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RepositoryRootIsUsedWithoutSearchingUpwardsOrATrailingSeparator(bool trailingSeparator)
     {
         string root = this.CreateNestedRoot();
+        string configuredRoot = trailingSeparator ? root + Path.DirectorySeparatorChar : root;
 
-        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root);
-
-        Assert.Equal(expected: root, actual: resolver.RepositoryRoot);
-    }
-
-    [Fact]
-    public void RepositoryRootTrailingSeparatorIsRemoved()
-    {
-        string root = this.CreateNestedRoot();
-
-        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root + Path.DirectorySeparatorChar);
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(configuredRoot);
 
         Assert.Equal(expected: root, actual: resolver.RepositoryRoot);
     }

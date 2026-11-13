@@ -28,43 +28,26 @@ public sealed class RepositoryRootEnvironmentTests : TestBase
         }
     }
 
-    [Fact]
-    public async Task ServerOwningStreamsEndsWhenInputClosesAsync()
+    [Theory]
+    [InlineData(null, 0)]
+    [InlineData("relative/repo", 1)]
+    public static async Task ServerOwningStreamsExitCodeReflectsTheRootFromTheEnvironmentAsync(
+        string? configuredRoot,
+        int expectedExitCode
+    )
     {
         string? original = Environment.GetEnvironmentVariable("CHANGELOG_MCP_REPO_ROOT");
 
         try
         {
-            Environment.SetEnvironmentVariable(variable: "CHANGELOG_MCP_REPO_ROOT", value: null);
+            Environment.SetEnvironmentVariable(variable: "CHANGELOG_MCP_REPO_ROOT", value: configuredRoot);
 
             await using ScriptedInputStream input = new(script: string.Empty, waitAtEnd: false);
             await using CapturingOutputStream output = new(CALL_RESPONSE_MARKER);
 
             int exitCode = await ServerHost.RunAsync(input: input, output: output);
 
-            Assert.Equal(expected: 0, actual: exitCode);
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable(variable: "CHANGELOG_MCP_REPO_ROOT", value: original);
-        }
-    }
-
-    [Fact]
-    public async Task ServerOwningStreamsRejectsAnInvalidRootFromTheEnvironmentAsync()
-    {
-        string? original = Environment.GetEnvironmentVariable("CHANGELOG_MCP_REPO_ROOT");
-
-        try
-        {
-            Environment.SetEnvironmentVariable(variable: "CHANGELOG_MCP_REPO_ROOT", value: "relative/repo");
-
-            await using ScriptedInputStream input = new(script: string.Empty, waitAtEnd: false);
-            await using CapturingOutputStream output = new(CALL_RESPONSE_MARKER);
-
-            int exitCode = await ServerHost.RunAsync(input: input, output: output);
-
-            Assert.Equal(expected: 1, actual: exitCode);
+            Assert.Equal(expected: expectedExitCode, actual: exitCode);
         }
         finally
         {
