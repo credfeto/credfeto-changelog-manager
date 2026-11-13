@@ -39,13 +39,4 @@ public sealed class ServerSetupTests : ToolTestBase
 
         return services.GetRequiredService<ChangeLogPathResolver>();
     }
-
-    // A folder inside the test repository, so any walk up to the enclosing .git would be visible
-    private string CreateNestedRoot()
-    {
-        string root = Path.Combine(path1: this.RepositoryFolder, path2: "nested");
-        Directory.CreateDirectory(root);
-
-        return root;
-    }
 }

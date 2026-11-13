@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Credfeto.ChangeLog.Mcp.Tests.Streams;
 using FunFair.Test.Common;
@@ -14,18 +13,9 @@ public sealed class RepositoryRootEnvironmentTests : TestBase
     [Fact]
     public void ReadReturnsTheEnvironmentVariable()
     {
-        string? original = Environment.GetEnvironmentVariable("CHANGELOG_MCP_REPO_ROOT");
+        using RepositoryRootEnvironmentScope environment = new("/configured/root");
 
-        try
-        {
-            Environment.SetEnvironmentVariable(variable: "CHANGELOG_MCP_REPO_ROOT", value: "/configured/root");
-
-            Assert.Equal(expected: "/configured/root", actual: RepositoryRootOption.Read());
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable(variable: "CHANGELOG_MCP_REPO_ROOT", value: original);
-        }
+        Assert.Equal(expected: "/configured/root", actual: RepositoryRootOption.Read());
     }
 
     [Theory]
@@ -36,22 +26,13 @@ public sealed class RepositoryRootEnvironmentTests : TestBase
         int expectedExitCode
     )
     {
-        string? original = Environment.GetEnvironmentVariable("CHANGELOG_MCP_REPO_ROOT");
+        using RepositoryRootEnvironmentScope environment = new(configuredRoot);
 
-        try
-        {
-            Environment.SetEnvironmentVariable(variable: "CHANGELOG_MCP_REPO_ROOT", value: configuredRoot);
+        await using ScriptedInputStream input = new(script: string.Empty, waitAtEnd: false);
+        await using CapturingOutputStream output = new(CALL_RESPONSE_MARKER);
 
-            await using ScriptedInputStream input = new(script: string.Empty, waitAtEnd: false);
-            await using CapturingOutputStream output = new(CALL_RESPONSE_MARKER);
+        int exitCode = await ServerHost.RunAsync(input: input, output: output);
 
-            int exitCode = await ServerHost.RunAsync(input: input, output: output);
-
-            Assert.Equal(expected: expectedExitCode, actual: exitCode);
-        }
-        finally
-        {
-            Environment.SetEnvironmentVariable(variable: "CHANGELOG_MCP_REPO_ROOT", value: original);
-        }
+        Assert.Equal(expected: expectedExitCode, actual: exitCode);
     }
 }
