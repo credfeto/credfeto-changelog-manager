@@ -12,7 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 - Added a --self-test switch that proves the tool can start: it resolves all services without touching files, git or the network, and exits non-zero with a one-line reason on stderr if it cannot (#398)
-- Added a changelog manager MCP server (stdio dotnet tool) exposing changelog operations as MCP tools
+- Added a changelog MCP server, a stdio dotnet tool (Credfeto.ChangeLog.Mcp, command changelog-mcp) that lets MCP clients manage CHANGELOG.md through changelog_add, changelog_remove, changelog_unreleased, changelog_extract, changelog_create_release, changelog_check_insert and changelog_lint tools, so AI agents can maintain changelog entries without hand-editing the file (#400)
 ### Fixed
 - Changelog parser now uses an explicit StringComparison when comparing strings, fixing analyzer warning MA0001
 ### Changed
