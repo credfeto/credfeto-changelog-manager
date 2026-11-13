@@ -21,7 +21,7 @@ public sealed class ServerOptionsFactoryTests : ToolTestBase
 
         McpServerOptions options = services.GetRequiredService<McpServerOptions>();
 
-        Assert.Equal(expected: ServerOptionsFactory.ServerName, actual: options.ServerInfo?.Name);
+        Assert.Equal(expected: "credfeto-changelog", actual: options.ServerInfo?.Name);
         Assert.False(string.IsNullOrWhiteSpace(options.ServerInfo?.Version), userMessage: "Version should be set");
         Assert.Contains(
             expectedSubstring: RepositoryRootOption.EnvironmentVariable,
