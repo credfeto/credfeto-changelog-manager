@@ -66,6 +66,19 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
         Assert.Equal(expected: root, actual: resolver.RepositoryRoot);
     }
 
+    [Fact]
+    public void RepositoryRootTrailingSeparatorIsRemoved()
+    {
+        string root = this.CreateNestedRoot();
+
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(
+            repositoryRoot: root + Path.DirectorySeparatorChar,
+            detector: new FixedChangeLogDetector(null)
+        );
+
+        Assert.Equal(expected: root, actual: resolver.RepositoryRoot);
+    }
+
     [Theory]
     [InlineData("CHANGELOG.md")]
     [InlineData("docs/CHANGELOG.md")]

@@ -30,6 +30,6 @@ public static class RepositoryRootOption
             throw new RepositoryRootException(EnvironmentVariable + " must name an existing directory: " + value);
         }
 
-        return Path.TrimEndingDirectorySeparator(Path.GetFullPath(value));
+        return value;
     }
 }

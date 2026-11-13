@@ -28,15 +28,6 @@ public sealed class RepositoryRootOptionTests : ToolTestBase
     }
 
     [Fact]
-    public void TrailingSeparatorIsRemoved()
-    {
-        Assert.Equal(
-            expected: this.RepositoryFolder,
-            actual: RepositoryRootOption.Parse(this.RepositoryFolder + Path.DirectorySeparatorChar)
-        );
-    }
-
-    [Fact]
     public void RelativePathIsRejected()
     {
         RepositoryRootException exception = Assert.Throws<RepositoryRootException>(() =>
