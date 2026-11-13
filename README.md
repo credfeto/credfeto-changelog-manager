@@ -198,6 +198,58 @@ Notes:
 - Exits with `0` and prints `Self-test passed` when everything loads.
 - Exits with a non-zero exit code and writes a single `SELF-TEST FAILED: <reason>` line to stderr if anything fails to load.
 
+## MCP Server
+
+The same changelog operations are available to AI assistants through a Model Context Protocol (MCP) server that communicates over stdio.
+It is shipped as a separate dotnet tool.
+
+### Install the MCP server
+
+```shell
+dotnet tool install --global Credfeto.ChangeLog.Mcp
+```
+
+To update to latest released version
+
+```shell
+dotnet tool update --global Credfeto.ChangeLog.Mcp
+```
+
+### Configure an MCP client
+
+Start the server from the root of the repository whose changelog it should manage.
+For example, in a client that reads an `mcpServers` configuration:
+
+```json
+{
+  "mcpServers": {
+    "changelog": {
+      "command": "changelog-mcp"
+    }
+  }
+}
+```
+
+### Tools
+
+| Tool                       | Description                                                                         |
+|----------------------------|-------------------------------------------------------------------------------------|
+| `changelog_add`            | Adds an entry to a section of the [Unreleased] section.                             |
+| `changelog_remove`         | Removes an entry from a section of the [Unreleased] section.                        |
+| `changelog_unreleased`     | Returns the content of the [Unreleased] section.                                    |
+| `changelog_extract`        | Returns the release notes for a version as text.                                    |
+| `changelog_create_release` | Moves the [Unreleased] changes into a new release, optionally with a pending date.  |
+| `changelog_check_insert`   | Checks that all changes since a branch are only in the [Unreleased] section.        |
+| `changelog_lint`           | Validates the changelog format and can optionally fix the problems it finds.        |
+
+Notes:
+
+- Every tool takes an optional `changelog` parameter; when it is omitted the changelog is searched for in the current git repo, as the command line tool does.
+- Every tool takes an optional `additionalSections` parameter: a comma-separated list of extra allowed section names.
+- The changelog must be a file named `CHANGELOG.md` inside the repository the server was started in; any other path is rejected.
+- Results are returned as JSON, apart from `changelog_extract`, which returns the release notes as plain text.
+- Failures are returned as tool errors rather than ending the server.
+
 ## Contributors
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->

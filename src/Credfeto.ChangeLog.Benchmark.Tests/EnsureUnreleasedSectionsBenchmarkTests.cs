@@ -6,6 +6,7 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Benchmark.Tests;
 
+[Collection(SerialBenchmarks.NAME)]
 public sealed class EnsureUnreleasedSectionsBenchmarkTests : LoggingTestBase
 {
     // Baselines measured after replacing per-call HashSet with static FrozenSet (issue #253).

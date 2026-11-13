@@ -6,6 +6,7 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Benchmark.Tests;
 
+[Collection(SerialBenchmarks.NAME)]
 public sealed class ExampleBenchmarkTests : LoggingTestBase
 {
     public ExampleBenchmarkTests(ITestOutputHelper output)
