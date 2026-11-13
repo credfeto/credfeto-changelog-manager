@@ -9,10 +9,13 @@ public static class ServerOptionsFactory
     public const string SERVER_NAME = "credfeto-changelog";
 
     private const string INSTRUCTIONS =
-        "Manages the CHANGELOG.md of the repository the server was started in, using the Keep a Changelog format. "
+        "Manages the CHANGELOG.md of the repository named by "
+        + RepositoryRootOption.ENVIRONMENT_VARIABLE
+        + ", or of the repository the server was started in when that is not set, using the Keep a Changelog format. "
         + "Add or remove entries in the [Unreleased] section, read unreleased changes, extract release notes, "
         + "create releases, check that only the [Unreleased] section was changed since a branch, and lint the file. "
-        + "Every tool takes an optional changelog path, which must be a CHANGELOG.md inside the repository.";
+        + "Every tool takes an optional changelog path, which must be a CHANGELOG.md inside the repository; "
+        + "a relative path is resolved against the configured repository root, or the start folder when none is set.";
 
     public static McpServerOptions Create(IEnumerable<McpServerTool> tools)
     {

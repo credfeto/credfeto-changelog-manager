@@ -36,7 +36,7 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
     protected ServiceProvider BuildServices(IChangeLogDetector? detector = null)
     {
         return new ServiceCollection()
-            .AddChangeLogMcpServer(this.RepositoryFolder)
+            .AddChangeLogMcpServer(workingDirectory: this.RepositoryFolder, repositoryRoot: null)
             .AddSingleton(detector ?? new FixedChangeLogDetector(this.ChangeLogPath))
             .BuildServiceProvider();
     }
