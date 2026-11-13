@@ -6,8 +6,8 @@ namespace Credfeto.ChangeLog.Benchmark.Tests;
 // allocations for the whole test process. Running the benchmark tests in parallel would count
 // other tests' allocations against each benchmark, so they all share this test collection and
 // run one at a time.
-[CollectionDefinition(NAME, DisableParallelization = true)]
+[CollectionDefinition(Name, DisableParallelization = true)]
 public static class SerialBenchmarks
 {
-    public const string NAME = "Benchmarks";
+    public const string Name = "Benchmarks";
 }
