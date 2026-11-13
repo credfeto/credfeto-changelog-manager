@@ -28,11 +28,12 @@ public sealed class ChangeLogPathResolver
         return new(workingDirectory: folder, repositoryRoot: FindRepositoryRoot(folder), detector: detector);
     }
 
-    public static ChangeLogPathResolver FromRepositoryRoot(string repositoryRoot, IChangeLogDetector detector)
+    // The detector is built from the same normalised root the resolver checks against, so the two cannot disagree
+    public static ChangeLogPathResolver FromRepositoryRoot(string repositoryRoot)
     {
         string root = Normalise(repositoryRoot);
 
-        return new(workingDirectory: root, repositoryRoot: root, detector: detector);
+        return new(workingDirectory: root, repositoryRoot: root, detector: new RepositoryRootChangeLogDetector(root));
     }
 
     public string Resolve(string? changeLog)
