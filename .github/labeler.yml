@@ -20,6 +20,10 @@
   - any: ['src/Credfeto.ChangeLog.Cmd/**/*']
 "credfeto-changelog-cmd-tests":
   - any: ['src/Credfeto.ChangeLog.Cmd.Tests/**/*']
+"credfeto-changelog-mcp":
+  - any: ['src/Credfeto.ChangeLog.Mcp/**/*']
+"credfeto-changelog-mcp-tests":
+  - any: ['src/Credfeto.ChangeLog.Mcp.Tests/**/*']
 "credfeto-changelog-tests":
   - any: ['src/Credfeto.ChangeLog.Tests/**/*']
 "dotnet":
