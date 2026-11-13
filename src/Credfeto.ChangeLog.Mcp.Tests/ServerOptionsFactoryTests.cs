@@ -21,10 +21,10 @@ public sealed class ServerOptionsFactoryTests : ToolTestBase
 
         McpServerOptions options = services.GetRequiredService<McpServerOptions>();
 
-        Assert.Equal(expected: ServerOptionsFactory.SERVER_NAME, actual: options.ServerInfo?.Name);
+        Assert.Equal(expected: ServerOptionsFactory.ServerName, actual: options.ServerInfo?.Name);
         Assert.False(string.IsNullOrWhiteSpace(options.ServerInfo?.Version), userMessage: "Version should be set");
         Assert.Contains(
-            expectedSubstring: RepositoryRootOption.ENVIRONMENT_VARIABLE,
+            expectedSubstring: RepositoryRootOption.EnvironmentVariable,
             actualString: options.ServerInstructions,
             comparisonType: StringComparison.Ordinal
         );
