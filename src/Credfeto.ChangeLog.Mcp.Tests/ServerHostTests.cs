@@ -106,8 +106,10 @@ public sealed class ServerHostTests : ToolTestBase
         Assert.Empty(error.ToString());
     }
 
-    [Fact]
-    public async Task InvalidRepositoryRootStopsBeforeServingAsync()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task InvalidRepositoryRootStopsBeforeServingWhetherOrNotAlreadyStoppedAsync(bool alreadyStopped)
     {
         await using StringWriter error = new(CultureInfo.InvariantCulture);
         await using ScriptedInputStream input = new(script: SESSION, waitAtEnd: false);
@@ -119,31 +121,7 @@ public sealed class ServerHostTests : ToolTestBase
             error: error,
             input: input,
             output: output,
-            stopRequested: this.CancellationToken()
-        );
-
-        Assert.NotEqual(expected: 0, actual: exitCode);
-        Assert.Equal(
-            expected: "CHANGELOG_MCP_REPO_ROOT must be an absolute path: \"relative/repo\"" + Environment.NewLine,
-            actual: error.ToString()
-        );
-        Assert.Empty(output.Text);
-    }
-
-    [Fact]
-    public async Task InvalidRepositoryRootIsReportedWhenAlreadyStoppedAsync()
-    {
-        await using StringWriter error = new(CultureInfo.InvariantCulture);
-        await using ScriptedInputStream input = new(script: SESSION, waitAtEnd: false);
-        await using CapturingOutputStream output = new(CALL_RESPONSE_MARKER);
-
-        int exitCode = await ServerHost.RunAsync(
-            workingDirectory: this.RepositoryFolder,
-            repositoryRoot: "relative/repo",
-            error: error,
-            input: input,
-            output: output,
-            stopRequested: new CancellationToken(canceled: true)
+            stopRequested: alreadyStopped ? new CancellationToken(canceled: true) : this.CancellationToken()
         );
 
         Assert.NotEqual(expected: 0, actual: exitCode);
