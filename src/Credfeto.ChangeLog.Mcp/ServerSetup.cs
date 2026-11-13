@@ -43,11 +43,6 @@ public static class ServerSetup
             );
         }
 
-        return services.AddSingleton(
-            ChangeLogPathResolver.FromRepositoryRoot(
-                repositoryRoot: repositoryRoot,
-                detector: new RepositoryRootChangeLogDetector(repositoryRoot)
-            )
-        );
+        return services.AddSingleton(ChangeLogPathResolver.FromRepositoryRoot(repositoryRoot));
     }
 }
