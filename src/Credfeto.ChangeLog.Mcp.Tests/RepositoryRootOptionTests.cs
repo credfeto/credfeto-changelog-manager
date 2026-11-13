@@ -38,7 +38,7 @@ public sealed class RepositoryRootOptionTests : ToolTestBase
             RepositoryRootOption.Parse("repo")
         );
 
-        Assert.Equal(expected: "CHANGELOG_MCP_REPO_ROOT must be an absolute path: repo", actual: exception.Message);
+        Assert.Equal(expected: "CHANGELOG_MCP_REPO_ROOT must be an absolute path: \"repo\"", actual: exception.Message);
     }
 
     [Fact]
@@ -51,7 +51,23 @@ public sealed class RepositoryRootOptionTests : ToolTestBase
         );
 
         Assert.Equal(
-            expected: "CHANGELOG_MCP_REPO_ROOT must name an existing directory: " + missing,
+            expected: $"CHANGELOG_MCP_REPO_ROOT must name an existing directory: \"{missing}\"",
+            actual: exception.Message
+        );
+    }
+
+    [Fact]
+    public void SurroundingWhitespaceIsNotTrimmedAndIsVisibleInTheError()
+    {
+        // A leading space fails the absolute-path check on every OS; Windows would strip a trailing one
+        string padded = " " + this.RepositoryFolder;
+
+        RepositoryRootException exception = Assert.Throws<RepositoryRootException>(() =>
+            RepositoryRootOption.Parse(padded)
+        );
+
+        Assert.Equal(
+            expected: $"CHANGELOG_MCP_REPO_ROOT must be an absolute path: \"{padded}\"",
             actual: exception.Message
         );
     }
@@ -66,7 +82,7 @@ public sealed class RepositoryRootOptionTests : ToolTestBase
         );
 
         Assert.Equal(
-            expected: "CHANGELOG_MCP_REPO_ROOT must name an existing directory: " + this.ChangeLogPath,
+            expected: $"CHANGELOG_MCP_REPO_ROOT must name an existing directory: \"{this.ChangeLogPath}\"",
             actual: exception.Message
         );
     }

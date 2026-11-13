@@ -22,12 +22,14 @@ public static class RepositoryRootOption
 
         if (!Path.IsPathFullyQualified(value))
         {
-            throw new RepositoryRootException(EnvironmentVariable + " must be an absolute path: " + value);
+            throw new RepositoryRootException(EnvironmentVariable + " must be an absolute path: \"" + value + "\"");
         }
 
         if (!Directory.Exists(value))
         {
-            throw new RepositoryRootException(EnvironmentVariable + " must name an existing directory: " + value);
+            throw new RepositoryRootException(
+                EnvironmentVariable + " must name an existing directory: \"" + value + "\""
+            );
         }
 
         return value;
