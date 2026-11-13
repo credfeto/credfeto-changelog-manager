@@ -49,7 +49,8 @@ public static class ServerHost
         }
         catch (RepositoryRootException exception)
         {
-            await error.WriteLineAsync(exception.Message.AsMemory(), cancellationToken: stopRequested);
+            // The reason for exiting must still be reported when shutdown has already been requested
+            await error.WriteLineAsync(exception.Message.AsMemory(), cancellationToken: CancellationToken.None);
 
             return INVALID_OPTIONS_EXIT_CODE;
         }
