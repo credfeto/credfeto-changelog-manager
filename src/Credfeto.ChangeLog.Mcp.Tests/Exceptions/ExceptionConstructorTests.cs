@@ -54,4 +54,27 @@ public sealed class ExceptionConstructorTests : TestBase
         Assert.Equal(expected: MESSAGE, actual: ex.Message);
         Assert.Same(expected: inner, actual: ex.InnerException);
     }
+
+    [Fact]
+    public void RepositoryRootExceptionDefaultConstructorHasDefaultMessage()
+    {
+        RepositoryRootException ex = new();
+        Assert.Equal(expected: "Invalid repository root", actual: ex.Message);
+    }
+
+    [Fact]
+    public void RepositoryRootExceptionWithMessageStoresMessage()
+    {
+        RepositoryRootException ex = new(MESSAGE);
+        Assert.Equal(expected: MESSAGE, actual: ex.Message);
+    }
+
+    [Fact]
+    public void RepositoryRootExceptionWithMessageAndInnerExceptionStoresBoth()
+    {
+        InvalidOperationException inner = new("inner");
+        RepositoryRootException ex = new(MESSAGE, inner);
+        Assert.Equal(expected: MESSAGE, actual: ex.Message);
+        Assert.Same(expected: inner, actual: ex.InnerException);
+    }
 }

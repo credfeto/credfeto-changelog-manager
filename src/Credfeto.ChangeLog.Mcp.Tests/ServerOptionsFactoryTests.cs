@@ -23,7 +23,11 @@ public sealed class ServerOptionsFactoryTests : ToolTestBase
 
         Assert.Equal(expected: ServerOptionsFactory.SERVER_NAME, actual: options.ServerInfo?.Name);
         Assert.False(string.IsNullOrWhiteSpace(options.ServerInfo?.Version), userMessage: "Version should be set");
-        Assert.False(string.IsNullOrWhiteSpace(options.ServerInstructions), userMessage: "Instructions should be set");
+        Assert.Contains(
+            expectedSubstring: RepositoryRootOption.ENVIRONMENT_VARIABLE,
+            actualString: options.ServerInstructions,
+            comparisonType: StringComparison.Ordinal
+        );
         Assert.Equal(
             expected:
             [

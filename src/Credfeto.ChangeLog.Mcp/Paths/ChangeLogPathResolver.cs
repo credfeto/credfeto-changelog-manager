@@ -12,15 +12,28 @@ public sealed class ChangeLogPathResolver
     private readonly IChangeLogDetector _detector;
     private readonly string _workingDirectory;
 
-    public ChangeLogPathResolver(string workingDirectory, IChangeLogDetector detector)
+    private ChangeLogPathResolver(string workingDirectory, string repositoryRoot, IChangeLogDetector detector)
     {
-        // Without a trailing separator the root compares equal to the folder names Path.GetDirectoryName returns
-        this._workingDirectory = Path.TrimEndingDirectorySeparator(Path.GetFullPath(workingDirectory));
-        this.RepositoryRoot = FindRepositoryRoot(this._workingDirectory);
+        this._workingDirectory = workingDirectory;
+        this.RepositoryRoot = repositoryRoot;
         this._detector = detector;
     }
 
     public string RepositoryRoot { get; }
+
+    public static ChangeLogPathResolver FromWorkingDirectory(string workingDirectory, IChangeLogDetector detector)
+    {
+        string folder = Normalise(workingDirectory);
+
+        return new(workingDirectory: folder, repositoryRoot: FindRepositoryRoot(folder), detector: detector);
+    }
+
+    public static ChangeLogPathResolver FromRepositoryRoot(string repositoryRoot, IChangeLogDetector detector)
+    {
+        string root = Normalise(repositoryRoot);
+
+        return new(workingDirectory: root, repositoryRoot: root, detector: detector);
+    }
 
     public string Resolve(string? changeLog)
     {
@@ -28,7 +41,7 @@ public sealed class ChangeLogPathResolver
         string fullPath = Path.GetFullPath(Path.Combine(path1: this._workingDirectory, path2: candidate));
 
         // The tools write to the file they are given, so a caller must not be able to reach
-        // anything other than a changelog inside the repository the server was started in.
+        // anything other than a changelog inside the repository the server works on.
         if (!this.IsInsideRepository(fullPath) || !IsChangeLogFileName(fullPath) || this.PassesThroughLink(fullPath))
         {
             throw new ChangeLogPathException(
@@ -105,5 +118,11 @@ public sealed class ChangeLogPathResolver
         }
 
         return workingDirectory;
+    }
+
+    // Without a trailing separator the root compares equal to the folder names Path.GetDirectoryName returns
+    private static string Normalise(string folder)
+    {
+        return Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder));
     }
 }
