@@ -104,9 +104,11 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
 
     protected Task WriteChangeLogAsync(string content)
     {
+        // Raw string literals take the line endings of the test source file's checkout, but the tools write
+        // Environment.NewLine, so an unnormalised fixture makes git see every line as changed.
         return File.WriteAllTextAsync(
             path: this.ChangeLogPath,
-            contents: content,
+            contents: content.ReplaceLineEndings(Environment.NewLine),
             cancellationToken: this.CancellationToken()
         );
     }
