@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using CommandLine;
 using Credfeto.ChangeLog.Cmd.Exceptions;
 using Credfeto.ChangeLog.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -461,16 +460,6 @@ public static class Program
         );
     }
 
-    private static void NotParsed(IEnumerable<Error> errors)
-    {
-        Console.WriteLine("Errors:");
-
-        foreach (Error error in errors)
-        {
-            Console.WriteLine($" * {error.Tag.GetName()}");
-        }
-    }
-
     [SuppressMessage(
         category: "Meziantou.Analyzer",
         checkId: "MA0109",
@@ -484,9 +473,11 @@ public static class Program
 
         try
         {
-            ParserResult<Options> parser = await ParseOptionsAsync(args, serviceProvider);
+            Options options = OptionsParser.Parse(args);
 
-            return parser.Tag == ParserResultType.Parsed ? SUCCESS : ERROR;
+            await RunAsync(options: options, serviceProvider: serviceProvider);
+
+            return SUCCESS;
         }
         catch (InvalidOptionsException exception)
         {
@@ -508,16 +499,15 @@ public static class Program
         return new ServiceCollection().AddChangeLog().BuildServiceProvider();
     }
 
-    private static Task<ParserResult<Options>> ParseOptionsAsync(
-        IEnumerable<string> args,
-        IServiceProvider serviceProvider
-    )
+    private static Task RunAsync(Options options, IServiceProvider serviceProvider)
     {
-        return Parser
-            .Default.ParseArguments<Options>(args)
-            .WithNotParsed(NotParsed)
-            .WithParsedAsync(options =>
-                options.SelfTest ? RunSelfTestAsync() : ParsedOkAsync(options, serviceProvider)
-            );
+        if (options.ShowHelp)
+        {
+            Console.WriteLine(OptionsParser.Usage);
+
+            return Task.CompletedTask;
+        }
+
+        return options.SelfTest ? RunSelfTestAsync() : ParsedOkAsync(options, serviceProvider);
     }
 }
