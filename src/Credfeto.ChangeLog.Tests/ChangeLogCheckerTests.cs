@@ -336,7 +336,10 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
     public async Task ChangeLogModifiedInReleaseSectionReturnsTrueWhenChangelogModifiedWithoutTrailingNewline()
     {
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
-        byte[] changeLogBytes = Encoding.UTF8.GetBytes(CHANGE_LOG_WITH_RELEASES);
+
+        // The raw literal takes the source checkout's line endings; match the update's explicit "\n" endings so
+        // only the intended lines differ.
+        byte[] changeLogBytes = Encoding.UTF8.GetBytes(CHANGE_LOG_WITH_RELEASES.ReplaceLineEndings("\n"));
         (string changeLogPath, string originBranchName, Repository repo) =
             await GitRepositoryHelpers.CreateRepoWithOriginBranchAsync(
                 this.TempFolder,
@@ -651,6 +654,118 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         });
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task ReleaseSectionEditIsInvalidWhetherTheRepositoryIsReachedDirectlyOrThroughALinkAsync(
+        bool throughLink,
+        bool relativeLinkTarget
+    )
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        string repositoryFolder = Path.Combine(this.TempFolder, "repository");
+
+        (string changeLogPath, string originBranchName) = await CreateRepoWithReleaseSectionEditAsync(
+            repositoryFolder: repositoryFolder,
+            cancellationToken: cancellationToken
+        );
+
+        string checkedPath = throughLink
+            ? Path.Combine(
+                this.LinkToRepository(repositoryFolder: repositoryFolder, relativeLinkTarget: relativeLinkTarget),
+                "CHANGELOG.md"
+            )
+            : changeLogPath;
+
+        bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
+            changeLogFileName: checkedPath,
+            originBranchName: originBranchName,
+            language: this._language,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.False(result, userMessage: "Expected false when the release section was modified: " + checkedPath);
+    }
+
+    [Fact]
+    public async Task ChangeLogOutsideTheRepositoryWorkingFolderIsRejectedAsync()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        string repositoryFolder = Path.Combine(this.TempFolder, "repository");
+        string elsewhere = Path.Combine(this.TempFolder, "elsewhere");
+        Directory.CreateDirectory(elsewhere);
+
+        (string changeLogPath, string originBranchName) = await CreateRepoWithReleaseSectionEditAsync(
+            repositoryFolder: repositoryFolder,
+            cancellationToken: cancellationToken
+        );
+
+        // The working folder git reports no longer holds the changelog the check was given
+        using (Repository repo = new(repositoryFolder))
+        {
+            repo.Config.Set("core.worktree", elsewhere);
+        }
+
+        InvalidChangeLogException exception = await Assert.ThrowsAsync<InvalidChangeLogException>(async () =>
+        {
+            await this._checker.ChangeLogModifiedInReleaseSectionAsync(
+                changeLogFileName: changeLogPath,
+                originBranchName: originBranchName,
+                language: this._language,
+                cancellationToken: cancellationToken
+            );
+        });
+
+        Assert.StartsWith(
+            expectedStartString: "Changelog \"" + changeLogPath + "\" is not inside the repository working folder \"",
+            actualString: exception.Message,
+            comparisonType: StringComparison.Ordinal
+        );
+    }
+
+    private string LinkToRepository(string repositoryFolder, bool relativeLinkTarget)
+    {
+        string link = Path.Combine(this.TempFolder, "linked");
+        Directory.CreateSymbolicLink(
+            path: link,
+            pathToTarget: relativeLinkTarget ? Path.GetFileName(repositoryFolder) : repositoryFolder
+        );
+
+        return link;
+    }
+
+    private static async Task<(string ChangeLogPath, string OriginBranchName)> CreateRepoWithReleaseSectionEditAsync(
+        string repositoryFolder,
+        CancellationToken cancellationToken
+    )
+    {
+        // Both versions use "\n" endings whatever the checkout's, so only the sneaked-in line differs
+        string released = CHANGE_LOG_WITH_RELEASES.ReplaceLineEndings("\n");
+        string edited = released.Replace(
+            oldValue: "- First release item\n",
+            newValue: "- First release item\n- Sneaked in item\n",
+            comparisonType: StringComparison.Ordinal
+        );
+
+        (string changeLogPath, string originBranchName, Repository repo) =
+            await GitRepositoryHelpers.CreateRepoWithOriginBranchAsync(
+                repositoryFolder,
+                Encoding.UTF8.GetBytes(released),
+                cancellationToken
+            );
+
+        using (repo)
+        {
+            await File.WriteAllBytesAsync(changeLogPath, Encoding.UTF8.GetBytes(edited), cancellationToken);
+            Commands.Stage(repo, changeLogPath);
+            Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
+            repo.Commit("Modify release section", author, author);
+        }
+
+        return (changeLogPath, originBranchName);
+    }
+
     private static void PointOriginBranchAtUnrelatedHistory(Repository repo, string originBranchName)
     {
         Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
@@ -783,10 +898,6 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         Commands.Checkout(repo, featureBranchName);
     }
 
-    /// <summary>
-    /// Creates a temp git repo with a changelog. HEAD == origin tip (same commit).
-    /// Returns changelog path and the branch name to use as originBranchName.
-    /// </summary>
     private static async Task<(string ChangeLogPath, string BranchName)> CreateRepoWithChangeLogAsync(
         string tempDir,
         string changeLogContent,

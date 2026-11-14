@@ -1,4 +1,4 @@
-﻿using BenchmarkDotNet.Loggers;
+using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Reports;
 using Credfeto.ChangeLog.Benchmark.Tests.Bench;
 using FunFair.Test.Common;
@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Benchmark.Tests;
 
-[Collection(SerialBenchmarks.NAME)]
+[Collection(SerialBenchmarks.Name)]
 public sealed class ExampleBenchmarkTests : LoggingTestBase
 {
     public ExampleBenchmarkTests(ITestOutputHelper output)

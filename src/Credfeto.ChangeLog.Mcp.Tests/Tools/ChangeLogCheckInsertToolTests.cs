@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using LibGit2Sharp;
 using Xunit;
@@ -20,6 +21,21 @@ public sealed class ChangeLogCheckInsertToolTests : ToolTestBase
         ## [1.0.0] - 2024-01-01
         ### Added
         - First release item
+
+        ## [0.0.0] - Project created
+        """;
+
+    private const string RELEASED_ITEM_CHANGED = """
+        # Changelog
+        All notable changes to this project will be documented in this file.
+
+        ## [Unreleased]
+        ### Added
+        - Some unreleased item
+
+        ## [1.0.0] - 2024-01-01
+        ### Added
+        - Changed release item
 
         ## [0.0.0] - Project created
         """;
@@ -54,6 +70,34 @@ public sealed class ChangeLogCheckInsertToolTests : ToolTestBase
         this.CommitChangeLog("Add entry");
 
         await this.CallFailingAsync(name: "changelog_check_insert", arguments: [Text("branch", "origin/missing")]);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ChangeInReleasedSectionIsInvalidWhenTheRepositoryRootIsReachedThroughALinkAsync(
+        bool absoluteChangeLogArgument
+    )
+    {
+        // git reports the physical working directory, so the check must find the changelog in git's view of the
+        // repository whether it was detected or named in full through the linked root.
+        await this.CreateOriginBranchAsync();
+        await this.WriteChangeLogAsync(RELEASED_ITEM_CHANGED);
+        this.CommitChangeLog("Change released item");
+
+        string linkedRoot = Path.Combine(path1: this.TempFolder, path2: "linked-to-the-repository");
+        Directory.CreateSymbolicLink(path: linkedRoot, pathToTarget: this.RepositoryFolder);
+
+        string text = await this.CallSuccessfullyAsync(
+            name: "changelog_check_insert",
+            arguments: absoluteChangeLogArgument
+                ? [Text("changelog", Path.Combine(path1: linkedRoot, path2: CHANGELOG))]
+                : [],
+            repositoryRoot: linkedRoot
+        );
+
+        Assert.Equal(expected: CHANGELOG, actual: Property(json: text, name: "changeLog").GetString());
+        Assert.False(condition: Property(json: text, name: "valid").GetBoolean(), userMessage: text);
     }
 
     private async Task CreateOriginBranchAsync()

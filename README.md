@@ -217,18 +217,31 @@ dotnet tool update --global Credfeto.ChangeLog.Mcp
 
 ### Configure an MCP client
 
-Start the server from the root of the repository whose changelog it should manage.
+Set the `CHANGELOG_MCP_REPO_ROOT` environment variable to the root of the repository whose changelog the server should manage.
+This lets the server be started from any folder, for example your home folder.
 For example, in a client that reads an `mcpServers` configuration:
 
 ```json
 {
   "mcpServers": {
     "changelog": {
-      "command": "changelog-mcp"
+      "command": "changelog-mcp",
+      "env": {
+        "CHANGELOG_MCP_REPO_ROOT": "/path/to/repository"
+      }
     }
   }
 }
 ```
+
+When `CHANGELOG_MCP_REPO_ROOT` is set it must be an absolute path to an existing folder.
+Otherwise the server writes an error to stderr and exits with a non-zero exit code without starting.
+The folder is used as the repository root as given: the server does not search above it, and it does not need to contain `.git`, to start or to resolve changelog paths.
+`changelog_check_insert` compares the changelog with git history, so it needs the changelog to be inside a git working tree; it finds the git repository by searching upwards from the changelog's folder.
+Set `CHANGELOG_MCP_REPO_ROOT` to the root of that git repository so the paths the tools report agree with the paths git uses.
+
+When `CHANGELOG_MCP_REPO_ROOT` is not set, or is empty or only whitespace, start the server from inside the repository instead.
+The server then uses the nearest folder containing `.git` at or above the folder it was started in as the repository root.
 
 ### Tools
 
@@ -244,9 +257,11 @@ For example, in a client that reads an `mcpServers` configuration:
 
 Notes:
 
-- Every tool takes an optional `changelog` parameter; when it is omitted the changelog is searched for in the current git repo, as the command line tool does.
+- Every tool takes an optional `changelog` parameter. A relative path is resolved against `CHANGELOG_MCP_REPO_ROOT` when it is set, otherwise against the folder the server was started in.
+- When `changelog` is omitted and `CHANGELOG_MCP_REPO_ROOT` is set, only `CHANGELOG.md` at that root is used; pass `changelog` for a changelog anywhere else.
+  When `CHANGELOG_MCP_REPO_ROOT` is not set, the changelog is searched for in the current git repo, as the command line tool does.
 - Every tool takes an optional `additionalSections` parameter: a comma-separated list of extra allowed section names.
-- The changelog must be a file named `CHANGELOG.md` inside the repository the server was started in; any other path is rejected.
+- The changelog must be a file named `CHANGELOG.md` inside the repository; any other path is rejected.
 - Results are returned as JSON, apart from `changelog_extract`, which returns the release notes as plain text.
 - Failures are returned as tool errors rather than ending the server.
 
