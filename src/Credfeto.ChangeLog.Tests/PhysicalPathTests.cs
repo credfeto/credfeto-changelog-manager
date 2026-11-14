@@ -80,6 +80,47 @@ public sealed class PhysicalPathTests : LoggingFolderCleanupTestBase
     }
 
     [Fact]
+    public void ParentFolderSegmentWithoutLinksResolvesToTheParent()
+    {
+        this.CreateFolder("real");
+        string path = Path.Combine(path1: this.Root, path2: "real", path3: "..", path4: "CHANGELOG.md");
+
+        Assert.Equal(
+            expected: Path.Combine(path1: this.Root, path2: "CHANGELOG.md"),
+            actual: PhysicalPath.Resolve(path)
+        );
+    }
+
+    [Fact]
+    public void ParentFolderSegmentAfterALinkIsAppliedToTheLinkTarget()
+    {
+        // work/linkdir -> other/deep, so work/linkdir/../repo is other/repo, not the work/repo decoy
+        this.CreateFolder(Path.Combine(path1: "other", path2: "deep"));
+        string otherRepo = this.CreateFolder(Path.Combine(path1: "other", path2: "repo"));
+        string work = this.CreateFolder("work");
+        this.CreateFolder(Path.Combine(path1: "work", path2: "repo"));
+        Directory.CreateSymbolicLink(
+            path: Path.Combine(path1: work, path2: "linkdir"),
+            pathToTarget: Path.Combine(path1: this.Root, path2: "other", path3: "deep")
+        );
+        string path = Path.Combine(work, "linkdir", "..", "repo", "CHANGELOG.md");
+
+        Assert.Equal(
+            expected: Path.Combine(path1: otherRepo, path2: "CHANGELOG.md"),
+            actual: PhysicalPath.Resolve(path)
+        );
+    }
+
+    [Fact]
+    public void RelativePathResolvesFromTheCurrentFolder()
+    {
+        string folder = this.CreateFolder("relative");
+        string relative = Path.GetRelativePath(relativeTo: Directory.GetCurrentDirectory(), path: folder);
+
+        Assert.Equal(expected: folder, actual: PhysicalPath.Resolve(relative));
+    }
+
+    [Fact]
     public void LinkToItselfIsRejected()
     {
         string link = Path.Combine(path1: this.Root, path2: "loop");
