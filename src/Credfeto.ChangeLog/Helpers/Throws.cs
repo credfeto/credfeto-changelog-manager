@@ -19,6 +19,14 @@ public static class Throws
     }
 
     [DoesNotReturn]
+    public static string ChangeLogNotInRepository(string changeLogFileName, string workingDirectory)
+    {
+        throw new InvalidChangeLogException(
+            $"Changelog \"{changeLogFileName}\" is not inside the repository working folder \"{workingDirectory}\""
+        );
+    }
+
+    [DoesNotReturn]
     public static Commit CouldNotFindMergeBase(string headSha, string originBranchName)
     {
         throw new MergeBaseNotFoundException(
