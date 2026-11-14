@@ -13,8 +13,6 @@ public static class PhysicalPath
 {
     private const int MAX_LINKS_FOLLOWED = 40;
 
-    private static readonly char[] Separators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
-
     public static string Resolve(string path)
     {
         ReadOnlySpan<char> root = Path.GetPathRoot(path.AsSpan());
@@ -80,7 +78,7 @@ public static class PhysicalPath
     // Names are pushed last first so they pop in path order, ahead of whatever followed the link
     private static void PushNames(Stack<string> pending, string path)
     {
-        string[] names = path.Split(separator: Separators, options: StringSplitOptions.RemoveEmptyEntries);
+        string[] names = path.Split(separator: PathSeparators.All, options: StringSplitOptions.RemoveEmptyEntries);
 
         for (int index = names.Length - 1; index >= 0; --index)
         {
