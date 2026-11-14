@@ -44,7 +44,7 @@ public sealed class RepositoryRootOptionTests : ToolTestBase
         );
 
         Assert.Equal(
-            expected: $"CHANGELOG_MCP_REPO_ROOT must be an absolute path: \"{path}\"",
+            expected: $"{RepositoryRootOption.EnvironmentVariable} must be an absolute path: \"{path}\"",
             actual: exception.Message
         );
     }
@@ -66,7 +66,7 @@ public sealed class RepositoryRootOptionTests : ToolTestBase
         );
 
         Assert.Equal(
-            expected: $"CHANGELOG_MCP_REPO_ROOT must name an existing directory: \"{path}\"",
+            expected: $"{RepositoryRootOption.EnvironmentVariable} must name an existing directory: \"{path}\"",
             actual: exception.Message
         );
     }
