@@ -72,11 +72,15 @@ public sealed class ChangeLogCheckInsertToolTests : ToolTestBase
         await this.CallFailingAsync(name: "changelog_check_insert", arguments: [Text("branch", "origin/missing")]);
     }
 
-    [Fact]
-    public async Task ChangeInReleasedSectionIsInvalidWhenTheRepositoryRootIsReachedThroughALinkAsync()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ChangeInReleasedSectionIsInvalidWhenTheRepositoryRootIsReachedThroughALinkAsync(
+        bool absoluteChangeLogArgument
+    )
     {
-        // git reports the physical working directory, so the configured root must be compared
-        // against git's view of the repository rather than the linked path it was given.
+        // git reports the physical working directory, so the check must find the changelog in git's view of the
+        // repository whether it was detected or named in full through the linked root.
         await this.CreateOriginBranchAsync();
         await this.WriteChangeLogAsync(RELEASED_ITEM_CHANGED);
         this.CommitChangeLog("Change released item");
@@ -86,7 +90,9 @@ public sealed class ChangeLogCheckInsertToolTests : ToolTestBase
 
         string text = await this.CallSuccessfullyAsync(
             name: "changelog_check_insert",
-            arguments: [],
+            arguments: absoluteChangeLogArgument
+                ? [Text("changelog", Path.Combine(path1: linkedRoot, path2: CHANGELOG))]
+                : [],
             repositoryRoot: linkedRoot
         );
 
