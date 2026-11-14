@@ -16,7 +16,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.26.2691
 - Dependencies - Updated Meziantou.Analyzer to 3.0.340
 - SDK - Updated DotNet SDK to 11.0.100
-- TBD - to be finalized after review
+- Native AOT and trimming enabled for the Credfeto.ChangeLog.Cmd tool, published as a linux-x64 native package. CommandLineParser replaced with a trim-safe parser, and --help now exits with code 0
 ### Deprecated
 ### Removed
 ### Deployment Changes
