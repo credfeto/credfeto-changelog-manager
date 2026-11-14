@@ -180,6 +180,13 @@ public sealed class ProgramTests : TestBase
     }
 
     [Fact]
+    public async Task Main_WithHelp_ReturnsSuccess()
+    {
+        int result = await Credfeto.ChangeLog.Cmd.Program.Main(["--help"]);
+        Assert.Equal(expected: 0, actual: result);
+    }
+
+    [Fact]
     public async Task Main_SelfTestInDirectoryWithoutChangelog_ReturnsSuccessAndCreatesNoFiles()
     {
         string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());

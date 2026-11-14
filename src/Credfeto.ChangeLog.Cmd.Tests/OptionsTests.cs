@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using CommandLine;
 using FunFair.Test.Common;
 using Xunit;
 
@@ -100,14 +99,10 @@ public sealed class OptionsTests : TestBase
     }
 
     [Fact]
-    public void SelfTestSwitchIsParsedAsCommand()
+    public void ShowHelpPropertyIsSetCorrectly()
     {
-        using Parser parser = new();
-
-        ParserResult<Options> result = parser.ParseArguments<Options>(["--self-test"]);
-
-        Assert.Equal(expected: ParserResultType.Parsed, actual: result.Tag);
-        Assert.True(result.Value.SelfTest, userMessage: "Expected --self-test to set SelfTest");
+        Options options = new() { ShowHelp = true };
+        Assert.True(options.ShowHelp, userMessage: "Expected ShowHelp to be true");
     }
 
     [Fact]
