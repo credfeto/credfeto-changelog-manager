@@ -243,34 +243,12 @@ public sealed class ChangeLogChecker : IChangeLogChecker
         return path ?? Directory.GetCurrentDirectory();
     }
 
-    // git reports the physical working folder, so the changelog must be resolved the same way before the two are
-    // compared; the path it was given may reach the repository through links.
     private static string FindChangeLogPositionInRepo(Repository repo, string changeLogFileName)
     {
-        string workingDirectory = PhysicalPath.Resolve(repo.Info.WorkingDirectory);
-        string relativePath = Path.GetRelativePath(
-            relativeTo: workingDirectory,
-            path: PhysicalPath.Resolve(changeLogFileName)
-        );
-
-        if (IsOutside(relativePath))
-        {
-            return Throws.ChangeLogNotInRepository(
+        return RepositoryRelativePath.Find(workingDirectory: repo.Info.WorkingDirectory, fullPath: changeLogFileName)
+            ?? Throws.ChangeLogNotInRepository(
                 changeLogFileName: changeLogFileName,
                 workingDirectory: repo.Info.WorkingDirectory
-            );
-        }
-
-        return relativePath.Replace(oldChar: '\\', newChar: '/');
-    }
-
-    private static bool IsOutside(string relativePath)
-    {
-        return Path.IsPathRooted(relativePath)
-            || relativePath.EqualsOrdinal("..")
-            || relativePath.StartsWith(
-                value: ".." + Path.DirectorySeparatorChar,
-                comparisonType: StringComparison.Ordinal
             );
     }
 }
