@@ -13,6 +13,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 - MCP server: CHANGELOG_MCP_REPO_ROOT environment variable naming the repository the server works on, so it can be started from any folder
 ### Fixed
+- Changelog checks now resolve the changelog's path through symbolic links before finding it in the repository, so the release-section check no longer falsely passes or crashes when the changelog is reached through a link; this also fixes the command-line tool's check of whether the changelog was modified in the release section
 ### Changed
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.26.2691
 - Dependencies - Updated Meziantou.Analyzer to 3.0.340
