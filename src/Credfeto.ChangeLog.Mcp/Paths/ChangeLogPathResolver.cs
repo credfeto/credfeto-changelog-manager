@@ -29,11 +29,11 @@ public sealed class ChangeLogPathResolver
     }
 
     // The detector is built from the same normalised root the resolver checks against, so the two cannot disagree.
-    // git reports the physical working directory, so a root configured through a link is resolved to the folder it
-    // names, as the working directory from getcwd already is.
+    // The root is kept as given, so a changelog named through the same path, including a linked root, compares
+    // equal to it.
     public static ChangeLogPathResolver FromRepositoryRoot(string repositoryRoot)
     {
-        string root = ResolveLinks(Normalise(repositoryRoot));
+        string root = Normalise(repositoryRoot);
 
         return new(workingDirectory: root, repositoryRoot: root, detector: new RepositoryRootChangeLogDetector(root));
     }
@@ -121,29 +121,6 @@ public sealed class ChangeLogPathResolver
         }
 
         return workingDirectory;
-    }
-
-    // A link target can itself sit below a linked folder, so each target is resolved in turn
-    private static string ResolveLinks(string fullPath)
-    {
-        string resolved = Path.GetPathRoot(fullPath.AsSpan()).ToString();
-
-        foreach (
-            string name in fullPath[resolved.Length..]
-                .Split(separator: Path.DirectorySeparatorChar, options: StringSplitOptions.RemoveEmptyEntries)
-        )
-        {
-            resolved = Path.Combine(path1: resolved, path2: name);
-
-            FileSystemInfo? target = new DirectoryInfo(resolved).ResolveLinkTarget(returnFinalTarget: true);
-
-            if (target is not null)
-            {
-                resolved = ResolveLinks(target.FullName);
-            }
-        }
-
-        return resolved;
     }
 
     // Without a trailing separator the root compares equal to the folder names Path.GetDirectoryName returns
