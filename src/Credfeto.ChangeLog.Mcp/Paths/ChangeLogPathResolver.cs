@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Credfeto.ChangeLog.Helpers;
 using Credfeto.ChangeLog.Mcp.Constants;
 using Credfeto.ChangeLog.Mcp.Exceptions;
 
@@ -88,24 +89,7 @@ public sealed class ChangeLogPathResolver
     // and the repository root must be real.
     private bool PassesThroughLink(string fullPath)
     {
-        if (new FileInfo(fullPath).LinkTarget is not null)
-        {
-            return true;
-        }
-
-        for (
-            string? folder = Path.GetDirectoryName(fullPath);
-            folder is not null && !StringComparer.Ordinal.Equals(x: folder, y: this.RepositoryRoot);
-            folder = Path.GetDirectoryName(folder)
-        )
-        {
-            if (new DirectoryInfo(folder).LinkTarget is not null)
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return PathLinks.HasLinkBelow(root: this.RepositoryRoot, path: fullPath);
     }
 
     private static string FindRepositoryRoot(string workingDirectory)

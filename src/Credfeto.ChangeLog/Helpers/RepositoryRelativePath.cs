@@ -9,13 +9,13 @@ namespace Credfeto.ChangeLog.Helpers;
 // resolving, which keeps the common case free of the full filesystem walk.
 public static class RepositoryRelativePath
 {
-    private static readonly char[] Separators = [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar];
-
     public static string? Find(string workingDirectory, string fullPath)
     {
+        // git records a link as its own entry, so a path through a link below the working folder would never match the
+        // file it reaches
         string relativePath =
             IsSpeltFrom(workingDirectory: workingDirectory, fullPath: fullPath)
-            && !HasLinkBelow(fullPath: fullPath, start: RelativeStart(workingDirectory))
+            && !PathLinks.HasLinkBelow(root: workingDirectory, path: fullPath)
                 ? fullPath[RelativeStart(workingDirectory)..]
                 : Path.GetRelativePath(
                     relativeTo: PhysicalPath.Resolve(workingDirectory),
@@ -36,41 +36,12 @@ public static class RepositoryRelativePath
 
         return fullPath.Length > start
             && fullPath.StartsWith(value: workingDirectory, comparisonType: StringComparison.Ordinal)
-            && (start == workingDirectory.Length || IsSeparator(fullPath[workingDirectory.Length]));
-    }
-
-    // git records a link as its own entry, so a path through a link below the working folder would never match the
-    // file it reaches
-    private static bool HasLinkBelow(string fullPath, int start)
-    {
-        for (
-            int index = fullPath.IndexOfAny(anyOf: Separators, startIndex: start);
-            index != -1;
-            index = fullPath.IndexOfAny(anyOf: Separators, startIndex: index + 1)
-        )
-        {
-            if (IsLink(fullPath[..index]))
-            {
-                return true;
-            }
-        }
-
-        return IsLink(fullPath);
-    }
-
-    private static bool IsLink(string path)
-    {
-        return new FileInfo(path).LinkTarget is not null;
+            && (start == workingDirectory.Length || PathSeparators.IsSeparator(fullPath[workingDirectory.Length]));
     }
 
     private static int RelativeStart(string workingDirectory)
     {
         return Path.EndsInDirectorySeparator(workingDirectory) ? workingDirectory.Length : workingDirectory.Length + 1;
-    }
-
-    private static bool IsSeparator(char character)
-    {
-        return character == Path.DirectorySeparatorChar || character == Path.AltDirectorySeparatorChar;
     }
 
     private static bool IsOutside(string relativePath)
