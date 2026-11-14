@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,8 +40,57 @@ public static class Program
         throw new MissingChangelogException("Could not find changelog");
     }
 
+    private static void EnsureSingleOperation(Options options)
+    {
+        (string Name, bool Selected)[] operations =
+        [
+            ("--add", options.Add is not null),
+            ("--remove", options.Remove is not null),
+            ("--extract", options.Extract is not null || options.Version is not null),
+            ("--check-insert", options.CheckInsert is not null),
+            ("--create-release", options.CreateRelease is not null),
+            ("--un-released", options.DisplayUnreleased),
+            ("--lint", options.Lint),
+        ];
+
+        string[] selected = [.. operations.Where(static o => o.Selected).Select(static o => o.Name)];
+
+        if (selected.Length > 1)
+        {
+            throw new InvalidOptionsException(
+                $"Only one operation may be specified at a time, but found: {string.Join(separator: ", ", value: selected)}"
+            );
+        }
+
+        EnsureModifierAllowed(
+            modifierSpecified: options.Message is not null,
+            operationSelected: options.Add is not null || options.Remove is not null,
+            message: "--message can only be used with --add or --remove"
+        );
+        EnsureModifierAllowed(
+            modifierSpecified: options.Pending,
+            operationSelected: options.CreateRelease is not null,
+            message: "--Pending can only be used with --create-release"
+        );
+        EnsureModifierAllowed(
+            modifierSpecified: options.Fix,
+            operationSelected: options.Lint,
+            message: "--fix can only be used with --lint"
+        );
+    }
+
+    private static void EnsureModifierAllowed(bool modifierSpecified, bool operationSelected, string message)
+    {
+        if (modifierSpecified && !operationSelected)
+        {
+            throw new InvalidOptionsException(message);
+        }
+    }
+
     private static async Task ParsedOkAsync(Options options, IServiceProvider services)
     {
+        EnsureSingleOperation(options);
+
         CancellationToken cancellationToken = CancellationToken.None;
         IChangeLogDetector detector = services.GetRequiredService<IChangeLogDetector>();
         ChangeLogLanguage effectiveLanguage = ResolveEffectiveLanguage(options: options, services: services);
