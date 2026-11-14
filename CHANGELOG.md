@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+- Command-line operations are now mutually exclusive; conflicting operations or stray modifiers are rejected with an error - #389
 ### Changed
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.26.2691
 - Dependencies - Updated Meziantou.Analyzer to 3.0.340
