@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FunFair.Test.Common;
@@ -38,6 +39,8 @@ file static class RepoLocator
 
 public sealed class ProgramTests : TestBase
 {
+    private const string OUTPUT_FILE_PLACEHOLDER = "{output}";
+
     private const string VALID_CHANGELOG = """
         # Changelog
         All notable changes to this project will be documented in this file.
@@ -582,6 +585,97 @@ public sealed class ProgramTests : TestBase
         finally
         {
             Environment.CurrentDirectory = savedDir;
+            File.Delete(tempFile);
+        }
+    }
+
+    [Theory]
+    [InlineData("-a Added -m msg -x {output} -v 1.0.0")]
+    [InlineData("-a Added -m msg -r Added")]
+    [InlineData("-a Added -m msg -t origin/main")]
+    [InlineData("-a Added -m msg -c 2.0.0")]
+    [InlineData("-a Added -m msg -u")]
+    [InlineData("-a Added -m msg -l")]
+    [InlineData("-a Added -m msg -v 1.0.0")]
+    [InlineData("-r Added -m msg -x {output} -v 1.0.0")]
+    [InlineData("-r Added -m msg -l")]
+    [InlineData("-x {output} -v 1.0.0 -t origin/main")]
+    [InlineData("-x {output} -v 1.0.0 -c 2.0.0")]
+    [InlineData("-x {output} -v 1.0.0 -u")]
+    [InlineData("-x {output} -v 1.0.0 -l")]
+    [InlineData("-t origin/main -c 2.0.0")]
+    [InlineData("-t origin/main -u")]
+    [InlineData("-c 2.0.0 -l")]
+    [InlineData("-u -l")]
+    [InlineData("-u -v 1.0.0")]
+    [InlineData("-x {output} -v 1.0.0 -m msg")]
+    [InlineData("-t origin/main -m msg")]
+    [InlineData("-c 2.0.0 -m msg")]
+    [InlineData("-u -m msg")]
+    [InlineData("-l -m msg")]
+    [InlineData("-a Added -m msg -p")]
+    [InlineData("-l -p")]
+    [InlineData("-u --fix")]
+    [InlineData("-a Added -m msg --fix")]
+    public static async Task Main_WithInvalidOptionCombination_ReturnsErrorAndWritesNothingAsync(string operationArgs)
+    {
+        string tempFile = await CreateTempChangeLogAsync(CHANGELOG_WITH_ENTRIES);
+        string outputFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
+
+        try
+        {
+            string[] args =
+            [
+                "--changelog",
+                tempFile,
+                .. operationArgs
+                    .Split(' ')
+                    .Select(arg =>
+                        StringComparer.Ordinal.Equals(x: arg, y: OUTPUT_FILE_PLACEHOLDER) ? outputFile : arg
+                    ),
+            ];
+
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main(args);
+
+            Assert.Equal(expected: 1, actual: result);
+            Assert.False(File.Exists(outputFile), userMessage: "Expected no extract output file to be written");
+
+            string content = await File.ReadAllTextAsync(
+                path: tempFile,
+                encoding: Encoding.UTF8,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken
+            );
+            Assert.Equal(expected: CHANGELOG_WITH_ENTRIES, actual: content);
+        }
+        finally
+        {
+            File.Delete(tempFile);
+
+            if (File.Exists(outputFile))
+            {
+                File.Delete(outputFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Main_CreateReleaseWithPending_ReturnsSuccess()
+    {
+        string tempFile = await CreateTempChangeLogAsync(CHANGELOG_WITH_ENTRIES);
+
+        try
+        {
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main([
+                "--changelog",
+                tempFile,
+                "--create-release",
+                "2.0.0",
+                "--Pending",
+            ]);
+            Assert.Equal(expected: 0, actual: result);
+        }
+        finally
+        {
             File.Delete(tempFile);
         }
     }
