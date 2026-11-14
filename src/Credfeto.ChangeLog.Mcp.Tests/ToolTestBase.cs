@@ -42,11 +42,19 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
         return root;
     }
 
-    protected ServiceProvider BuildServices(IChangeLogDetector? detector = null, string? repositoryRoot = null)
+    protected ServiceProvider BuildServices(IChangeLogDetector? detector = null)
+    {
+        return new ServiceCollection()
+            .AddChangeLogMcpServer(workingDirectory: this.RepositoryFolder, repositoryRoot: null)
+            .AddSingleton(detector ?? new FixedChangeLogDetector(this.ChangeLogPath))
+            .BuildServiceProvider();
+    }
+
+    // No detector is registered: a repository root resolver builds its own, so one registered here would be ignored.
+    private ServiceProvider BuildRepositoryRootServices(string repositoryRoot)
     {
         return new ServiceCollection()
             .AddChangeLogMcpServer(workingDirectory: this.RepositoryFolder, repositoryRoot: repositoryRoot)
-            .AddSingleton(detector ?? new FixedChangeLogDetector(this.ChangeLogPath))
             .BuildServiceProvider();
     }
 
@@ -61,18 +69,12 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
     protected async Task<(string Text, bool IsError)> CallAsync(
         string name,
         IReadOnlyList<KeyValuePair<string, JsonElement>> arguments,
-        IChangeLogDetector? detector = null,
-        string? repositoryRoot = null
+        IChangeLogDetector? detector = null
     )
     {
-        await using ServiceProvider services = this.BuildServices(detector: detector, repositoryRoot: repositoryRoot);
-        ChangeLogTool tool = GetTool(services: services, name: name);
+        await using ServiceProvider services = this.BuildServices(detector);
 
-        CallToolResult result = await tool.CallAsync(arguments: arguments, cancellationToken: this.CancellationToken());
-
-        string text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
-
-        return (text, result.IsError ?? false);
+        return await this.CallToolAsync(services: services, name: name, arguments: arguments);
     }
 
     protected async Task<string> CallSuccessfullyAsync(
@@ -81,15 +83,30 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
         string? repositoryRoot = null
     )
     {
-        (string text, bool isError) = await this.CallAsync(
-            name: name,
-            arguments: arguments,
-            repositoryRoot: repositoryRoot
-        );
+        await using ServiceProvider services = repositoryRoot is null
+            ? this.BuildServices()
+            : this.BuildRepositoryRootServices(repositoryRoot);
+
+        (string text, bool isError) = await this.CallToolAsync(services: services, name: name, arguments: arguments);
 
         Assert.False(condition: isError, userMessage: text);
 
         return text;
+    }
+
+    private async Task<(string Text, bool IsError)> CallToolAsync(
+        ServiceProvider services,
+        string name,
+        IReadOnlyList<KeyValuePair<string, JsonElement>> arguments
+    )
+    {
+        ChangeLogTool tool = GetTool(services: services, name: name);
+
+        CallToolResult result = await tool.CallAsync(arguments: arguments, cancellationToken: this.CancellationToken());
+
+        string text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+
+        return (text, result.IsError ?? false);
     }
 
     protected async Task<string> CallFailingAsync(
