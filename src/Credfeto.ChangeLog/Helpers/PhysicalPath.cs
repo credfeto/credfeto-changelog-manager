@@ -7,7 +7,8 @@ namespace Credfeto.ChangeLog.Helpers;
 
 // git reports the physical working folder, and .NET has no realpath. ResolveLinkTarget joins a relative link target
 // to the folder the link was reached through rather than the folder it sits in, so each link is followed here from
-// its already-resolved parent instead.
+// its already-resolved parent instead. Path.GetFullPath collapses ".." as text before any link is followed, so only
+// the root is made absolute with it and every name after the root is walked in order, the way the OS does.
 public static class PhysicalPath
 {
     private const int MAX_LINKS_FOLLOWED = 40;
@@ -16,11 +17,13 @@ public static class PhysicalPath
 
     public static string Resolve(string path)
     {
-        string fullPath = Path.GetFullPath(path);
-        string resolved = Path.GetPathRoot(fullPath.AsSpan()).ToString();
+        ReadOnlySpan<char> root = Path.GetPathRoot(path.AsSpan());
+        string start = root.IsEmpty ? Directory.GetCurrentDirectory() : Path.GetFullPath(root.ToString());
+        string resolved = Path.GetPathRoot(start.AsSpan()).ToString();
 
         Stack<string> pending = new();
-        PushNames(pending: pending, path: fullPath[resolved.Length..]);
+        PushNames(pending: pending, path: path[root.Length..]);
+        PushNames(pending: pending, path: start[resolved.Length..]);
 
         int linksFollowed = 0;
 
