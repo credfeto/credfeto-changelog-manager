@@ -36,12 +36,6 @@ internal static class GitRepositoryHelpers
         di.Delete(true);
     }
 
-    /// <summary>
-    /// Creates a temp git repo with an initial commit containing a changelog file written from raw bytes,
-    /// then creates a named "origin/main" branch pointing to that commit.
-    /// Returns an open <see cref="Repository" /> so the caller can add more commits.
-    /// HEAD stays on the original branch (master/main).
-    /// </summary>
     public static async Task<(
         string ChangeLogPath,
         string OriginBranchName,
