@@ -13,10 +13,11 @@ public static class RepositoryRelativePath
     {
         // git records a link as its own entry, so a path through a link below the working folder would never match the
         // file it reaches
+        int relativeStart = PathLinks.RelativeStart(workingDirectory);
         string relativePath =
-            IsSpeltFrom(workingDirectory: workingDirectory, fullPath: fullPath)
-            && !PathLinks.HasLinkBelow(root: workingDirectory, path: fullPath)
-                ? fullPath[RelativeStart(workingDirectory)..]
+            IsSpeltFrom(workingDirectory: workingDirectory, fullPath: fullPath, relativeStart: relativeStart)
+            && !PathLinks.HasLinkBelow(path: fullPath, relativeStart: relativeStart)
+                ? fullPath[relativeStart..]
                 : Path.GetRelativePath(
                     relativeTo: PhysicalPath.Resolve(workingDirectory),
                     path: PhysicalPath.Resolve(fullPath)
@@ -30,18 +31,14 @@ public static class RepositoryRelativePath
         return relativePath.Replace(oldChar: '\\', newChar: '/');
     }
 
-    private static bool IsSpeltFrom(string workingDirectory, string fullPath)
+    private static bool IsSpeltFrom(string workingDirectory, string fullPath, int relativeStart)
     {
-        int start = RelativeStart(workingDirectory);
-
-        return fullPath.Length > start
+        return fullPath.Length > relativeStart
             && fullPath.StartsWith(value: workingDirectory, comparisonType: StringComparison.Ordinal)
-            && (start == workingDirectory.Length || PathSeparators.IsSeparator(fullPath[workingDirectory.Length]));
-    }
-
-    private static int RelativeStart(string workingDirectory)
-    {
-        return Path.EndsInDirectorySeparator(workingDirectory) ? workingDirectory.Length : workingDirectory.Length + 1;
+            && (
+                relativeStart == workingDirectory.Length
+                || PathSeparators.IsSeparator(fullPath[workingDirectory.Length])
+            );
     }
 
     private static bool IsOutside(string relativePath)
