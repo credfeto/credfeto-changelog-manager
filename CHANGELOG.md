@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+- Command-line operations in credfeto-changelog-cmd are now mutually exclusive; combining operations or using modifiers (-m, -p, --fix, -v) with the wrong operation fails with an error and exit code 1 before any file is touched - #389
 ### Changed
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.26.2691
 - Dependencies - Updated Meziantou.Analyzer to 3.0.340
