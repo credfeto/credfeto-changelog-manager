@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Credfeto.ChangeLog.Exceptions;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
@@ -10,21 +10,6 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Tests;
 
-[SuppressMessage(
-    category: "Meziantou.Analyzer",
-    checkId: "MA0045:Use async overload",
-    Justification = "Testing the bit that changes the file rather than reading/writing"
-)]
-[SuppressMessage(
-    category: "Microsoft.VisualStudio.Threading.Analyzers",
-    checkId: "VSTHRD002",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.Reliability",
-    checkId: "CA2012:UseValueTasksCorrectly",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
 public sealed class ChangeLogUpdaterCreateRelease : TestBase
 {
     private readonly ITestOutputHelper _output;
@@ -38,18 +23,23 @@ public sealed class ChangeLogUpdaterCreateRelease : TestBase
         this._output = output ?? throw new ArgumentNullException(nameof(output));
     }
 
-    private static ChangeLogDocument Parse(string content)
+    private static ValueTask<ChangeLogDocument> ParseAsync(string content)
     {
-        return ChangeLogTestHelper.ParseAsync(content, Language).GetAwaiter().GetResult();
+        return ChangeLogTestHelper.ParseAsync(content, Language);
     }
 
-    private static string Serialise(ChangeLogDocument document)
+    private static async ValueTask<string> CreatePendingReleaseAndSerialiseAsync(string changeLog)
     {
-        return ChangeLogTestHelper.SerialiseAsync(document, Language).GetAwaiter().GetResult();
+        ChangeLogDocument document = await ParseAsync(changeLog);
+
+        return await ChangeLogTestHelper.SerialiseAsync(
+            ChangeLogUpdater.CreateRelease(document, "1.0.0", ChangeLogRelease.PendingDate),
+            Language
+        );
     }
 
     [Fact]
-    public void EmptyUnreleasedDoesNotCreateARelease()
+    public async Task EmptyUnreleasedDoesNotCreateARelease()
     {
         const string changeLog =
             @"# Changelog
@@ -71,13 +61,15 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
+        ChangeLogDocument document = await ParseAsync(changeLog);
+
         Assert.Throws<EmptyChangeLogException>(() =>
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
+            ChangeLogUpdater.CreateRelease(document, "1.0.0", ChangeLogRelease.PendingDate)
         );
     }
 
     [Fact]
-    public void UnreleasedWithOnlyWhitespaceEntriesDoesNotCreateARelease()
+    public async Task UnreleasedWithOnlyWhitespaceEntriesDoesNotCreateARelease()
     {
         string changeLog =
             $@"# Changelog
@@ -100,13 +92,15 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
+        ChangeLogDocument document = await ParseAsync(changeLog);
+
         Assert.Throws<EmptyChangeLogException>(() =>
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
+            ChangeLogUpdater.CreateRelease(document, "1.0.0", ChangeLogRelease.PendingDate)
         );
     }
 
     [Fact]
-    public void CannotCreateAReleaseThatAlreadyExists()
+    public async Task CannotCreateAReleaseThatAlreadyExists()
     {
         const string changeLog =
             @"# Changelog
@@ -133,13 +127,15 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 
 ## [0.0.0] - Project created";
 
+        ChangeLogDocument document = await ParseAsync(changeLog);
+
         Assert.Throws<ReleaseAlreadyExistsException>(() =>
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
+            ChangeLogUpdater.CreateRelease(document, "1.0.0", ChangeLogRelease.PendingDate)
         );
     }
 
     [Fact]
-    public void CannotCreateAReleaseOlderThanLatest()
+    public async Task CannotCreateAReleaseOlderThanLatest()
     {
         const string changeLog =
             @"# Changelog
@@ -166,13 +162,15 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 
 ## [0.0.0] - Project created";
 
+        ChangeLogDocument document = await ParseAsync(changeLog);
+
         Assert.Throws<ReleaseTooOldException>(() =>
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
+            ChangeLogUpdater.CreateRelease(document, "1.0.0", ChangeLogRelease.PendingDate)
         );
     }
 
     [Fact]
-    public void ChangeLogWithOnlyAddedInUnreleasedProducesReleaseWithJustAdded()
+    public async Task ChangeLogWithOnlyAddedInUnreleasedProducesReleaseWithJustAdded()
     {
         const string changeLog =
             @"# Changelog
@@ -195,9 +193,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string updated = Serialise(
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
-        );
+        string updated = await CreatePendingReleaseAndSerialiseAsync(changeLog);
 
         const string expected =
             @"# Changelog
@@ -229,7 +225,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void ChangeLogWithWhitespaceOnlyEntryExcludesItFromRelease()
+    public async Task ChangeLogWithWhitespaceOnlyEntryExcludesItFromRelease()
     {
         string changeLog =
             $@"# Changelog
@@ -253,9 +249,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string updated = Serialise(
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
-        );
+        string updated = await CreatePendingReleaseAndSerialiseAsync(changeLog);
 
         const string expected =
             @"# Changelog
@@ -287,7 +281,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void ChangeLogWithOnlyFixedInUnreleasedProducesReleaseWithJustAdded()
+    public async Task ChangeLogWithOnlyFixedInUnreleasedProducesReleaseWithJustAdded()
     {
         const string changeLog =
             @"# Changelog
@@ -310,9 +304,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string updated = Serialise(
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
-        );
+        string updated = await CreatePendingReleaseAndSerialiseAsync(changeLog);
 
         const string expected =
             @"# Changelog
@@ -344,7 +336,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void ChangeLogWithOnlyChangedInUnreleasedProducesReleaseWithJustAdded()
+    public async Task ChangeLogWithOnlyChangedInUnreleasedProducesReleaseWithJustAdded()
     {
         const string changeLog =
             @"# Changelog
@@ -367,9 +359,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string updated = Serialise(
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
-        );
+        string updated = await CreatePendingReleaseAndSerialiseAsync(changeLog);
 
         const string expected =
             @"# Changelog
@@ -401,7 +391,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void ChangeLogWithOnlyRemovedInUnreleasedProducesReleaseWithJustAdded()
+    public async Task ChangeLogWithOnlyRemovedInUnreleasedProducesReleaseWithJustAdded()
     {
         const string changeLog =
             @"# Changelog
@@ -424,9 +414,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string updated = Serialise(
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
-        );
+        string updated = await CreatePendingReleaseAndSerialiseAsync(changeLog);
 
         const string expected =
             @"# Changelog
@@ -458,7 +446,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void NoPreviousReleaseAddsReleaseAtEndOfFile()
+    public async Task NoPreviousReleaseAddsReleaseAtEndOfFile()
     {
         const string changeLog =
             @"# Changelog
@@ -480,9 +468,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->";
 
-        string updated = Serialise(
-            ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", ChangeLogRelease.PendingDate)
-        );
+        string updated = await CreatePendingReleaseAndSerialiseAsync(changeLog);
 
         const string expected =
             @"# Changelog
@@ -522,7 +508,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     // corrects it to 1 rather than the fix being a no-op that happens to match an already-correct
     // input (see PR #371 review).
     [Fact]
-    public void DisplacedReleaseBlankLinesBeforeHeadingIsCorrected()
+    public async Task DisplacedReleaseBlankLinesBeforeHeadingIsCorrected()
     {
         const string changeLog =
             @"# Changelog
@@ -549,7 +535,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 
 ## [0.0.0] - Project created";
 
-        ChangeLogDocument original = Parse(changeLog);
+        ChangeLogDocument original = await ParseAsync(changeLog);
         Assert.Equal(expected: 0, actual: original.Releases[0].BlankLinesBeforeHeading);
 
         ChangeLogDocument updated = ChangeLogUpdater.CreateRelease(original, "2.0.0", ChangeLogRelease.PendingDate);
@@ -559,9 +545,8 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
         Assert.Equal(expected: 1, actual: displaced.BlankLinesBeforeHeading);
 
         IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(updated, Language);
-        Assert.DoesNotContain(
-            errors,
-            e => e.Message.Contains(value: "## [1.0.0]", comparisonType: StringComparison.Ordinal)
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(value: "## [1.0.0]", comparisonType: StringComparison.Ordinal)
         );
     }
 
@@ -569,7 +554,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public static void NullOrWhitespaceDateThrows(string? date)
+    public static async Task NullOrWhitespaceDateThrowsAsync(string? date)
     {
         const string changeLog =
             @"# Changelog
@@ -592,7 +577,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
+        ChangeLogDocument document = await ParseAsync(changeLog);
+
         // ! Intentionally passing null/empty/whitespace to exercise CreateRelease's guard.
-        Assert.ThrowsAny<ArgumentException>(() => ChangeLogUpdater.CreateRelease(Parse(changeLog), "1.0.0", date!));
+        Assert.ThrowsAny<ArgumentException>(() => ChangeLogUpdater.CreateRelease(document, "1.0.0", date!));
     }
 }

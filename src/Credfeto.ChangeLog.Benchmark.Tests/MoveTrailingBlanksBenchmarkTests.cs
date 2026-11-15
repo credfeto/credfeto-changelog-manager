@@ -54,7 +54,7 @@ public sealed class MoveTrailingBlanksBenchmarkTests : LoggingTestBase
     {
         return methodName switch
         {
-            nameof(MoveTrailingBlanksBenchmark.ParseAsync_ManyTrailingBlanks) =>
+            nameof(MoveTrailingBlanksBenchmark.ParseManyTrailingBlanksAsync) =>
                 MAX_ALLOCATED_BYTES_MANY_TRAILING_BLANKS,
             _ => long.MaxValue,
         };

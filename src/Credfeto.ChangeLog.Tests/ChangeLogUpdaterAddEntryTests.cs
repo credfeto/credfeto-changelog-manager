@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Exceptions;
 using Credfeto.ChangeLog.Models;
@@ -9,44 +9,35 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Tests;
 
-[SuppressMessage(
-    category: "Meziantou.Analyzer",
-    checkId: "MA0045:Use async overload",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.VisualStudio.Threading.Analyzers",
-    checkId: "VSTHRD002",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.Reliability",
-    checkId: "CA2012:UseValueTasksCorrectly",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
 public sealed class ChangeLogUpdaterAddEntryTests : TestBase
 {
     private static readonly ChangeLogLanguage Language = new ChangeLogLanguageFactory().Get(
         ChangeLogLanguageFactory.English
     );
 
-    private static ChangeLogDocument ParseOrCreate(string content)
+    private static ValueTask<ChangeLogDocument> ParseOrCreateAsync(string content)
     {
-        return ChangeLogTestHelper
-            .ParseAsync(string.IsNullOrEmpty(content) ? TemplateFile.Build(Language) : content, Language)
-            .GetAwaiter()
-            .GetResult();
+        return ChangeLogTestHelper.ParseAsync(
+            string.IsNullOrEmpty(content) ? TemplateFile.Build(Language) : content,
+            Language
+        );
     }
 
-    private static string Serialise(ChangeLogDocument document)
+    private static async ValueTask<string> AddEntryAndSerialiseAsync(string content, string type, string message)
     {
-        return ChangeLogTestHelper.SerialiseAsync(document, Language).GetAwaiter().GetResult();
+        ChangeLogDocument document = await ParseOrCreateAsync(content);
+
+        return await ChangeLogTestHelper.SerialiseAsync(ChangeLogUpdater.AddEntry(document, type, message), Language);
     }
 
     [Fact]
-    public void AddToEmptyChangelog()
+    public async Task AddToEmptyChangelog()
     {
-        string result = Serialise(ChangeLogUpdater.AddEntry(ParseOrCreate(string.Empty), "Added", "Added a new entry"));
+        string result = await AddEntryAndSerialiseAsync(
+            content: string.Empty,
+            type: "Added",
+            message: "Added a new entry"
+        );
 
         const string expected =
             @"# Changelog
@@ -79,7 +70,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void AddToExistingChangelog()
+    public async Task AddToExistingChangelog()
     {
         const string existing =
             @"# Changelog
@@ -102,7 +93,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string result = Serialise(ChangeLogUpdater.AddEntry(ParseOrCreate(existing), "Added", "Another entry"));
+        string result = await AddEntryAndSerialiseAsync(content: existing, type: "Added", message: "Another entry");
 
         const string expected =
             @"# Changelog
@@ -131,7 +122,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void AddingDuplicateToExistingChangelogDoesNotAdd()
+    public async Task AddingDuplicateToExistingChangelogDoesNotAdd()
     {
         const string existing =
             @"# Changelog
@@ -154,7 +145,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string result = Serialise(ChangeLogUpdater.AddEntry(ParseOrCreate(existing), "Added", "Added a new entry"));
+        string result = await AddEntryAndSerialiseAsync(content: existing, type: "Added", message: "Added a new entry");
 
         const string expected =
             @"# Changelog
@@ -182,7 +173,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void AddToExistingChangelogWithTrailingBlanks()
+    public async Task AddToExistingChangelogWithTrailingBlanks()
     {
         const string existing =
             @"# Changelog
@@ -206,7 +197,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string result = Serialise(ChangeLogUpdater.AddEntry(ParseOrCreate(existing), "Added", "Another entry"));
+        string result = await AddEntryAndSerialiseAsync(content: existing, type: "Added", message: "Another entry");
 
         const string expected =
             @"# Changelog
@@ -238,7 +229,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("added")]
     [InlineData("ADDED")]
-    public static void AddUsingLowerOrUpperCaseTypeResolvesToCanonicalHeading(string type)
+    public static async Task AddUsingLowerOrUpperCaseTypeResolvesToCanonicalHeadingAsync(string type)
     {
         const string existing =
             @"# Changelog
@@ -261,7 +252,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string result = Serialise(ChangeLogUpdater.AddEntry(ParseOrCreate(existing), type, "Another entry"));
+        string result = await AddEntryAndSerialiseAsync(content: existing, type: type, message: "Another entry");
 
         const string expected =
             @"# Changelog
@@ -290,7 +281,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void AddToExistingChangelogForSectionThatDoesNotExistFails()
+    public async Task AddToExistingChangelogForSectionThatDoesNotExistFails()
     {
         const string existing =
             @"# Changelog
@@ -315,8 +306,8 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 
 ## [0.0.0] - Project created";
 
-        Assert.Throws<InvalidChangeLogException>(() =>
-            ChangeLogUpdater.AddEntry(ParseOrCreate(existing), "Added", "Another entry")
-        );
+        ChangeLogDocument document = await ParseOrCreateAsync(existing);
+
+        Assert.Throws<InvalidChangeLogException>(() => ChangeLogUpdater.AddEntry(document, "Added", "Another entry"));
     }
 }

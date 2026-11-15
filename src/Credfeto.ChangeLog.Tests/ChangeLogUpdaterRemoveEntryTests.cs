@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
@@ -8,45 +8,32 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Tests;
 
-[SuppressMessage(
-    category: "Meziantou.Analyzer",
-    checkId: "MA0045:Use async overload",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.VisualStudio.Threading.Analyzers",
-    checkId: "VSTHRD002",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.Reliability",
-    checkId: "CA2012:UseValueTasksCorrectly",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
 public sealed class ChangeLogUpdaterRemoveEntryTests : TestBase
 {
     private static readonly ChangeLogLanguage Language = new ChangeLogLanguageFactory().Get(
         ChangeLogLanguageFactory.English
     );
 
-    private static ChangeLogDocument ParseOrCreate(string content)
+    private static async ValueTask<string> RemoveEntryAndSerialiseAsync(string content, string type, string message)
     {
-        return ChangeLogTestHelper
-            .ParseAsync(string.IsNullOrEmpty(content) ? TemplateFile.Build(Language) : content, Language)
-            .GetAwaiter()
-            .GetResult();
-    }
+        ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(
+            string.IsNullOrEmpty(content) ? TemplateFile.Build(Language) : content,
+            Language
+        );
 
-    private static string Serialise(ChangeLogDocument document)
-    {
-        return ChangeLogTestHelper.SerialiseAsync(document, Language).GetAwaiter().GetResult();
+        return await ChangeLogTestHelper.SerialiseAsync(
+            ChangeLogUpdater.RemoveEntry(document, type, message),
+            Language
+        );
     }
 
     [Fact]
-    public void RemoveFromEmptyChangelog()
+    public async Task RemoveFromEmptyChangelog()
     {
-        string result = Serialise(
-            ChangeLogUpdater.RemoveEntry(ParseOrCreate(string.Empty), "Added", "Added a new entry")
+        string result = await RemoveEntryAndSerialiseAsync(
+            content: string.Empty,
+            type: "Added",
+            message: "Added a new entry"
         );
 
         const string expected =
@@ -79,7 +66,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void RemoveOnlyLineFromSection()
+    public async Task RemoveOnlyLineFromSection()
     {
         const string existing =
             @"# Changelog
@@ -108,7 +95,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string result = Serialise(ChangeLogUpdater.RemoveEntry(ParseOrCreate(existing), "Added", "Remove Me"));
+        string result = await RemoveEntryAndSerialiseAsync(content: existing, type: "Added", message: "Remove Me");
 
         const string expected =
             @"# Changelog
@@ -141,7 +128,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void RemoveFirstLineFromSection()
+    public async Task RemoveFirstLineFromSection()
     {
         const string existing =
             @"# Changelog
@@ -165,7 +152,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string result = Serialise(ChangeLogUpdater.RemoveEntry(ParseOrCreate(existing), "Added", "Remove Me"));
+        string result = await RemoveEntryAndSerialiseAsync(content: existing, type: "Added", message: "Remove Me");
 
         const string expected =
             @"# Changelog
@@ -193,7 +180,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void RemoveLastLineFromSection()
+    public async Task RemoveLastLineFromSection()
     {
         const string existing =
             @"# Changelog
@@ -217,7 +204,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string result = Serialise(ChangeLogUpdater.RemoveEntry(ParseOrCreate(existing), "Added", "Remove Me"));
+        string result = await RemoveEntryAndSerialiseAsync(content: existing, type: "Added", message: "Remove Me");
 
         const string expected =
             @"# Changelog
@@ -245,7 +232,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void DoesNotRemoveLineFromReleasedSection()
+    public async Task DoesNotRemoveLineFromReleasedSection()
     {
         const string existing =
             @"# Changelog
@@ -272,7 +259,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 
 ## [0.0.0] - Project created";
 
-        string result = Serialise(ChangeLogUpdater.RemoveEntry(ParseOrCreate(existing), "Added", "Remove Me"));
+        string result = await RemoveEntryAndSerialiseAsync(content: existing, type: "Added", message: "Remove Me");
 
         const string expected =
             @"# Changelog
@@ -306,7 +293,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("added")]
     [InlineData("ADDED")]
-    public static void RemoveUsingLowerOrUpperCaseTypeResolvesToCanonicalHeading(string type)
+    public static async Task RemoveUsingLowerOrUpperCaseTypeResolvesToCanonicalHeadingAsync(string type)
     {
         const string existing =
             @"# Changelog
@@ -330,7 +317,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string result = Serialise(ChangeLogUpdater.RemoveEntry(ParseOrCreate(existing), type, "Remove Me"));
+        string result = await RemoveEntryAndSerialiseAsync(content: existing, type: type, message: "Remove Me");
 
         const string expected =
             @"# Changelog
@@ -358,7 +345,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void RemovesMultipleMatchingFromUnreleased()
+    public async Task RemovesMultipleMatchingFromUnreleased()
     {
         const string existing =
             @"# Changelog
@@ -383,7 +370,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string result = Serialise(ChangeLogUpdater.RemoveEntry(ParseOrCreate(existing), "Added", "Remove Me"));
+        string result = await RemoveEntryAndSerialiseAsync(content: existing, type: "Added", message: "Remove Me");
 
         const string expected =
             @"# Changelog
