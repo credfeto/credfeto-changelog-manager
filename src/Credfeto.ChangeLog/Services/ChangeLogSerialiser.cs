@@ -54,6 +54,11 @@ public sealed class ChangeLogSerialiser : IChangeLogSerialiser
     {
         lines.Add(unreleasedHeader);
 
+        foreach (ChangeLogPreambleLine preambleLine in unreleased.PreambleLines)
+        {
+            lines.Add(preambleLine.Text);
+        }
+
         foreach (ChangeLogSection section in unreleased.Sections)
         {
             SerialiseSection(section, lines);

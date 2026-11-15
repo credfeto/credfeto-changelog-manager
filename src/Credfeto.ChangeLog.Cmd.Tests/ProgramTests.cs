@@ -130,6 +130,28 @@ public sealed class ProgramTests : TestBase
         - Initial release
         """;
 
+    private const string CHANGELOG_WITH_CONTENT_BEFORE_FIRST_UNRELEASED_HEADING = """
+        # Changelog
+        All notable changes to this project will be documented in this file.
+
+        ## [Unreleased]
+        - TBD
+        ### Security
+        ### Added
+        - Banana
+        ### Fixed
+        ### Changed
+        ### Deprecated
+        ### Removed
+        ### Deployment Changes
+
+        <!--
+        Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+        -->
+
+        ## [0.0.0] - Project created
+        """;
+
     private const string CHANGELOG_WITH_INVALID_VERSION = """
         # Changelog
         All notable changes to this project will be documented in this file.
@@ -353,6 +375,64 @@ public sealed class ProgramTests : TestBase
         try
         {
             int result = await Credfeto.ChangeLog.Cmd.Program.Main(["--changelog", tempFile, "--lint", "--fix"]);
+            Assert.Equal(expected: 0, actual: result);
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
+    public async Task Main_LintChangelogWithContentBeforeFirstUnreleasedHeading_ReturnsError()
+    {
+        string tempFile = await CreateTempChangeLogAsync(CHANGELOG_WITH_CONTENT_BEFORE_FIRST_UNRELEASED_HEADING);
+
+        try
+        {
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main(["--changelog", tempFile, "--lint"]);
+            Assert.Equal(expected: 1, actual: result);
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
+    public async Task Main_LintChangelogWithContentBeforeFirstUnreleasedHeadingWithFix_ReturnsErrorAndKeepsContent()
+    {
+        string tempFile = await CreateTempChangeLogAsync(CHANGELOG_WITH_CONTENT_BEFORE_FIRST_UNRELEASED_HEADING);
+
+        try
+        {
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main(["--changelog", tempFile, "--lint", "--fix"]);
+            Assert.Equal(expected: 1, actual: result);
+
+            string content = await File.ReadAllTextAsync(
+                path: tempFile,
+                cancellationToken: Xunit.TestContext.Current.CancellationToken
+            );
+            Assert.Contains(
+                expectedSubstring: "- TBD",
+                actualString: content,
+                comparisonType: StringComparison.Ordinal
+            );
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
+    public async Task Main_DisplayUnreleasedWithContentBeforeFirstHeading_ReturnsSuccess()
+    {
+        string tempFile = await CreateTempChangeLogAsync(CHANGELOG_WITH_CONTENT_BEFORE_FIRST_UNRELEASED_HEADING);
+
+        try
+        {
+            int result = await Credfeto.ChangeLog.Cmd.Program.Main(["--changelog", tempFile, "--un-released"]);
             Assert.Equal(expected: 0, actual: result);
         }
         finally

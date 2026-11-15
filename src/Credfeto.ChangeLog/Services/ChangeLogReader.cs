@@ -30,7 +30,7 @@ public sealed class ChangeLogReader : IChangeLogReader
             cancellationToken: cancellationToken
         );
 
-        return FormatSections(FindSections(document: document, version: version));
+        return ExtractReleaseNotes(document: document, version: version);
     }
 
     public async ValueTask<int?> FindFirstReleaseVersionPositionAsync(
@@ -50,21 +50,19 @@ public sealed class ChangeLogReader : IChangeLogReader
 
     public static string ExtractReleaseNotes(ChangeLogDocument document, string version)
     {
-        return FormatSections(FindSections(document: document, version: version));
-    }
-
-    private static ImmutableArray<ChangeLogSection> FindSections(ChangeLogDocument document, string version)
-    {
         Version? releaseVersion = BuildNumberHelpers.DetermineVersionForChangeLog(version);
 
         if (releaseVersion is null)
         {
-            return document.Unreleased?.Sections ?? [];
+            return FormatSections(
+                preambleLines: document.Unreleased?.PreambleLines ?? [],
+                sections: document.Unreleased?.Sections ?? []
+            );
         }
 
         ChangeLogRelease? release = FindRelease(releases: document.Releases, version: releaseVersion);
 
-        return release?.Sections ?? [];
+        return FormatSections(preambleLines: [], sections: release?.Sections ?? []);
     }
 
     private static ChangeLogRelease? FindRelease(in ImmutableArray<ChangeLogRelease> releases, Version version)
@@ -91,9 +89,17 @@ public sealed class ChangeLogReader : IChangeLogReader
         return parsed.Major == requested.Major && parsed.Minor == requested.Minor && parsedBuild == requestedBuild;
     }
 
-    private static string FormatSections(in ImmutableArray<ChangeLogSection> sections)
+    private static string FormatSections(
+        in ImmutableArray<ChangeLogPreambleLine> preambleLines,
+        in ImmutableArray<ChangeLogSection> sections
+    )
     {
         StringBuilder result = new();
+
+        foreach (ChangeLogPreambleLine preambleLine in preambleLines)
+        {
+            result.AppendLine(preambleLine.Text);
+        }
 
         foreach (ChangeLogSection section in sections)
         {
