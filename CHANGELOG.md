@@ -13,7 +13,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 - Command-line operations in credfeto-changelog-cmd are now mutually exclusive; combining operations or using modifiers (-m, -p, --fix, -v) with the wrong operation fails with an error and exit code 1 before any file is touched - #389
-- Lint now reports non-blank lines between [Unreleased] and its first heading, and the parser no longer drops them - #399
+- Unreleased preamble lines (non-blank text between [Unreleased] and its first ### heading) are no longer silently dropped; they are kept, --lint reports each one as an error naming its line, and --un-released shows them - #399
 ### Changed
 - Dependencies - Updated FunFair.CodeAnalysis to 7.2.26.2691
 - Dependencies - Updated Meziantou.Analyzer to 3.0.340
