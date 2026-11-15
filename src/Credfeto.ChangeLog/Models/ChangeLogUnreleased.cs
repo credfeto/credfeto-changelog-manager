@@ -6,6 +6,7 @@ namespace Credfeto.ChangeLog.Models;
 [DebuggerDisplay("Unreleased (line {LineNumber}): {Sections.Length} sections")]
 public sealed record ChangeLogUnreleased(
     int LineNumber,
+    ImmutableArray<ChangeLogPreambleLine> PreambleLines,
     ImmutableArray<ChangeLogSection> Sections,
     ImmutableArray<string> TrailingLines,
     // Valid only immediately after ChangeLogParser.ParseAsync: like every other LineNumber in

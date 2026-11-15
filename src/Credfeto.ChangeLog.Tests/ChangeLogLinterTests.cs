@@ -806,4 +806,128 @@ public sealed class ChangeLogLinterTests : TestBase
                 )
         );
     }
+
+    private const string CHANGE_LOG_WITH_CONTENT_BEFORE_FIRST_HEADING = """
+        # Changelog
+        All notable changes to this project will be documented in this file.
+
+        ## [Unreleased]
+        - TBD
+        ### Security
+        ### Added
+        - Banana
+        ### Fixed
+        ### Changed
+        ### Deprecated
+        ### Removed
+        ### Deployment Changes
+
+        <!--
+        Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+        -->
+
+        ## [0.0.0] - Project created
+        """;
+
+    [Fact]
+    public void ContentBeforeFirstUnreleasedHeading_ReturnsErrorNamingLine()
+    {
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(
+            Parse(CHANGE_LOG_WITH_CONTENT_BEFORE_FIRST_HEADING),
+            Language
+        );
+
+        LintError error = Assert.Single(errors);
+        Assert.Equal(expected: 5, actual: error.LineNumber);
+        Assert.Equal(
+            expected: "Unexpected content '- TBD' between [Unreleased] and its first '### ' heading",
+            actual: error.Message
+        );
+    }
+
+    [Fact]
+    public void MultipleLinesBeforeFirstUnreleasedHeading_ReturnsErrorForEachLine()
+    {
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+            - First
+
+            - Second
+            ### Security
+            ### Added
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+
+            ## [0.0.0] - Project created
+            """;
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+
+        Assert.Collection(
+            errors,
+            first =>
+            {
+                Assert.Equal(expected: 4, actual: first.LineNumber);
+                Assert.Contains(
+                    expectedSubstring: "'- First'",
+                    actualString: first.Message,
+                    comparisonType: StringComparison.Ordinal
+                );
+            },
+            second =>
+            {
+                Assert.Equal(expected: 6, actual: second.LineNumber);
+                Assert.Contains(
+                    expectedSubstring: "'- Second'",
+                    actualString: second.Message,
+                    comparisonType: StringComparison.Ordinal
+                );
+            }
+        );
+    }
+
+    [Fact]
+    public void BlankLinesBeforeFirstUnreleasedHeading_DoNotTriggerUnexpectedContentError()
+    {
+        const string changeLog = """
+            # Changelog
+
+            ## [Unreleased]
+
+            ### Security
+            ### Added
+            ### Fixed
+            ### Changed
+            ### Deprecated
+            ### Removed
+            ### Deployment Changes
+
+            ## [0.0.0] - Project created
+            """;
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+
+        Assert.DoesNotContain(
+            errors,
+            e => e.Message.Contains(value: "Unexpected content", comparisonType: StringComparison.Ordinal)
+        );
+    }
+
+    [Fact]
+    public void ContentBeforeFirstUnreleasedHeading_IsNotRemovedByFix()
+    {
+        ChangeLogDocument fixedDocument = ChangeLogFixer.Fix(
+            Parse(CHANGE_LOG_WITH_CONTENT_BEFORE_FIRST_HEADING),
+            Language
+        );
+
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(fixedDocument, Language);
+
+        Assert.Contains(errors, e => e.Message.Contains(value: "'- TBD'", comparisonType: StringComparison.Ordinal));
+    }
 }

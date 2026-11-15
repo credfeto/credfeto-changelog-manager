@@ -61,6 +61,7 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         ChangeLogLanguage language
     )
     {
+        CheckPreambleLines(preambleLines: unreleased.PreambleLines, errors: errors, language: language);
         CheckDuplicateSections(sections: unreleased.Sections, errors: errors, language: language);
         CheckUnknownSections(sections: unreleased.Sections, errors: errors, language: language);
         CheckSectionOrderAndPresence(
@@ -92,6 +93,23 @@ public sealed class ChangeLogLinter : IChangeLogLinter
             subject: "deployment trailer comment"
         );
         errors.Add(error);
+    }
+
+    private static void CheckPreambleLines(
+        in ImmutableArray<ChangeLogPreambleLine> preambleLines,
+        List<LintError> errors,
+        ChangeLogLanguage language
+    )
+    {
+        foreach (ChangeLogPreambleLine preambleLine in preambleLines)
+        {
+            errors.Add(
+                new(
+                    LineNumber: preambleLine.LineNumber,
+                    Message: $"Unexpected content '{preambleLine.Text}' between [{language.UnreleasedSectionName}] and its first '### ' heading"
+                )
+            );
+        }
     }
 
     private static void CheckDuplicateSections(

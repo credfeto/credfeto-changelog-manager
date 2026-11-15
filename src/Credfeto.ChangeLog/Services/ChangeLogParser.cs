@@ -69,10 +69,11 @@ public sealed class ChangeLogParser : IChangeLogParser
         );
         return new(
             LineNumber: start + 1,
+            PreambleLines: [.. state.PreambleLines],
             Sections: [.. state.Sections],
             TrailingLines: [.. state.Trailer],
             // trailer is always a contiguous suffix of the [start + 1, end) line range (every
-            // other path, sections/entries, blanksBeforeFirstSection, accounts for every line
+            // other path, preamble/sections/entries, blanksBeforeFirstSection, accounts for every line
             // before it), so its own start line is derived directly from that range rather than
             // reconstructed from section/entry counts; see MoveTrailingBlanksFromLastSection.
             TrailingLinesStartLineNumber: end - state.Trailer.Count + 1
@@ -150,6 +151,7 @@ public sealed class ChangeLogParser : IChangeLogParser
         }
         else
         {
+            state.PreambleLines.Add(new(LineNumber: lineIndex + 1, Text: line));
             state.BlanksBeforeFirstSection = 0;
         }
 
@@ -291,6 +293,7 @@ public sealed class ChangeLogParser : IChangeLogParser
         public int CurrentSectionLine { get; set; }
         public List<string> CurrentEntries { get; } = [];
         public int BlanksBeforeFirstSection { get; set; }
+        public List<ChangeLogPreambleLine> PreambleLines { get; } = [];
         public List<ChangeLogSection> Sections { get; } = [];
         public List<string> Trailer { get; } = [];
 

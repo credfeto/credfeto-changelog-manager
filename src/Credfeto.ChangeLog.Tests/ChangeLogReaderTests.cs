@@ -364,6 +364,59 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
         Assert.Equal(expected: string.Empty, actual: result);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("1.0.0.1-master")]
+    public static void ReadUnReleasedSectionIncludesContentBeforeFirstHeading(string version)
+    {
+        const string changeLog =
+            @"# Changelog
+All notable changes to this project will be documented in this file.
+
+## [Unreleased]
+- TBD
+### Security
+### Added
+- Banana
+### Fixed
+
+## [0.0.0] - Project created
+";
+
+        string result = ExtractReleaseNotes(changeLog: changeLog, version: version);
+        const string expected =
+            @"- TBD
+### Added
+- Banana";
+
+        Assert.Equal(expected.ToLocalEndLine(), actual: result);
+    }
+
+    [Fact]
+    public static void ReadReleaseIgnoresUnreleasedContentBeforeFirstHeading()
+    {
+        const string changeLog =
+            @"# Changelog
+
+## [Unreleased]
+- TBD
+### Added
+
+## [1.0.0] - 2024-01-01
+### Added
+- Released item
+
+## [0.0.0] - Project created
+";
+
+        string result = ExtractReleaseNotes(changeLog: changeLog, version: "1.0.0");
+        const string expected =
+            @"### Added
+- Released item";
+
+        Assert.Equal(expected.ToLocalEndLine(), actual: result);
+    }
+
     private static ChangeLogDocument Parse(string content) =>
         ChangeLogTestHelper.ParseAsync(content).GetAwaiter().GetResult();
 
