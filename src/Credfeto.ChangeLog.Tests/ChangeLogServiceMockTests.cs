@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.ChangeLog.Models;
@@ -12,16 +11,6 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Tests;
 
-[SuppressMessage(
-    category: "Meziantou.Analyzer",
-    checkId: "MA0045:Use async overload",
-    Justification = "ValueTask mock returns are synchronous"
-)]
-[SuppressMessage(
-    category: "Microsoft.Reliability",
-    checkId: "CA2012:UseValueTasksCorrectly",
-    Justification = "Parse() synchronously unwraps a ValueTask known to have already completed (pure in-memory parse, no I/O); MockChangeLogStorageLoad/MockChangeLogStorageSave use NSubstitute's .Returns(ValueTask...) idiom, which the analyzer also flags"
-)]
 public sealed class ChangeLogServiceMockTests : TestBase
 {
     private static readonly ChangeLogLanguage Language = new ChangeLogLanguageFactory().Get(
@@ -45,33 +34,9 @@ public sealed class ChangeLogServiceMockTests : TestBase
         ## [0.0.0] - Project created
         """;
 
-    [SuppressMessage(
-        category: "Microsoft.VisualStudio.Threading.Analyzers",
-        checkId: "VSTHRD002",
-        Justification = "Helpers synchronously wrap pure parse ValueTasks"
-    )]
-    private static ChangeLogDocument Parse(string content)
+    private static ValueTask<ChangeLogDocument> ParseAsync(string content)
     {
-        return ChangeLogTestHelper.ParseAsync(content, Language).GetAwaiter().GetResult();
-    }
-
-    private static void MockChangeLogStorageLoad(IChangeLogStorage storage, ChangeLogDocument document)
-    {
-        storage
-            .LoadAsync(Arg.Any<string>(), Arg.Any<ChangeLogLanguage>(), Arg.Any<CancellationToken>())
-            .Returns(ValueTask.FromResult(document));
-    }
-
-    private static void MockChangeLogStorageSave(IChangeLogStorage storage)
-    {
-        storage
-            .SaveAsync(
-                Arg.Any<string>(),
-                Arg.Any<ChangeLogDocument>(),
-                Arg.Any<ChangeLogLanguage>(),
-                Arg.Any<CancellationToken>()
-            )
-            .Returns(ValueTask.CompletedTask);
+        return ChangeLogTestHelper.ParseAsync(content, Language);
     }
 
     // ─── ChangeLogReader ──────────────────────────────────────────────────────────
@@ -81,9 +46,9 @@ public sealed class ChangeLogServiceMockTests : TestBase
     {
         using CancellationTokenSource cancellationTokenSource = new();
 
-        ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
+        ChangeLogDocument document = await ParseAsync(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        MockChangeLogStorageLoad(storage, document);
+        ChangeLogStorageMock.MockLoad(storage: storage, document: document);
 
         ChangeLogReader reader = new(storage);
 
@@ -116,9 +81,9 @@ public sealed class ChangeLogServiceMockTests : TestBase
             - First release
             """;
 
-        ChangeLogDocument document = Parse(changeLog);
+        ChangeLogDocument document = await ParseAsync(changeLog);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        MockChangeLogStorageLoad(storage, document);
+        ChangeLogStorageMock.MockLoad(storage: storage, document: document);
 
         ChangeLogReader reader = new(storage);
 
@@ -156,10 +121,9 @@ public sealed class ChangeLogServiceMockTests : TestBase
             ### Deployment Changes
             """;
 
-        ChangeLogDocument document = Parse(contentWithBlankLines);
+        ChangeLogDocument document = await ParseAsync(contentWithBlankLines);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        MockChangeLogStorageLoad(storage, document);
-        MockChangeLogStorageSave(storage);
+        ChangeLogStorageMock.MockLoad(storage: storage, document: document);
 
         ChangeLogFixer fixer = new(storage);
 
@@ -187,9 +151,9 @@ public sealed class ChangeLogServiceMockTests : TestBase
     {
         using CancellationTokenSource cancellationTokenSource = new();
 
-        ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
+        ChangeLogDocument document = await ParseAsync(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        MockChangeLogStorageLoad(storage, document);
+        ChangeLogStorageMock.MockLoad(storage: storage, document: document);
 
         ChangeLogLinter linter = new(storage);
 
@@ -213,9 +177,9 @@ public sealed class ChangeLogServiceMockTests : TestBase
             All notable changes to this project will be documented in this file.
             """;
 
-        ChangeLogDocument document = Parse(invalidContent);
+        ChangeLogDocument document = await ParseAsync(invalidContent);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        MockChangeLogStorageLoad(storage, document);
+        ChangeLogStorageMock.MockLoad(storage: storage, document: document);
 
         ChangeLogLinter linter = new(storage);
 
@@ -237,10 +201,9 @@ public sealed class ChangeLogServiceMockTests : TestBase
     {
         using CancellationTokenSource cancellationTokenSource = new();
 
-        ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
+        ChangeLogDocument document = await ParseAsync(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        MockChangeLogStorageLoad(storage, document);
-        MockChangeLogStorageSave(storage);
+        ChangeLogStorageMock.MockLoad(storage: storage, document: document);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
@@ -276,10 +239,9 @@ public sealed class ChangeLogServiceMockTests : TestBase
     {
         using CancellationTokenSource cancellationTokenSource = new();
 
-        ChangeLogDocument document = Parse(SIMPLE_CHANGE_LOG);
+        ChangeLogDocument document = await ParseAsync(SIMPLE_CHANGE_LOG);
         IChangeLogStorage storage = GetSubstitute<IChangeLogStorage>();
-        MockChangeLogStorageLoad(storage, document);
-        MockChangeLogStorageSave(storage);
+        ChangeLogStorageMock.MockLoad(storage: storage, document: document);
 
         ChangeLogUpdater updater = new(storage, new ChangeLogParser(), MockDateTimeSources.Past);
 
