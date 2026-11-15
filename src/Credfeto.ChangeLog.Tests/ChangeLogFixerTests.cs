@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
 using Credfeto.ChangeLog.Tests.TestHelpers;
@@ -10,21 +10,6 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Tests;
 
-[SuppressMessage(
-    category: "Meziantou.Analyzer",
-    checkId: "MA0045:Use async overload",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.VisualStudio.Threading.Analyzers",
-    checkId: "VSTHRD002",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.Reliability",
-    checkId: "CA2012:UseValueTasksCorrectly",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
 public sealed partial class ChangeLogFixerTests : TestBase
 {
     private const string VALID_CHANGE_LOG = """
@@ -50,27 +35,27 @@ public sealed partial class ChangeLogFixerTests : TestBase
         ChangeLogLanguageFactory.English
     );
 
-    private static ChangeLogDocument Parse(string content)
+    private static ValueTask<ChangeLogDocument> ParseAsync(string content)
     {
-        return ChangeLogTestHelper.ParseAsync(content, Language).GetAwaiter().GetResult();
+        return ChangeLogTestHelper.ParseAsync(content, Language);
     }
 
-    private static string Serialise(ChangeLogDocument document)
+    private static ValueTask<string> SerialiseAsync(ChangeLogDocument document)
     {
-        return ChangeLogTestHelper.SerialiseAsync(document, Language).GetAwaiter().GetResult();
+        return ChangeLogTestHelper.SerialiseAsync(document, Language);
     }
 
     [Fact]
-    public void AlreadyValidChangelog_RemainsValid()
+    public async Task AlreadyValidChangelog_RemainsValid()
     {
-        string result = Serialise(ChangeLogFixer.Fix(Parse(VALID_CHANGE_LOG), Language));
+        string result = await SerialiseAsync(ChangeLogFixer.Fix(await ParseAsync(VALID_CHANGE_LOG), Language));
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(result), Language);
         Assert.Empty(errors);
     }
 
     [Fact]
-    public void BlankLineAfterHeading_IsRemoved()
+    public async Task BlankLineAfterHeading_IsRemoved()
     {
         const string changeLog = """
             # Changelog
@@ -88,14 +73,14 @@ public sealed partial class ChangeLogFixerTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+        string result = await SerialiseAsync(ChangeLogFixer.Fix(await ParseAsync(changeLog), Language));
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(result), Language);
         Assert.Empty(errors);
     }
 
     [Fact]
-    public void MultipleBlankLinesAfterHeading_AreAllRemoved()
+    public async Task MultipleBlankLinesAfterHeading_AreAllRemoved()
     {
         const string changeLog = """
             # Changelog
@@ -114,14 +99,14 @@ public sealed partial class ChangeLogFixerTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+        string result = await SerialiseAsync(ChangeLogFixer.Fix(await ParseAsync(changeLog), Language));
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(result), Language);
         Assert.Empty(errors);
     }
 
     [Fact]
-    public void MissingRequiredSection_IsAdded()
+    public async Task MissingRequiredSection_IsAdded()
     {
         const string changeLog = """
             # Changelog
@@ -133,14 +118,14 @@ public sealed partial class ChangeLogFixerTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+        string result = await SerialiseAsync(ChangeLogFixer.Fix(await ParseAsync(changeLog), Language));
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(result), Language);
         Assert.Empty(errors);
     }
 
     [Fact]
-    public void OutOfOrderSections_AreReordered()
+    public async Task OutOfOrderSections_AreReordered()
     {
         const string changeLog = """
             # Changelog
@@ -153,16 +138,16 @@ public sealed partial class ChangeLogFixerTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+        string result = await SerialiseAsync(ChangeLogFixer.Fix(await ParseAsync(changeLog), Language));
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(result), Language);
         Assert.Empty(errors);
     }
 
     [Theory]
     [InlineData(0)]
     [InlineData(2)]
-    public static void BlankLinesBeforeReleaseHeading_Mismatched_AreFixed(int blankLines)
+    public static async Task BlankLinesBeforeReleaseHeading_Mismatched_AreFixedAsync(int blankLines)
     {
         string gap = new(c: '\n', count: blankLines);
         string changeLog = $"""
@@ -184,16 +169,16 @@ public sealed partial class ChangeLogFixerTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+        string result = await SerialiseAsync(ChangeLogFixer.Fix(await ParseAsync(changeLog), Language));
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(result), Language);
         Assert.Empty(errors);
     }
 
     [Theory]
     [InlineData(0)]
     [InlineData(2)]
-    public static void BlankLinesBeforeDeploymentTrailerComment_Mismatched_AreFixed(int blankLines)
+    public static async Task BlankLinesBeforeDeploymentTrailerComment_Mismatched_AreFixedAsync(int blankLines)
     {
         string gap = new(c: '\n', count: blankLines);
         string changeLog = $"""
@@ -215,16 +200,16 @@ public sealed partial class ChangeLogFixerTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+        string result = await SerialiseAsync(ChangeLogFixer.Fix(await ParseAsync(changeLog), Language));
 
         Assert.Contains("Deployment comment", result, StringComparison.Ordinal);
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(result), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(result), Language);
         Assert.Empty(errors);
     }
 
     [Fact]
-    public void MissingPreamble_IsAdded()
+    public async Task MissingPreamble_IsAdded()
     {
         const string changeLog = """
             # Changelog
@@ -241,7 +226,7 @@ public sealed partial class ChangeLogFixerTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+        string result = await SerialiseAsync(ChangeLogFixer.Fix(await ParseAsync(changeLog), Language));
 
         Assert.Contains(
             "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),",
@@ -256,7 +241,7 @@ public sealed partial class ChangeLogFixerTests : TestBase
     }
 
     [Fact]
-    public void ExistingPreamble_IsNotDuplicated()
+    public async Task ExistingPreamble_IsNotDuplicated()
     {
         const string changeLog = """
             # Changelog
@@ -277,14 +262,14 @@ public sealed partial class ChangeLogFixerTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+        string result = await SerialiseAsync(ChangeLogFixer.Fix(await ParseAsync(changeLog), Language));
 
         int count = PreambleFormatLineRegex().Count(result);
         Assert.Equal(expected: 1, actual: count);
     }
 
     [Fact]
-    public void MissingPreamble_IsInsertedBeforeHtmlComment()
+    public async Task MissingPreamble_IsInsertedBeforeHtmlComment()
     {
         const string changeLog = """
             # Changelog
@@ -305,7 +290,7 @@ public sealed partial class ChangeLogFixerTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        string result = Serialise(ChangeLogFixer.Fix(Parse(changeLog), Language));
+        string result = await SerialiseAsync(ChangeLogFixer.Fix(await ParseAsync(changeLog), Language));
 
         int preambleIndex = result.IndexOf("The format is based on", StringComparison.Ordinal);
         int commentIndex = result.IndexOf("<!--", StringComparison.Ordinal);

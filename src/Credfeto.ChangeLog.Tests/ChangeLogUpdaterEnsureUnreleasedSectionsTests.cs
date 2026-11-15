@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Exceptions;
 using Credfeto.ChangeLog.Models;
@@ -9,38 +9,31 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Tests;
 
-[SuppressMessage(
-    category: "Meziantou.Analyzer",
-    checkId: "MA0045:Use async overload",
-    Justification = "Testing the bit that changes the file rather than reading/writing"
-)]
-[SuppressMessage(
-    category: "Microsoft.VisualStudio.Threading.Analyzers",
-    checkId: "VSTHRD002",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.Reliability",
-    checkId: "CA2012:UseValueTasksCorrectly",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
 public sealed class ChangeLogUpdaterEnsureUnreleasedSectionsTests : TestBase
 {
     private static readonly ChangeLogLanguage Language = new ChangeLogLanguageFactory().Get(
         ChangeLogLanguageFactory.English
     );
 
-    private static ChangeLogDocument ParseOrCreate(string content)
+    private static ValueTask<ChangeLogDocument> ParseOrCreateAsync(string content)
     {
-        return ChangeLogTestHelper
-            .ParseAsync(string.IsNullOrEmpty(content) ? TemplateFile.Build(Language) : content, Language)
-            .GetAwaiter()
-            .GetResult();
+        return ChangeLogTestHelper.ParseAsync(
+            string.IsNullOrEmpty(content) ? TemplateFile.Build(Language) : content,
+            Language
+        );
     }
 
-    private static string Serialise(ChangeLogDocument document)
+    private static async ValueTask<string> EnsureUnreleasedSectionsAndSerialiseAsync(
+        string content,
+        ChangeLogLanguage language
+    )
     {
-        return ChangeLogTestHelper.SerialiseAsync(document, Language).GetAwaiter().GetResult();
+        ChangeLogDocument document = await ParseOrCreateAsync(content);
+
+        return await ChangeLogTestHelper.SerialiseAsync(
+            ChangeLogUpdater.EnsureUnreleasedSections(document, language),
+            Language
+        );
     }
 
     public static TheoryData<string, string> EnsureUnreleasedSectionsCases
@@ -326,15 +319,15 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 
     [Theory]
     [MemberData(nameof(EnsureUnreleasedSectionsCases))]
-    public static void EnsureUnreleasedSectionsProducesCorrectResult(string existing, string expected)
+    public static async Task EnsureUnreleasedSectionsProducesCorrectResultAsync(string existing, string expected)
     {
-        string result = Serialise(ChangeLogUpdater.EnsureUnreleasedSections(ParseOrCreate(existing), Language));
+        string result = await EnsureUnreleasedSectionsAndSerialiseAsync(content: existing, language: Language);
 
         Assert.Equal(expected.ToLocalEndLine(), actual: result);
     }
 
     [Fact]
-    public void EnsureUnreleasedSectionsCreatesAdditionalSectionWhenMissing()
+    public async Task EnsureUnreleasedSectionsCreatesAdditionalSectionWhenMissing()
     {
         ChangeLogLanguage languageWithAdditionalSection = Language with
         {
@@ -361,8 +354,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-        string result = Serialise(
-            ChangeLogUpdater.EnsureUnreleasedSections(ParseOrCreate(existing), languageWithAdditionalSection)
+        string result = await EnsureUnreleasedSectionsAndSerialiseAsync(
+            content: existing,
+            language: languageWithAdditionalSection
         );
 
         const string expected =
@@ -394,7 +388,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     }
 
     [Fact]
-    public void MissingUnreleasedSectionThrows()
+    public async Task MissingUnreleasedSectionThrows()
     {
         const string noUnreleased =
             @"# Changelog
@@ -404,8 +398,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Initial release.";
 
-        Assert.Throws<InvalidChangeLogException>(() =>
-            ChangeLogUpdater.EnsureUnreleasedSections(ParseOrCreate(noUnreleased), Language)
-        );
+        ChangeLogDocument document = await ParseOrCreateAsync(noUnreleased);
+
+        Assert.Throws<InvalidChangeLogException>(() => ChangeLogUpdater.EnsureUnreleasedSections(document, Language));
     }
 }

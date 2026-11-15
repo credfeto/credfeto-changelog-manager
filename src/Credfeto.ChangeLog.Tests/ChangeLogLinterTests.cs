@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
@@ -10,21 +10,6 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Tests;
 
-[SuppressMessage(
-    category: "Meziantou.Analyzer",
-    checkId: "MA0045:Use async overload",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.VisualStudio.Threading.Analyzers",
-    checkId: "VSTHRD002",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.Reliability",
-    checkId: "CA2012:UseValueTasksCorrectly",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
 public sealed class ChangeLogLinterTests : TestBase
 {
     private const string VALID_CHANGE_LOG = """
@@ -47,15 +32,15 @@ public sealed class ChangeLogLinterTests : TestBase
         """;
 
     [Fact]
-    public void ValidChangelog_ReturnsNoErrors()
+    public async Task ValidChangelog_ReturnsNoErrors()
     {
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(VALID_CHANGE_LOG), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(VALID_CHANGE_LOG), Language);
 
         Assert.Empty(errors);
     }
 
     [Fact]
-    public void MissingUnreleasedSection_ReturnsError()
+    public async Task MissingUnreleasedSection_ReturnsError()
     {
         const string changeLog = """
             # Changelog
@@ -65,16 +50,15 @@ public sealed class ChangeLogLinterTests : TestBase
             - Initial release
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e => e.Message.Contains(value: "[Unreleased]", comparisonType: StringComparison.Ordinal)
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "[Unreleased]", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void MissingRequiredSection_ReturnsError()
+    public async Task MissingRequiredSection_ReturnsError()
     {
         const string changeLog = """
             # Changelog
@@ -93,18 +77,16 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "### Added", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "Missing", comparisonType: StringComparison.Ordinal)
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "### Added", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: "Missing", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void DuplicateSection_ReturnsError()
+    public async Task DuplicateSection_ReturnsError()
     {
         const string changeLog = """
             # Changelog
@@ -123,19 +105,17 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "### Added", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "duplicated", comparisonType: StringComparison.Ordinal)
-                && e.LineNumber == 7
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "### Added", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: "duplicated", comparisonType: StringComparison.Ordinal)
+            && e.LineNumber == 7
         );
     }
 
     [Fact]
-    public void UnknownSection_ReturnsError()
+    public async Task UnknownSection_ReturnsError()
     {
         const string changeLog = """
             # Changelog
@@ -152,19 +132,17 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "### Custom", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "Unknown", comparisonType: StringComparison.Ordinal)
-                && e.LineNumber == 10
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "### Custom", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: "Unknown", comparisonType: StringComparison.Ordinal)
+            && e.LineNumber == 10
         );
     }
 
     [Fact]
-    public void UnknownSection_AllowedViaAdditionalSections_ReturnsNoError()
+    public async Task UnknownSection_AllowedViaAdditionalSections_ReturnsNoError()
     {
         const string changeLog = """
             # Changelog
@@ -182,23 +160,21 @@ public sealed class ChangeLogLinterTests : TestBase
             """;
 
         IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(
-            Parse(changeLog),
+            await ParseAsync(changeLog),
             Language with
             {
                 SectionOrder = [.. Language.SectionOrder, "Custom"],
             }
         );
 
-        Assert.DoesNotContain(
-            errors,
-            e =>
-                e.Message.Contains(value: "### Custom", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "Unknown", comparisonType: StringComparison.Ordinal)
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(value: "### Custom", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: "Unknown", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void BlankLineAfterHeading_ReturnsError()
+    public async Task BlankLineAfterHeading_ReturnsError()
     {
         const string changeLog = """
             # Changelog
@@ -216,21 +192,16 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(
-                    value: "Blank line after heading '### Added'",
-                    comparisonType: StringComparison.Ordinal
-                )
-                && e.LineNumber == 5
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "Blank line after heading '### Added'", comparisonType: StringComparison.Ordinal)
+            && e.LineNumber == 5
         );
     }
 
     [Fact]
-    public void NoBlankLineAfterHeading_ReturnsNoError()
+    public async Task NoBlankLineAfterHeading_ReturnsNoError()
     {
         const string changeLog = """
             # Changelog
@@ -247,16 +218,15 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.DoesNotContain(
-            errors,
-            e => e.Message.Contains(value: "Blank line after heading", comparisonType: StringComparison.Ordinal)
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(value: "Blank line after heading", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void InvalidVersionHeader_ReturnsError()
+    public async Task InvalidVersionHeader_ReturnsError()
     {
         const string changeLog = """
             # Changelog
@@ -276,18 +246,16 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "not-a-version", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "Invalid version", comparisonType: StringComparison.Ordinal)
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "not-a-version", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: "Invalid version", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void ValidVersionsInOrder_ReturnsNoErrors()
+    public async Task ValidVersionsInOrder_ReturnsNoErrors()
     {
         const string changeLog = """
             # Changelog
@@ -311,16 +279,15 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.DoesNotContain(
-            errors,
-            e => e.Message.Contains(value: "descending order", comparisonType: StringComparison.Ordinal)
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(value: "descending order", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void WrongDateFormat_ReturnsError()
+    public async Task WrongDateFormat_ReturnsError()
     {
         const string changeLog = """
             # Changelog
@@ -341,18 +308,16 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "01/01/2024", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "01/01/2024", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void TextLabelInsteadOfDate_ReturnsNoError()
+    public async Task TextLabelInsteadOfDate_ReturnsNoError()
     {
         const string changeLog = """
             # Changelog
@@ -369,11 +334,10 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.DoesNotContain(
-            errors,
-            e => e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
         );
     }
 
@@ -381,13 +345,13 @@ public sealed class ChangeLogLinterTests : TestBase
         ChangeLogLanguageFactory.English
     );
 
-    private static ChangeLogDocument Parse(string content)
+    private static ValueTask<ChangeLogDocument> ParseAsync(string content)
     {
-        return ChangeLogTestHelper.ParseAsync(content, Language).GetAwaiter().GetResult();
+        return ChangeLogTestHelper.ParseAsync(content, Language);
     }
 
     [Fact]
-    public void VersionsOutOfOrder_ReturnsError()
+    public async Task VersionsOutOfOrder_ReturnsError()
     {
         const string changeLog = """
             # Changelog
@@ -411,18 +375,16 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "2.0.0", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "descending order", comparisonType: StringComparison.Ordinal)
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "2.0.0", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: "descending order", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void SectionOutOfOrder_ReturnsError()
+    public async Task SectionOutOfOrder_ReturnsError()
     {
         const string changeLog = """
             # Changelog
@@ -439,17 +401,15 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "out of order", comparisonType: StringComparison.Ordinal) && e.LineNumber == 4
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "out of order", comparisonType: StringComparison.Ordinal) && e.LineNumber == 4
         );
     }
 
     [Fact]
-    public void TbdDateInRelease_ReturnsNoDateFormatError()
+    public async Task TbdDateInRelease_ReturnsNoDateFormatError()
     {
         const string changeLog = """
             # Changelog
@@ -470,16 +430,15 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.DoesNotContain(
-            errors,
-            e => e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void CheckReleaseDateWithBlankDateReturnsNoError()
+    public async Task CheckReleaseDateWithBlankDateReturnsNoError()
     {
         // A release with an empty date (just version, no date) should not produce a date format error
         const string changeLog = """
@@ -501,16 +460,15 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.DoesNotContain(
-            errors,
-            e => e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void UnparseableGarbageDateInRelease_ReturnsDateFormatError()
+    public async Task UnparseableGarbageDateInRelease_ReturnsDateFormatError()
     {
         const string changeLog = """
             # Changelog
@@ -531,20 +489,21 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "banana", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "banana", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: "not in the expected format", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Theory]
     [InlineData(0, "Missing")]
     [InlineData(2, "Extra")]
-    public static void BlankLinesBeforeReleaseHeading_Mismatched_ReturnsError(int blankLines, string expectedToken)
+    public static async Task BlankLinesBeforeReleaseHeading_Mismatched_ReturnsErrorAsync(
+        int blankLines,
+        string expectedToken
+    )
     {
         string gap = new(c: '\n', count: blankLines);
         string changeLog = $"""
@@ -566,35 +525,28 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "## [1.0.0]", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: expectedToken, comparisonType: StringComparison.Ordinal)
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "## [1.0.0]", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: expectedToken, comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void ExactlyOneBlankLineBeforeReleaseHeading_ReturnsNoError()
+    public async Task ExactlyOneBlankLineBeforeReleaseHeading_ReturnsNoError()
     {
         // Also confirms ### sub-headings (which VALID_CHANGE_LOG has none before) are out of
         // scope for this rule; only ## release headings are checked.
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(VALID_CHANGE_LOG), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(VALID_CHANGE_LOG), Language);
 
-        Assert.DoesNotContain(
-            errors,
-            e =>
-                e.Message.Contains(
-                    value: "blank line(s) before release heading",
-                    comparisonType: StringComparison.Ordinal
-                )
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(value: "blank line(s) before release heading", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void MissingBlankLineBetweenTwoReleases_ReturnsError()
+    public async Task MissingBlankLineBetweenTwoReleases_ReturnsError()
     {
         const string changeLog = """
             # Changelog
@@ -618,20 +570,18 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "## [1.0.0]", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "Missing", comparisonType: StringComparison.Ordinal)
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "## [1.0.0]", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: "Missing", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Theory]
     [InlineData(0, "Missing", 12)]
     [InlineData(2, "Extra", 14)]
-    public static void BlankLinesBeforeDeploymentTrailerComment_Mismatched_ReturnsError(
+    public static async Task BlankLinesBeforeDeploymentTrailerComment_Mismatched_ReturnsErrorAsync(
         int blankLines,
         string expectedToken,
         int expectedLineNumber
@@ -661,21 +611,19 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
         // Line number must point at the "<!--" comment itself (line 12/14 in the fixture above),
         // not merely somewhere inside [Unreleased].
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "deployment trailer comment", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: expectedToken, comparisonType: StringComparison.Ordinal)
-                && e.LineNumber == expectedLineNumber
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "deployment trailer comment", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: expectedToken, comparisonType: StringComparison.Ordinal)
+            && e.LineNumber == expectedLineNumber
         );
     }
 
     [Fact]
-    public static void BlankLineBeforeFirstSection_DoesNotSkewTrailerCommentLineNumber()
+    public static async Task BlankLineBeforeFirstSection_DoesNotSkewTrailerCommentLineNumberAsync()
     {
         const string changeLog = """
             # Changelog
@@ -701,22 +649,20 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
         // A blank line between "## [Unreleased]" and its first "### " section heading must not
         // throw off the reported line number: it is derived from the trailer's own position in
         // the source, not reconstructed by counting sections/entries after the heading.
-        Assert.Contains(
-            errors,
-            e =>
-                e.Message.Contains(value: "deployment trailer comment", comparisonType: StringComparison.Ordinal)
-                && e.Message.Contains(value: "Missing", comparisonType: StringComparison.Ordinal)
-                && e.LineNumber == 13
+        Assert.Contains(errors, e =>
+            e.Message.Contains(value: "deployment trailer comment", comparisonType: StringComparison.Ordinal)
+            && e.Message.Contains(value: "Missing", comparisonType: StringComparison.Ordinal)
+            && e.LineNumber == 13
         );
     }
 
     [Fact]
-    public void ExactlyOneBlankLineBeforeDeploymentTrailerComment_ReturnsNoError()
+    public async Task ExactlyOneBlankLineBeforeDeploymentTrailerComment_ReturnsNoError()
     {
         const string changeLog = """
             # Changelog
@@ -737,20 +683,18 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.DoesNotContain(
-            errors,
-            e =>
-                e.Message.Contains(
-                    value: "blank line(s) before deployment trailer comment",
-                    comparisonType: StringComparison.Ordinal
-                )
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(
+                value: "blank line(s) before deployment trailer comment",
+                comparisonType: StringComparison.Ordinal
+            )
         );
     }
 
     [Fact]
-    public void NonBlankContentBeforeDeploymentTrailerComment_DoesNotTriggerBlankLineCheck()
+    public async Task NonBlankContentBeforeDeploymentTrailerComment_DoesNotTriggerBlankLineCheck()
     {
         // A non-blank line directly under "### Deployment Changes" stays part of that section's
         // own entries (ChangeLogParser only ever moves trailing *blank* lines into TrailingLines,
@@ -777,33 +721,29 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.DoesNotContain(
-            errors,
-            e =>
-                e.Message.Contains(
-                    value: "blank line(s) before deployment trailer comment",
-                    comparisonType: StringComparison.Ordinal
-                )
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(
+                value: "blank line(s) before deployment trailer comment",
+                comparisonType: StringComparison.Ordinal
+            )
         );
     }
 
     [Fact]
-    public void NoDeploymentTrailerComment_DoesNotTriggerBlankLineCheck()
+    public async Task NoDeploymentTrailerComment_DoesNotTriggerBlankLineCheck()
     {
         // VALID_CHANGE_LOG's trailer has no HTML comment at all (goes straight from
         // "### Deployment Changes" to the next release heading): the rule must stay
         // silent rather than treating that gap as a missing comment-blank-line.
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(VALID_CHANGE_LOG), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(VALID_CHANGE_LOG), Language);
 
-        Assert.DoesNotContain(
-            errors,
-            e =>
-                e.Message.Contains(
-                    value: "blank line(s) before deployment trailer comment",
-                    comparisonType: StringComparison.Ordinal
-                )
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(
+                value: "blank line(s) before deployment trailer comment",
+                comparisonType: StringComparison.Ordinal
+            )
         );
     }
 
@@ -830,10 +770,10 @@ public sealed class ChangeLogLinterTests : TestBase
         """;
 
     [Fact]
-    public void ContentBeforeFirstUnreleasedHeading_ReturnsErrorNamingLine()
+    public async Task ContentBeforeFirstUnreleasedHeading_ReturnsErrorNamingLine()
     {
         IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(
-            Parse(CHANGE_LOG_WITH_CONTENT_BEFORE_FIRST_HEADING),
+            await ParseAsync(CHANGE_LOG_WITH_CONTENT_BEFORE_FIRST_HEADING),
             Language
         );
 
@@ -846,7 +786,7 @@ public sealed class ChangeLogLinterTests : TestBase
     }
 
     [Fact]
-    public void MultipleLinesBeforeFirstUnreleasedHeading_ReturnsErrorForEachLine()
+    public async Task MultipleLinesBeforeFirstUnreleasedHeading_ReturnsErrorForEachLine()
     {
         const string changeLog = """
             # Changelog
@@ -866,7 +806,7 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
         Assert.Collection(
             errors,
@@ -892,7 +832,7 @@ public sealed class ChangeLogLinterTests : TestBase
     }
 
     [Fact]
-    public void BlankLinesBeforeFirstUnreleasedHeading_DoNotTriggerUnexpectedContentError()
+    public async Task BlankLinesBeforeFirstUnreleasedHeading_DoNotTriggerUnexpectedContentError()
     {
         const string changeLog = """
             # Changelog
@@ -910,19 +850,18 @@ public sealed class ChangeLogLinterTests : TestBase
             ## [0.0.0] - Project created
             """;
 
-        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(Parse(changeLog), Language);
+        IReadOnlyList<LintError> errors = ChangeLogLinter.Lint(await ParseAsync(changeLog), Language);
 
-        Assert.DoesNotContain(
-            errors,
-            e => e.Message.Contains(value: "Unexpected content", comparisonType: StringComparison.Ordinal)
+        Assert.DoesNotContain(errors, e =>
+            e.Message.Contains(value: "Unexpected content", comparisonType: StringComparison.Ordinal)
         );
     }
 
     [Fact]
-    public void ContentBeforeFirstUnreleasedHeading_IsNotRemovedByFix()
+    public async Task ContentBeforeFirstUnreleasedHeading_IsNotRemovedByFix()
     {
         ChangeLogDocument fixedDocument = ChangeLogFixer.Fix(
-            Parse(CHANGE_LOG_WITH_CONTENT_BEFORE_FIRST_HEADING),
+            await ParseAsync(CHANGE_LOG_WITH_CONTENT_BEFORE_FIRST_HEADING),
             Language
         );
 

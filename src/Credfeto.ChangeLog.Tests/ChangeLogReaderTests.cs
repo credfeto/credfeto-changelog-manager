@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
 using Credfeto.ChangeLog.Tests.TestHelpers;
@@ -7,21 +7,6 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Tests;
 
-[SuppressMessage(
-    category: "Meziantou.Analyzer",
-    checkId: "MA0045:Use async overload",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.VisualStudio.Threading.Analyzers",
-    checkId: "VSTHRD002",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
-[SuppressMessage(
-    category: "Microsoft.Reliability",
-    checkId: "CA2012:UseValueTasksCorrectly",
-    Justification = "Helpers synchronously wrap pure parse/serialise ValueTasks"
-)]
 public sealed class ChangeLogReaderTests : TestBase
 {
     private const string MULTI_RELEASE_CHANGE_LOG =
@@ -63,16 +48,16 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
     [InlineData("1.0.0.1")]
-    public static void ReadEmptyChangeLogReturnsEmpty(string version)
+    public static async Task ReadEmptyChangeLogReturnsEmptyAsync(string version)
     {
-        string result = ExtractReleaseNotes(changeLog: string.Empty, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: string.Empty, version: version);
         Assert.Empty(result);
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public static void ReadUnReleasedSectionWithNoContentReturnsEmpty(string version)
+    public static async Task ReadUnReleasedSectionWithNoContentReturnsEmptyAsync(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -95,14 +80,14 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 ## [0.0.0] - Project created
 ";
 
-        string result = ExtractReleaseNotes(changeLog: changeLog, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: changeLog, version: version);
         Assert.Empty(result);
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public static void ReadUnReleasedSectionWithJustAddedReturnsAddedSectionOnly(string version)
+    public static async Task ReadUnReleasedSectionWithJustAddedReturnsAddedSectionOnlyAsync(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -126,7 +111,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 ## [0.0.0] - Project created
 ";
 
-        string result = ExtractReleaseNotes(changeLog: changeLog, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: changeLog, version: version);
         const string expected =
             @"### Added
 - Something was added.";
@@ -137,7 +122,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public static void ReadUnReleasedSectionWithJustFixedReturnsAddedSectionOnly(string version)
+    public static async Task ReadUnReleasedSectionWithJustFixedReturnsAddedSectionOnlyAsync(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -161,7 +146,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 ## [0.0.0] - Project created
 ";
 
-        string result = ExtractReleaseNotes(changeLog: changeLog, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: changeLog, version: version);
         const string expected =
             @"### Fixed
 - Something was fixed.";
@@ -172,7 +157,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public static void ReadUnReleasedSectionWithJustChangedReturnsChangedSectionOnly(string version)
+    public static async Task ReadUnReleasedSectionWithJustChangedReturnsChangedSectionOnlyAsync(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -196,7 +181,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 ## [0.0.0] - Project created
 ";
 
-        string result = ExtractReleaseNotes(changeLog: changeLog, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: changeLog, version: version);
         const string expected =
             @"### Changed
 - Something was changed.";
@@ -207,7 +192,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public static void ReadUnReleasedSectionWithJustRemovedReturnsRemovedSectionOnly(string version)
+    public static async Task ReadUnReleasedSectionWithJustRemovedReturnsRemovedSectionOnlyAsync(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -231,7 +216,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 ## [0.0.0] - Project created
 ";
 
-        string result = ExtractReleaseNotes(changeLog: changeLog, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: changeLog, version: version);
         const string expected =
             @"### Removed
 - Something was removed.";
@@ -242,7 +227,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public static void ReadUnReleasedSectionWithJustDeploymentChangesReturnsDeploymentChangesSectionOnly(string version)
+    public static async Task ReadUnReleasedSectionWithJustDeploymentChangesReturnsDeploymentChangesSectionOnlyAsync(
+        string version
+    )
     {
         const string changeLog =
             @"# Changelog
@@ -266,7 +253,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 ## [0.0.0] - Project created
 ";
 
-        string result = ExtractReleaseNotes(changeLog: changeLog, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: changeLog, version: version);
         const string expected =
             @"### Deployment Changes
 - Need to do something special here on the next deployment.";
@@ -278,9 +265,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [InlineData("1.1.1")]
     [InlineData("1.1.1.1")]
     [InlineData("1.1.1.3000")]
-    public static void ReadASpecificReleaseReturnsThatReleaseOnly(string version)
+    public static async Task ReadASpecificReleaseReturnsThatReleaseOnlyAsync(string version)
     {
-        string result = ExtractReleaseNotes(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
         const string expected =
             @"### Added
 - Something was added here.";
@@ -292,9 +279,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [InlineData("1.0.0")]
     [InlineData("1.0.0.0")]
     [InlineData("1.0.0.3000")]
-    public static void ReadASpecificReleaseReturnsThatReleaseOnlyIgnoringZeroVersionParts(string version)
+    public static async Task ReadASpecificReleaseReturnsThatReleaseOnlyIgnoringZeroVersionPartsAsync(string version)
     {
-        string result = ExtractReleaseNotes(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
         const string expected =
             @"### Added
 - This is release 1.0.0.";
@@ -306,9 +293,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [InlineData("0.0.0")]
     [InlineData("0.0.0.0")]
     [InlineData("0.0.0.3000")]
-    public static void ReadASpecificReleaseAtEndOfFile(string version)
+    public static async Task ReadASpecificReleaseAtEndOfFileAsync(string version)
     {
-        string result = ExtractReleaseNotes(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
 
         const string expected =
             @"### Added
@@ -319,7 +306,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public static void ReadUnReleasedSectionWithWhitespaceOnlyEntryExcludesItFromReleaseNotes(string version)
+    public static async Task ReadUnReleasedSectionWithWhitespaceOnlyEntryExcludesItFromReleaseNotesAsync(string version)
     {
         string changeLog =
             $@"# Changelog
@@ -344,7 +331,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 ## [0.0.0] - Project created
 ";
 
-        string result = ExtractReleaseNotes(changeLog: changeLog, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: changeLog, version: version);
         const string expected =
             @"### Added
 - Something was added.";
@@ -357,9 +344,9 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [InlineData("8.1.0")]
     [InlineData("9.2.3.0")]
     [InlineData("10.3.4.3000")]
-    public static void ReadNonExistentVersion(string version)
+    public static async Task ReadNonExistentVersionAsync(string version)
     {
-        string result = ExtractReleaseNotes(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: MULTI_RELEASE_CHANGE_LOG, version: version);
 
         Assert.Equal(expected: string.Empty, actual: result);
     }
@@ -367,7 +354,7 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
     [Theory]
     [InlineData("")]
     [InlineData("1.0.0.1-master")]
-    public static void ReadUnReleasedSectionIncludesContentBeforeFirstHeading(string version)
+    public static async Task ReadUnReleasedSectionIncludesContentBeforeFirstHeadingAsync(string version)
     {
         const string changeLog =
             @"# Changelog
@@ -383,7 +370,7 @@ All notable changes to this project will be documented in this file.
 ## [0.0.0] - Project created
 ";
 
-        string result = ExtractReleaseNotes(changeLog: changeLog, version: version);
+        string result = await ExtractReleaseNotesAsync(changeLog: changeLog, version: version);
         const string expected =
             @"- TBD
 ### Added
@@ -393,7 +380,7 @@ All notable changes to this project will be documented in this file.
     }
 
     [Fact]
-    public static void ReadReleaseIgnoresUnreleasedContentBeforeFirstHeading()
+    public static async Task ReadReleaseIgnoresUnreleasedContentBeforeFirstHeadingAsync()
     {
         const string changeLog =
             @"# Changelog
@@ -409,7 +396,7 @@ All notable changes to this project will be documented in this file.
 ## [0.0.0] - Project created
 ";
 
-        string result = ExtractReleaseNotes(changeLog: changeLog, version: "1.0.0");
+        string result = await ExtractReleaseNotesAsync(changeLog: changeLog, version: "1.0.0");
         const string expected =
             @"### Added
 - Released item";
@@ -417,11 +404,10 @@ All notable changes to this project will be documented in this file.
         Assert.Equal(expected.ToLocalEndLine(), actual: result);
     }
 
-    private static ChangeLogDocument Parse(string content) =>
-        ChangeLogTestHelper.ParseAsync(content).GetAwaiter().GetResult();
-
-    private static string ExtractReleaseNotes(string changeLog, string version)
+    private static async ValueTask<string> ExtractReleaseNotesAsync(string changeLog, string version)
     {
-        return ChangeLogReader.ExtractReleaseNotes(document: Parse(changeLog), version: version);
+        ChangeLogDocument document = await ChangeLogTestHelper.ParseAsync(changeLog);
+
+        return ChangeLogReader.ExtractReleaseNotes(document: document, version: version);
     }
 }
