@@ -1,5 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using Credfeto.ChangeLog.Models;
 using Credfeto.ChangeLog.Services;
@@ -60,49 +62,40 @@ Releases that have at least been deployed to staging, BUT NOT necessarily releas
 -->
 ## [0.0.0] - Project created";
 
-    private static readonly ChangeLogDocument CorrectOrderDocument = ParseSync(CORRECT_ORDER_CHANGELOG);
-    private static readonly ChangeLogDocument OutOfOrderDocument = ParseSync(OUT_OF_ORDER_CHANGELOG);
+    private ChangeLogDocument? _correctOrderDocument;
+    private ChangeLogDocument? _outOfOrderDocument;
+
+    [GlobalSetup]
+    public async Task SetupAsync()
+    {
+        this._correctOrderDocument = await ParseAsync(CORRECT_ORDER_CHANGELOG);
+        this._outOfOrderDocument = await ParseAsync(OUT_OF_ORDER_CHANGELOG);
+    }
 
     [Benchmark]
     public ChangeLogDocument EnsureUnreleasedSections_AllSectionsCorrect()
     {
-        return ChangeLogUpdater.EnsureUnreleasedSections(
-            document: CorrectOrderDocument,
-            language: BenchmarkLanguage.English
-        );
+        ChangeLogDocument document = this._correctOrderDocument
+            ?? throw new InvalidOperationException("Setup has not run");
+
+        return ChangeLogUpdater.EnsureUnreleasedSections(document: document, language: BenchmarkLanguage.English);
     }
 
     [Benchmark]
     public ChangeLogDocument EnsureUnreleasedSections_OutOfOrderAndMissing()
     {
-        return ChangeLogUpdater.EnsureUnreleasedSections(
-            document: OutOfOrderDocument,
-            language: BenchmarkLanguage.English
-        );
+        ChangeLogDocument document = this._outOfOrderDocument
+            ?? throw new InvalidOperationException("Setup has not run");
+
+        return ChangeLogUpdater.EnsureUnreleasedSections(document: document, language: BenchmarkLanguage.English);
     }
 
-    [SuppressMessage(
-        category: "Meziantou.Analyzer",
-        checkId: "MA0045:Use async overload",
-        Justification = "Benchmark setup requires synchronous parse of a pure ValueTask.FromResult"
-    )]
-    [SuppressMessage(
-        category: "Microsoft.VisualStudio.Threading.Analyzers",
-        checkId: "VSTHRD002",
-        Justification = "Benchmark setup requires synchronous parse of a pure ValueTask.FromResult"
-    )]
-    [SuppressMessage(
-        category: "Microsoft.Reliability",
-        checkId: "CA2012:UseValueTasksCorrectly",
-        Justification = "ChangeLogParser.ParseAsync always returns ValueTask.FromResult — already completed"
-    )]
-    private static ChangeLogDocument ParseSync(string content) =>
-        new ChangeLogParser()
-            .ParseAsync(
-                content: content,
-                language: BenchmarkLanguage.English,
-                cancellationToken: CancellationToken.None
-            )
-            .GetAwaiter()
-            .GetResult();
+    private static ValueTask<ChangeLogDocument> ParseAsync(string content)
+    {
+        return new ChangeLogParser().ParseAsync(
+            content: content,
+            language: BenchmarkLanguage.English,
+            cancellationToken: CancellationToken.None
+        );
+    }
 }
