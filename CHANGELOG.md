@@ -25,6 +25,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Dependencies - Updated Microsoft.Extensions to 11.0.0
 - SDK - Updated DotNet SDK to 11.0.100
 - Native AOT and trimming enabled for the Credfeto.ChangeLog.Cmd tool, published as a linux-x64 native package. CommandLineParser replaced with a trim-safe parser, and --help now exits with code 0
+- changelog-mcp published as a native AOT, trimmed dotnet tool
 ### Deprecated
 ### Removed
 ### Deployment Changes
