@@ -12,6 +12,17 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+### Changed
+### Deprecated
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+
+## [1.10.217] - 2026-11-19
+### Fixed
 - Command-line operations in credfeto-changelog-cmd are now mutually exclusive; combining operations or using modifiers (-m, -p, --fix, -v) with the wrong operation fails with an error and exit code 1 before any file is touched - #389
 - Unreleased preamble lines (non-blank text between [Unreleased] and its first ### heading) are no longer silently dropped; they are kept, --lint reports each one as an error naming its line, and --un-released shows them - #399
 - Test and benchmark code no longer suppresses CA2012 with SuppressMessage; the root cause is fixed by using async test helpers instead of blocking on ValueTask, and a shared ChangeLogStorageMock helper replaces repeated NSubstitute setups - #379
@@ -26,13 +37,6 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - SDK - Updated DotNet SDK to 11.0.100
 - Native AOT and trimming enabled for the Credfeto.ChangeLog.Cmd tool, published as a linux-x64 native package. CommandLineParser replaced with a trim-safe parser, and --help now exits with code 0
 - Native AOT and full trimming enabled for the Credfeto.ChangeLog.Mcp (changelog-mcp) tool, packed as per-RID native packages with the trim, AOT and single-file analysers enabled - #410
-### Deprecated
-### Removed
-### Deployment Changes
-
-<!--
-Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
--->
 
 ## [1.10.216] - 2026-11-14
 ### Changed
