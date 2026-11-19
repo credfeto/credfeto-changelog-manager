@@ -26,6 +26,13 @@ public sealed class ServerHostTests : ToolTestBase
 
         """;
 
+    private const string ADDING_SESSION = """
+        {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+        {"jsonrpc":"2.0","method":"notifications/initialized"}
+        {"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"changelog_add","arguments":{"changelog":"CHANGELOG.md","type":"Added","message":"Written outside"}}}
+
+        """;
+
     public ServerHostTests(ITestOutputHelper output)
         : base(output) { }
 
@@ -104,6 +111,44 @@ public sealed class ServerHostTests : ToolTestBase
             comparisonType: StringComparison.Ordinal
         );
         Assert.Empty(error.ToString());
+    }
+
+    [Fact]
+    public async Task ToolCallStartedOutsideARepositoryIsAnErrorAndCreatesNothingAsync()
+    {
+        string elsewhere = Path.Combine(path1: this.TempFolder, path2: "elsewhere");
+        Directory.CreateDirectory(elsewhere);
+
+        await using StringWriter error = new(CultureInfo.InvariantCulture);
+        await using ScriptedInputStream input = new(script: ADDING_SESSION, waitAtEnd: true);
+        await using CapturingOutputStream output = new(CALL_RESPONSE_MARKER);
+
+        int exitCode = await ServerHost.RunAsync(
+            workingDirectory: elsewhere,
+            repositoryRoot: null,
+            error: error,
+            input: input,
+            output: output,
+            stopRequested: output.MarkerWritten
+        );
+
+        Assert.Equal(expected: 0, actual: exitCode);
+        Assert.Contains(
+            expectedSubstring: "\"isError\":true",
+            actualString: output.Text,
+            comparisonType: StringComparison.Ordinal
+        );
+        Assert.Contains(
+            expectedSubstring: "No repository found",
+            actualString: output.Text,
+            comparisonType: StringComparison.Ordinal
+        );
+        Assert.Contains(
+            expectedSubstring: elsewhere,
+            actualString: output.Text,
+            comparisonType: StringComparison.Ordinal
+        );
+        Assert.Empty(Directory.EnumerateFileSystemEntries(elsewhere));
     }
 
     [Theory]

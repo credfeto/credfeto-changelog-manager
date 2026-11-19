@@ -42,10 +42,10 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
         return root;
     }
 
-    protected ServiceProvider BuildServices(IChangeLogDetector? detector = null)
+    protected ServiceProvider BuildServices(IChangeLogDetector? detector = null, string? workingDirectory = null)
     {
         return new ServiceCollection()
-            .AddChangeLogMcpServer(workingDirectory: this.RepositoryFolder, repositoryRoot: null)
+            .AddChangeLogMcpServer(workingDirectory: workingDirectory ?? this.RepositoryFolder, repositoryRoot: null)
             .AddSingleton(detector ?? new FixedChangeLogDetector(this.ChangeLogPath))
             .BuildServiceProvider();
     }
@@ -69,10 +69,14 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
     protected async Task<(string Text, bool IsError)> CallAsync(
         string name,
         IReadOnlyList<KeyValuePair<string, JsonElement>> arguments,
-        IChangeLogDetector? detector = null
+        IChangeLogDetector? detector = null,
+        string? workingDirectory = null
     )
     {
-        await using ServiceProvider services = this.BuildServices(detector);
+        await using ServiceProvider services = this.BuildServices(
+            detector: detector,
+            workingDirectory: workingDirectory
+        );
 
         return await this.CallToolAsync(services: services, name: name, arguments: arguments);
     }
@@ -94,7 +98,7 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
         return text;
     }
 
-    private async Task<(string Text, bool IsError)> CallToolAsync(
+    protected async Task<(string Text, bool IsError)> CallToolAsync(
         ServiceProvider services,
         string name,
         IReadOnlyList<KeyValuePair<string, JsonElement>> arguments
@@ -121,12 +125,38 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
         return text;
     }
 
-    protected Task<string> AddEntryAsync(string type, string message)
+    // The tools never create a changelog, so one is made first, as a user would with the command-line tool
+    protected async Task<string> AddEntryAsync(string type, string message)
     {
-        return this.CallSuccessfullyAsync(
+        if (!File.Exists(this.ChangeLogPath))
+        {
+            await this.CreateChangeLogAsync(this.ChangeLogPath);
+        }
+
+        return await this.CallSuccessfullyAsync(
             name: "changelog_add",
             arguments: [Text("type", type), Text("message", message)]
         );
+    }
+
+    protected async Task CreateChangeLogAsync(string fullPath, IReadOnlyList<string>? additionalSections = null)
+    {
+        await using ServiceProvider services = new ServiceCollection().AddChangeLog().BuildServiceProvider();
+
+        ChangeLogLanguage language = services
+            .GetRequiredService<IChangeLogLanguageFactory>()
+            .Get(ChangeLogLanguageFactory.English);
+
+        await services
+            .GetRequiredService<IChangeLogUpdater>()
+            .CreateEmptyAsync(
+                changeLogFileName: fullPath,
+                language: language with
+                {
+                    SectionOrder = [.. language.SectionOrder, .. additionalSections ?? []],
+                },
+                cancellationToken: this.CancellationToken()
+            );
     }
 
     protected Task<string> ReadChangeLogAsync()

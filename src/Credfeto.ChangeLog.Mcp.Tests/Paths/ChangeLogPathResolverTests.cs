@@ -39,18 +39,29 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
         Assert.Equal(expected: worktree, actual: resolver.RepositoryRoot);
     }
 
-    [Fact]
-    public void FolderOutsideAnyRepositoryIsItsOwnRoot()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("CHANGELOG.md")]
+    public void FolderOutsideAnyRepositoryHasNoRootAndRefusesEveryChangeLog(string? changeLog)
     {
         // The file system root is never inside a repository, so the search runs out of parents
         string root = Path.GetPathRoot(Path.GetFullPath(this.TempFolder)) ?? Path.DirectorySeparatorChar.ToString();
 
         ChangeLogPathResolver resolver = ChangeLogPathResolver.FromWorkingDirectory(
             workingDirectory: root,
-            detector: new FixedChangeLogDetector(null)
+            detector: new FixedChangeLogDetector(Path.Combine(path1: root, path2: CHANGELOG))
         );
 
-        Assert.Equal(expected: root, actual: resolver.RepositoryRoot);
+        Assert.Null(resolver.RepositoryRoot);
+        ChangeLogPathException exception = Assert.Throws<ChangeLogPathException>(() => resolver.Resolve(changeLog));
+        Assert.Equal(
+            expected: "No repository found: \""
+                + root
+                + "\" is not inside a git repository and "
+                + RepositoryRootOption.EnvironmentVariable
+                + " is not set",
+            actual: exception.Message
+        );
     }
 
     [Theory]

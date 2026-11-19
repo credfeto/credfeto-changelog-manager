@@ -4,7 +4,7 @@ public static class ToolProperties
 {
     public static readonly SchemaProperty ChangeLog = new(
         Name: "changelog",
-        Description: "Path to the CHANGELOG.md file, relative to the configured repository root, or the start folder when none is set. Found automatically when omitted."
+        Description: "Path to the CHANGELOG.md file, relative to the configured repository root, or the start folder when none is set. Found automatically when omitted. The file must already exist: it is never created."
     );
 
     public static readonly SchemaProperty AdditionalSections = new(

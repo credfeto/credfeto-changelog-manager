@@ -15,7 +15,8 @@ public static class ServerOptionsFactory
         + "Add or remove entries in the [Unreleased] section, read unreleased changes, extract release notes, "
         + "create releases, check that only the [Unreleased] section was changed since a branch, and lint the file. "
         + "Every tool takes an optional changelog path, which must be a CHANGELOG.md inside the repository; "
-        + "a relative path is resolved against the configured repository root, or the start folder when none is set.";
+        + "a relative path is resolved against the configured repository root, or the start folder when none is set. "
+        + "The tools never create a changelog, and refuse to work when there is no repository to work on.";
 
     public static McpServerOptions Create(IEnumerable<McpServerTool> tools)
     {

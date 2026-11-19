@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -11,7 +10,7 @@ public sealed class ChangeLogEntryToolTests : ToolTestBase
         : base(output) { }
 
     [Fact]
-    public async Task AddCreatesTheChangeLogAndAddsTheEntryAsync()
+    public async Task AddAddsTheEntryAsync()
     {
         string text = await this.AddEntryAsync(type: "Added", message: "A new feature");
 
@@ -48,6 +47,8 @@ public sealed class ChangeLogEntryToolTests : ToolTestBase
     [Fact]
     public async Task AddToAnUnknownSectionIsAnErrorAsync()
     {
+        await this.CreateChangeLogAsync(this.ChangeLogPath);
+
         string text = await this.CallFailingAsync(
             name: "changelog_add",
             arguments: [Text("type", "Bananas"), Text("message", "Patched")]
@@ -59,6 +60,8 @@ public sealed class ChangeLogEntryToolTests : ToolTestBase
     [Fact]
     public async Task AddToAnAdditionalSectionSucceedsAsync()
     {
+        await this.CreateChangeLogAsync(fullPath: this.ChangeLogPath, additionalSections: ["Bananas", "Other"]);
+
         await this.CallSuccessfullyAsync(
             name: "changelog_add",
             arguments:
@@ -80,9 +83,12 @@ public sealed class ChangeLogEntryToolTests : ToolTestBase
     [Fact]
     public async Task MissingMessageIsAnErrorAsync()
     {
+        await this.CreateChangeLogAsync(this.ChangeLogPath);
+        string before = await this.ReadChangeLogAsync();
+
         string text = await this.CallFailingAsync(name: "changelog_add", arguments: [Text("type", "Added")]);
 
         Assert.Equal(expected: "Missing required parameter message", actual: text);
-        Assert.False(condition: File.Exists(this.ChangeLogPath), userMessage: "Nothing should be written");
+        Assert.Equal(expected: before, actual: await this.ReadChangeLogAsync());
     }
 }

@@ -30,6 +30,7 @@ public sealed class ChangeLogPathTests : ToolTestBase
     public async Task ChangeLogInASubFolderIsAcceptedAsync()
     {
         Directory.CreateDirectory(Path.Combine(path1: this.RepositoryFolder, path2: "docs"));
+        await this.CreateChangeLogAsync(Path.Combine(path1: this.RepositoryFolder, path2: "docs", path3: CHANGELOG));
 
         string text = await this.CallSuccessfullyAsync(
             name: "changelog_add",

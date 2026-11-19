@@ -242,6 +242,7 @@ Set `CHANGELOG_MCP_REPO_ROOT` to the root of that git repository so the paths th
 
 When `CHANGELOG_MCP_REPO_ROOT` is not set, or is empty or only whitespace, start the server from inside the repository instead.
 The server then uses the nearest folder containing `.git` at or above the folder it was started in as the repository root.
+If there is no such folder, the server still starts, but every tool returns an error naming the folder it was started in; it never falls back to working on that folder.
 
 ### Tools
 
@@ -262,6 +263,8 @@ Notes:
   When `CHANGELOG_MCP_REPO_ROOT` is not set, the changelog is searched for in the current git repo, as the command line tool does.
 - Every tool takes an optional `additionalSections` parameter: a comma-separated list of extra allowed section names.
 - The changelog must be a file named `CHANGELOG.md` inside the repository; any other path is rejected.
+- The changelog must already exist: the tools never create one, and return an error naming the folder when it is missing.
+  Create it with the command line tool first: `dotnet changelog --changelog CHANGELOG.md --add Added --message "Change description"` creates the file when it is missing.
 - Results are returned as JSON, apart from `changelog_extract`, which returns the release notes as plain text.
 - Failures are returned as tool errors rather than ending the server.
 
