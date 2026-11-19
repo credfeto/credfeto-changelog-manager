@@ -16,6 +16,7 @@ public static class RepositoryRelativePath
         int relativeStart = PathLinks.RelativeStart(workingDirectory);
         string relativePath =
             IsSpeltFrom(workingDirectory: workingDirectory, fullPath: fullPath, relativeStart: relativeStart)
+            && HasOnlyPlainNames(fullPath: fullPath, relativeStart: relativeStart)
             && !PathLinks.HasLinkBelow(path: fullPath, relativeStart: relativeStart)
                 ? fullPath[relativeStart..]
                 : Path.GetRelativePath(
@@ -39,6 +40,34 @@ public static class RepositoryRelativePath
                 relativeStart == workingDirectory.Length
                 || PathSeparators.IsSeparator(fullPath[workingDirectory.Length])
             );
+    }
+
+    // A "." or ".." name, or an empty one from a doubled separator, means the text after the working folder does not
+    // spell where the path goes, so such a path is resolved instead
+    private static bool HasOnlyPlainNames(string fullPath, int relativeStart)
+    {
+        ReadOnlySpan<char> remaining = fullPath.AsSpan(relativeStart);
+
+        for (
+            int separator = remaining.IndexOfAny(PathSeparators.All);
+            separator != -1;
+            separator = remaining.IndexOfAny(PathSeparators.All)
+        )
+        {
+            if (!IsPlainName(remaining[..separator]))
+            {
+                return false;
+            }
+
+            remaining = remaining[(separator + 1)..];
+        }
+
+        return IsPlainName(remaining);
+    }
+
+    private static bool IsPlainName(ReadOnlySpan<char> name)
+    {
+        return name is not ("" or "." or "..");
     }
 
     private static bool IsOutside(string relativePath)

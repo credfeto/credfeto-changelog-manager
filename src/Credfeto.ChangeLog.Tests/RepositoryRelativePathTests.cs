@@ -99,6 +99,46 @@ public sealed class RepositoryRelativePathTests : LoggingFolderCleanupTestBase
         );
     }
 
+    [Theory]
+    [InlineData("docs/../../elsewhere/CHANGELOG.md")]
+    [InlineData("docs/../../repository-other/CHANGELOG.md")]
+    [InlineData("./../elsewhere/CHANGELOG.md")]
+    [InlineData("docs/../..")]
+    public void PathSpeltFromTheWorkingFolderThatParentSegmentsTakeOutsideIsNotFound(string suffix)
+    {
+        string repository = this.CreateFolder("repository");
+        this.CreateFolder(Path.Combine(path1: "repository", path2: "docs"));
+        this.CreateFolder("elsewhere");
+        this.CreateFolder("repository-other");
+
+        Assert.Null(
+            RepositoryRelativePath.Find(
+                workingDirectory: repository,
+                fullPath: repository + Path.DirectorySeparatorChar + suffix
+            )
+        );
+    }
+
+    [Theory]
+    [InlineData("docs/../CHANGELOG.md", "CHANGELOG.md")]
+    [InlineData("./docs/CHANGELOG.md", "docs/CHANGELOG.md")]
+    [InlineData("docs/./CHANGELOG.md", "docs/CHANGELOG.md")]
+    [InlineData("docs//CHANGELOG.md", "docs/CHANGELOG.md")]
+    [InlineData("docs/../docs/CHANGELOG.md", "docs/CHANGELOG.md")]
+    public void PathSpeltFromTheWorkingFolderWithDotSegmentsIsFoundWhereItLeads(string suffix, string expected)
+    {
+        string repository = this.CreateFolder("repository");
+        this.CreateFolder(Path.Combine(path1: "repository", path2: "docs"));
+
+        Assert.Equal(
+            expected: expected,
+            actual: RepositoryRelativePath.Find(
+                workingDirectory: repository,
+                fullPath: repository + Path.DirectorySeparatorChar + suffix
+            )
+        );
+    }
+
     private string CreateFolder(string name)
     {
         string folder = Path.Combine(path1: this.Root, path2: name);

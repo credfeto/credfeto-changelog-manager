@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using Credfeto.ChangeLog.Helpers;
 using FunFair.Test.Common;
@@ -61,6 +62,30 @@ public sealed class PathLinksTests : LoggingFolderCleanupTestBase
             PathLinks.HasLinkBelow(root: this.RootSpelt(trailingSeparator), path: changeLog),
             userMessage: "A path that is itself a link should report a link"
         );
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void PathThatIsTheRootHasNoLinkBelowIt(bool rootTrailingSeparator, bool pathTrailingSeparator)
+    {
+        string link = Path.Combine(path1: this.Root, path2: "link");
+        Directory.CreateSymbolicLink(path: link, pathToTarget: this.CreateFolder("docs"));
+        string root = rootTrailingSeparator ? link + Path.DirectorySeparatorChar : link;
+        string path = pathTrailingSeparator ? link + Path.DirectorySeparatorChar : link;
+
+        Assert.False(
+            PathLinks.HasLinkBelow(root: root, path: path),
+            userMessage: "The root itself is never checked, so a path that is the root has no link below it"
+        );
+    }
+
+    [Fact]
+    public void NegativeRelativeStartIsRejected()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => PathLinks.HasLinkBelow(path: this.Root, relativeStart: -1));
     }
 
     private string RootSpelt(bool trailingSeparator)

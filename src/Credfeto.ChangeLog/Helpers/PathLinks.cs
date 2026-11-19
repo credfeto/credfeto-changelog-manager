@@ -1,11 +1,12 @@
+using System;
 using System.IO;
 
 namespace Credfeto.ChangeLog.Helpers;
 
 public static class PathLinks
 {
-    // The path must be spelt textually from the root, and longer than it. The root itself is never checked, only each
-    // component after it, up to and including the path.
+    // The path must be spelt textually from the root. The root itself is never checked, only each component after it,
+    // up to and including the path, so a path with nothing after the root has no link below it.
     public static bool HasLinkBelow(string root, string path)
     {
         return HasLinkBelow(path: path, relativeStart: RelativeStart(root));
@@ -14,6 +15,13 @@ public static class PathLinks
     // relativeStart is the index of the first character after the root and its separator, as RelativeStart gives.
     public static bool HasLinkBelow(string path, int relativeStart)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(relativeStart);
+
+        if (relativeStart >= path.Length)
+        {
+            return false;
+        }
+
         for (
             int index = path.IndexOfAny(anyOf: PathSeparators.All, startIndex: relativeStart);
             index != -1;
