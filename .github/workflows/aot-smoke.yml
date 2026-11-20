@@ -17,6 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # @@required: merge
   aot-smoke-test:
     runs-on: ubuntu-latest
     steps:
