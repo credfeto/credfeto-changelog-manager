@@ -33,11 +33,28 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
 
     protected string ChangeLogPath => Path.Combine(path1: this.RepositoryFolder, path2: CHANGELOG);
 
-    protected ServiceProvider BuildServices(IChangeLogDetector? detector = null)
+    // A folder inside the test repository, so any walk up to the enclosing .git would be visible
+    protected string CreateNestedRoot()
+    {
+        string root = Path.Combine(path1: this.RepositoryFolder, path2: "nested");
+        Directory.CreateDirectory(root);
+
+        return root;
+    }
+
+    protected ServiceProvider BuildServices(IChangeLogDetector? detector = null, string? workingDirectory = null)
     {
         return new ServiceCollection()
-            .AddChangeLogMcpServer(this.RepositoryFolder)
+            .AddChangeLogMcpServer(workingDirectory: workingDirectory ?? this.RepositoryFolder, repositoryRoot: null)
             .AddSingleton(detector ?? new FixedChangeLogDetector(this.ChangeLogPath))
+            .BuildServiceProvider();
+    }
+
+    // No detector is registered: a repository root resolver builds its own, so one registered here would be ignored.
+    private ServiceProvider BuildRepositoryRootServices(string repositoryRoot)
+    {
+        return new ServiceCollection()
+            .AddChangeLogMcpServer(workingDirectory: this.RepositoryFolder, repositoryRoot: repositoryRoot)
             .BuildServiceProvider();
     }
 
@@ -52,10 +69,41 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
     protected async Task<(string Text, bool IsError)> CallAsync(
         string name,
         IReadOnlyList<KeyValuePair<string, JsonElement>> arguments,
-        IChangeLogDetector? detector = null
+        IChangeLogDetector? detector = null,
+        string? workingDirectory = null
     )
     {
-        await using ServiceProvider services = this.BuildServices(detector);
+        await using ServiceProvider services = this.BuildServices(
+            detector: detector,
+            workingDirectory: workingDirectory
+        );
+
+        return await this.CallToolAsync(services: services, name: name, arguments: arguments);
+    }
+
+    protected async Task<string> CallSuccessfullyAsync(
+        string name,
+        IReadOnlyList<KeyValuePair<string, JsonElement>> arguments,
+        string? repositoryRoot = null
+    )
+    {
+        await using ServiceProvider services = repositoryRoot is null
+            ? this.BuildServices()
+            : this.BuildRepositoryRootServices(repositoryRoot);
+
+        (string text, bool isError) = await this.CallToolAsync(services: services, name: name, arguments: arguments);
+
+        Assert.False(condition: isError, userMessage: text);
+
+        return text;
+    }
+
+    protected async Task<(string Text, bool IsError)> CallToolAsync(
+        ServiceProvider services,
+        string name,
+        IReadOnlyList<KeyValuePair<string, JsonElement>> arguments
+    )
+    {
         ChangeLogTool tool = GetTool(services: services, name: name);
 
         CallToolResult result = await tool.CallAsync(arguments: arguments, cancellationToken: this.CancellationToken());
@@ -63,18 +111,6 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
         string text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
 
         return (text, result.IsError ?? false);
-    }
-
-    protected async Task<string> CallSuccessfullyAsync(
-        string name,
-        IReadOnlyList<KeyValuePair<string, JsonElement>> arguments
-    )
-    {
-        (string text, bool isError) = await this.CallAsync(name: name, arguments: arguments);
-
-        Assert.False(condition: isError, userMessage: text);
-
-        return text;
     }
 
     protected async Task<string> CallFailingAsync(
@@ -89,12 +125,38 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
         return text;
     }
 
-    protected Task<string> AddEntryAsync(string type, string message)
+    // The tools never create a changelog, so one is made first, as a user would with the command-line tool
+    protected async Task<string> AddEntryAsync(string type, string message)
     {
-        return this.CallSuccessfullyAsync(
+        if (!File.Exists(this.ChangeLogPath))
+        {
+            await this.CreateChangeLogAsync(this.ChangeLogPath);
+        }
+
+        return await this.CallSuccessfullyAsync(
             name: "changelog_add",
             arguments: [Text("type", type), Text("message", message)]
         );
+    }
+
+    protected async Task CreateChangeLogAsync(string fullPath, IReadOnlyList<string>? additionalSections = null)
+    {
+        await using ServiceProvider services = new ServiceCollection().AddChangeLog().BuildServiceProvider();
+
+        ChangeLogLanguage language = services
+            .GetRequiredService<IChangeLogLanguageFactory>()
+            .Get(ChangeLogLanguageFactory.English);
+
+        await services
+            .GetRequiredService<IChangeLogUpdater>()
+            .CreateEmptyAsync(
+                changeLogFileName: fullPath,
+                language: language with
+                {
+                    SectionOrder = [.. language.SectionOrder, .. additionalSections ?? []],
+                },
+                cancellationToken: this.CancellationToken()
+            );
     }
 
     protected Task<string> ReadChangeLogAsync()
@@ -104,9 +166,11 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
 
     protected Task WriteChangeLogAsync(string content)
     {
+        // Raw string literals take the line endings of the test source file's checkout, but the tools write
+        // Environment.NewLine, so an unnormalised fixture makes git see every line as changed.
         return File.WriteAllTextAsync(
             path: this.ChangeLogPath,
-            contents: content,
+            contents: content.ReplaceLineEndings(Environment.NewLine),
             cancellationToken: this.CancellationToken()
         );
     }

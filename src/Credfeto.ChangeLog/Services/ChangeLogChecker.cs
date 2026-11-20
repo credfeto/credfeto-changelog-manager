@@ -261,6 +261,10 @@ public sealed class ChangeLogChecker : IChangeLogChecker
 
     private static string FindChangeLogPositionInRepo(Repository repo, string changeLogFileName)
     {
-        return changeLogFileName[repo.Info.WorkingDirectory.Length..].Replace(oldChar: '\\', newChar: '/');
+        return RepositoryRelativePath.Find(workingDirectory: repo.Info.WorkingDirectory, fullPath: changeLogFileName)
+            ?? Throws.ChangeLogNotInRepository(
+                changeLogFileName: changeLogFileName,
+                workingDirectory: repo.Info.WorkingDirectory
+            );
     }
 }

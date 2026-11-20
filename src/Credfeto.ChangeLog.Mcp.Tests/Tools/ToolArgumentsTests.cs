@@ -22,6 +22,8 @@ public sealed class ToolArgumentsTests : ToolTestBase
     [Fact]
     public async Task NonStringValueIsAnErrorAsync()
     {
+        await this.CreateChangeLogAsync(this.ChangeLogPath);
+
         string text = await this.CallFailingAsync(
             name: "changelog_add",
             arguments: [Number("type", 1), Text("message", "Something")]
@@ -43,6 +45,8 @@ public sealed class ToolArgumentsTests : ToolTestBase
     [Fact]
     public async Task NullValueIsTreatedAsNotSuppliedAsync()
     {
+        await this.CreateChangeLogAsync(this.ChangeLogPath);
+
         string text = await this.CallSuccessfullyAsync(
             name: "changelog_add",
             arguments:
@@ -60,6 +64,8 @@ public sealed class ToolArgumentsTests : ToolTestBase
     [Fact]
     public async Task NoArgumentsAtAllIsAMissingParameterErrorAsync()
     {
+        await this.CreateChangeLogAsync(this.ChangeLogPath);
+
         await using ServiceProvider services = this.BuildServices();
 
         CallToolResult result = await GetTool(services: services, name: "changelog_add")

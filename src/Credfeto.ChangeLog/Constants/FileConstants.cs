@@ -1,4 +1,4 @@
-﻿namespace Credfeto.ChangeLog.Constants;
+namespace Credfeto.ChangeLog.Constants;
 
 internal static class FileConstants
 {

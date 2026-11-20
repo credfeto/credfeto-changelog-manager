@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Benchmark.Tests;
 
-[Collection(SerialBenchmarks.NAME)]
+[Collection(SerialBenchmarks.Name)]
 public sealed class MoveTrailingBlanksBenchmarkTests : LoggingTestBase
 {
     // Baseline measured after replacing the per-blank Insert(0, ...)/RemoveAt loop with a
