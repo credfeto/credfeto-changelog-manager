@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+- The Native AOT build of credfeto-changelog-cmd no longer aborts with exit code 134 in --check-insert (and the MCP check-insert tool no longer kills the server); CI now runs every mode of the published native binaries so an AOT-only crash fails the build - #413
 ### Changed
 ### Deprecated
 ### Removed
