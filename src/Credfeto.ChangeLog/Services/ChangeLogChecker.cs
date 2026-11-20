@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -77,22 +77,33 @@ public sealed class ChangeLogChecker : IChangeLogChecker
         // Diff against the merge base, not the origin branch's tip: if origin has advanced
         // (e.g. a release was cut) since this branch diverged, diffing against its tip would
         // pull in origin's own unrelated changes and could misreport them as this branch's.
-        Commit mergeBase =
-            repo.ObjectDatabase.FindMergeBase(originBranch.Tip, repo.Head.Tip)
+        Commit mergeBase = repo.ObjectDatabase.FindMergeBase(originBranch.Tip, repo.Head.Tip)
             ?? Throws.CouldNotFindMergeBase(headSha: sha, originBranchName: originBranchName);
 
-        Patch changes = repo.Diff.Compare<Patch>(
+        // Never use Diff.Compare<Patch> here: under Native AOT its line callback is given a NULL hunk
+        // for the file header lines and the process aborts (exit 134). Find the changed file with
+        // TreeChanges, then diff its two blobs, which never produces file header lines.
+        using TreeChanges changes = repo.Diff.Compare<TreeChanges>(
             mergeBase.Tree,
             HeadTree(repo),
             paths: [changeLogInRepoPath],
             compareOptions: CompareSettings.BuildCompareOptions
         );
 
-        PatchEntryChanges? change = changes.FirstOrDefault();
+        TreeEntryChanges? change = changes.FirstOrDefault();
 
         if (change is not null)
         {
-            return CheckForChangesAfterFirstRelease(change: change, firstReleaseVersionIndex: firstReleaseVersionIndex);
+            ContentChanges content = repo.Diff.Compare(
+                oldBlob: FindBlob(repo: repo, exists: change.OldExists, id: change.OldOid),
+                newBlob: FindBlob(repo: repo, exists: change.Exists, id: change.Oid),
+                compareOptions: CompareSettings.BuildCompareOptions
+            );
+
+            return CheckForChangesAfterFirstRelease(
+                patch: content.Patch,
+                firstReleaseVersionIndex: firstReleaseVersionIndex
+            );
         }
 
         Console.WriteLine("Could not find change in diff");
@@ -126,10 +137,15 @@ public sealed class ChangeLogChecker : IChangeLogChecker
         return BranchSha(repo.Head);
     }
 
-    private static bool CheckForChangesAfterFirstRelease(PatchEntryChanges change, int firstReleaseVersionIndex)
+    private static Blob? FindBlob(Repository repo, bool exists, ObjectId id)
+    {
+        return exists ? repo.Lookup<Blob>(id) : null;
+    }
+
+    private static bool CheckForChangesAfterFirstRelease(string patch, int firstReleaseVersionIndex)
     {
         Console.WriteLine("Change Details");
-        string patchDetails = ExtractPatchDetails(change.Patch);
+        string patchDetails = ExtractPatchDetails(patch);
         Console.WriteLine(patchDetails);
 
         MatchCollection matches = CommonRegex.GitHunkPosition.Matches(patchDetails);

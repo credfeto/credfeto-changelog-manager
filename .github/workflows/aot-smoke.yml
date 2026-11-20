@@ -1,0 +1,63 @@
+--- # Run every mode of the published Native AOT binaries so an AOT-only crash fails CI
+name: "PR: AOT Smoke Test"
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "${{github.workflow}}-${{github.ref}}"
+  cancel-in-progress: true
+
+jobs:
+  aot-smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Initialise Workspace"
+        if: runner.environment == 'self-hosted'
+        shell: bash
+        run: sudo chown -R "$USER:$USER" "$GITHUB_WORKSPACE"
+
+      - name: "Set Active Environment"
+        shell: bash
+        run: |
+          {
+            echo "ACTIVE_RUNNER_NAME=$RUNNER_NAME"
+            echo "ACTIVE_HOSTNAME=$HOSTNAME"
+            echo "ACTIVE_USER=$USER"
+          } >> "$GITHUB_ENV"
+
+      - name: "Checkout Source"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          clean: true
+          fetch-depth: 1
+
+      - name: "Install dotnet"
+        uses: ./.github/actions/dotnet-install
+        with:
+          github-token: "${{github.token}}"
+          nuget-public-restore-feed-cache: "${{vars.NUGET_BAGET_CACHE}}"
+          nuget-public-restore-feed: "${{vars.NUGET_PUBLIC_RESTORE_FEED || 'https://api.nuget.org/v3/index.json'}}"
+          nuget-additional-restore-feed-release-cache: ""
+          nuget-additional-restore-feed-prerelease-cache: ""
+          nuget-additional-restore-feed-release: ""
+          nuget-additional-restore-feed-prerelease: ""
+
+      - name: "Publish Native AOT binaries"
+        shell: bash
+        working-directory: "src"
+        run: |
+          dotnet publish Credfeto.ChangeLog.Cmd/Credfeto.ChangeLog.Cmd.csproj --configuration Release --runtime linux-x64 --output "$RUNNER_TEMP/aot/cmd"
+          dotnet publish Credfeto.ChangeLog.Mcp/Credfeto.ChangeLog.Mcp.csproj --configuration Release --runtime linux-x64 --output "$RUNNER_TEMP/aot/mcp"
+
+      - name: "Run every mode of the Native AOT binaries"
+        shell: bash
+        run: ./scripts/aot-smoke.sh "$RUNNER_TEMP/aot/cmd/Credfeto.ChangeLog.Cmd" "$RUNNER_TEMP/aot/mcp/Credfeto.ChangeLog.Mcp"

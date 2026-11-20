@@ -651,6 +651,96 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         });
     }
 
+    [Fact]
+    public async Task ChangeLogModifiedInReleaseSectionReturnsFalseWhenChangeLogAddedSinceOriginBranch()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        Directory.CreateDirectory(this.TempFolder);
+        string readmePath = Path.Combine(this.TempFolder, "README.md");
+        await File.WriteAllTextAsync(readmePath, "# Readme", Encoding.UTF8, cancellationToken);
+
+        string changeLogPath = Path.Combine(this.TempFolder, "CHANGELOG.md");
+
+        using (Repository repo = new(Repository.Init(this.TempFolder)))
+        {
+            Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
+
+            Commands.Stage(repo, readmePath);
+            Commit initialCommit = repo.Commit("Initial commit without a changelog", author, author);
+            repo.Branches.Add("origin/main", initialCommit);
+
+            // The whole file is new on this branch, so the diff covers the released section too
+            await File.WriteAllTextAsync(changeLogPath, CHANGE_LOG_WITH_RELEASES, Encoding.UTF8, cancellationToken);
+            Commands.Stage(repo, changeLogPath);
+            repo.Commit("Add changelog", author, author);
+        }
+
+        bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
+            changeLogFileName: changeLogPath,
+            originBranchName: "origin/main",
+            language: this._language,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.False(
+            result,
+            userMessage: "Expected false when the changelog, including a released section, was added since the origin branch"
+        );
+    }
+
+    [Fact]
+    public async Task ChangeLogModifiedInReleaseSectionReturnsTrueWhenChangeLogInSubFolderOnlyUnreleasedChanged()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        string docsFolder = Path.Combine(this.TempFolder, "docs");
+        Directory.CreateDirectory(docsFolder);
+        string changeLogPath = Path.Combine(docsFolder, "CHANGELOG.md");
+        await File.WriteAllTextAsync(changeLogPath, CHANGE_LOG_WITH_RELEASES, Encoding.UTF8, cancellationToken);
+
+        using (Repository repo = new(Repository.Init(this.TempFolder)))
+        {
+            Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
+
+            Commands.Stage(repo, changeLogPath);
+            Commit initialCommit = repo.Commit("Initial commit", author, author);
+            repo.Branches.Add("origin/main", initialCommit);
+
+            const string UPDATED_CHANGE_LOG = """
+                # Changelog
+                All notable changes to this project will be documented in this file.
+
+                ## [Unreleased]
+                ### Added
+                - Some unreleased item
+                - Another unreleased item
+
+                ## [1.0.0] - 2024-01-01
+                ### Added
+                - First release item
+
+                ## [0.0.0] - Project created
+                """;
+
+            await File.WriteAllTextAsync(changeLogPath, UPDATED_CHANGE_LOG, Encoding.UTF8, cancellationToken);
+            Commands.Stage(repo, changeLogPath);
+            repo.Commit("Add unreleased item", author, author);
+        }
+
+        bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
+            changeLogFileName: changeLogPath,
+            originBranchName: "origin/main",
+            language: this._language,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.True(
+            result,
+            userMessage: "Expected true when only the unreleased section of a changelog in a sub folder was changed"
+        );
+    }
+
     private static void PointOriginBranchAtUnrelatedHistory(Repository repo, string originBranchName)
     {
         Signature author = new("Test User", "test@example.com", MockDateTimeSources.Past.GetUtcNow());
@@ -783,10 +873,6 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         Commands.Checkout(repo, featureBranchName);
     }
 
-    /// <summary>
-    /// Creates a temp git repo with a changelog. HEAD == origin tip (same commit).
-    /// Returns changelog path and the branch name to use as originBranchName.
-    /// </summary>
     private static async Task<(string ChangeLogPath, string BranchName)> CreateRepoWithChangeLogAsync(
         string tempDir,
         string changeLogContent,
