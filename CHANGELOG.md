@@ -10,6 +10,19 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 
 ## [Unreleased]
 ### Security
+### Added
+### Fixed
+### Changed
+### Deprecated
+### Removed
+### Deployment Changes
+
+<!--
+Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
+-->
+
+## [1.10.219] - 2026-11-23
+### Security
 - MCP server: when no repository root can be found (CHANGELOG_MCP_REPO_ROOT not set and no git repository at or above the folder it was started in) every tool now returns an error naming that folder, instead of working on that folder and creating a CHANGELOG.md there
 ### Added
 - MCP server: CHANGELOG_MCP_REPO_ROOT environment variable naming the repository the server works on, so it can be started from any folder
@@ -18,13 +31,6 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Pointer tool package now only lists RID packages that are published (linux-x64 native AOT plus framework-dependent any fallback)
 ### Changed
 - MCP server: tools never create CHANGELOG.md; when it is missing they return an error naming the folder, and creating one stays an explicit step with the command-line tool
-### Deprecated
-### Removed
-### Deployment Changes
-
-<!--
-Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
--->
 
 ## [1.10.218] - 2026-11-20
 ### Fixed
