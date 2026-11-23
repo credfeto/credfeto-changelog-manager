@@ -52,18 +52,44 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/credfeto/credfeto-changelog-manager</RepositoryUrl>
     <RunAOTCompilation>false</RunAOTCompilation>
-    <RuntimeIdentifiers>win-x64;win-arm64;osx-x64;osx-arm64;linux-x64;linux-arm64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>linux-x64;any</RuntimeIdentifiers>
     <StripSymbols>true</StripSymbols>
     <TargetFramework>net11.0</TargetFramework>
     <TieredCompilation>true</TieredCompilation>
     <TieredPGO>true</TieredPGO>
     <ToolCommandName>changelog</ToolCommandName>
+    <ToolPackageRuntimeIdentifiers>$(RuntimeIdentifiers)</ToolPackageRuntimeIdentifiers>
     <TreatSpecificWarningsAsErrors />
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <ValidateExecutableReferencesMatchSelfContained>true</ValidateExecutableReferencesMatchSelfContained>
     <WarningsAsErrors />
   </PropertyGroup>
+  <!-- Native AOT needs a concrete RID; the 'any' tool package is the framework-dependent fallback for platforms without a native package -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'any'">
+    <PublishAot>false</PublishAot>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+  <!-- With PublishAot the SDK's default only packs the host RID and silently skips the rest (including 'any'), so every listed RID is requested explicitly -->
+  <Target Name="_SelectToolPackageRuntimeIdentifiers" BeforeTargets="ComputeToolPackageRuntimeIdentifiersToPack" Condition="'$(RuntimeIdentifier)' == '' AND '$(CreateRidSpecificToolPackages)' == 'true'">
+    <ItemGroup>
+      <ToolPackageRuntimeIdentifiersToPack Include="$(ToolPackageRuntimeIdentifiers)" />
+    </ItemGroup>
+  </Target>
+  <!-- The pointer package names every RID in ToolPackageRuntimeIdentifiers; installs fail on any RID whose package was not built alongside it -->
+  <Target Name="_VerifyToolRidPackagesBuilt" AfterTargets="Pack" Condition="'$(RuntimeIdentifier)' == '' AND '$(CreateRidSpecificToolPackages)' == 'true'">
+    <PropertyGroup>
+      <_ToolPackageDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(PackageOutputPath)'))</_ToolPackageDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <_ListedToolRid Include="$(ToolPackageRuntimeIdentifiers)" />
+      <_ListedToolRid>
+        <ExpectedPackage>$(_ToolPackageDirectory)$(PackageId).%(Identity).$(PackageVersion).nupkg</ExpectedPackage>
+      </_ListedToolRid>
+      <_MissingToolRid Include="@(_ListedToolRid)" Condition="!Exists('%(ExpectedPackage)')" />
+    </ItemGroup>
+    <Error Condition="'%(_MissingToolRid.Identity)' != ''" Text="Pointer tool package $(PackageId) lists RID '%(_MissingToolRid.Identity)' but its RID package was not built: %(_MissingToolRid.ExpectedPackage)" />
+  </Target>
   <ItemGroup>
     <!-- error NU1903: Warning As Error: Package 'System.Private.Uri' 4.3.0 has a known high severity vulnerability -->
     <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-5f2m-466j-3848" />
