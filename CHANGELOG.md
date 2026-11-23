@@ -15,6 +15,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - MCP server: CHANGELOG_MCP_REPO_ROOT environment variable naming the repository the server works on, so it can be started from any folder
 ### Fixed
 - Changelog checks now resolve the changelog's path through symbolic links before finding it in the repository, so the release-section check no longer falsely passes or crashes when the changelog is reached through a link; this also fixes the command-line tool's check of whether the changelog was modified in the release section
+- Pointer tool package now only lists RID packages that are published (linux-x64 native AOT plus framework-dependent any fallback)
 ### Changed
 - MCP server: tools never create CHANGELOG.md; when it is missing they return an error naming the folder, and creating one stays an explicit step with the command-line tool
 ### Deprecated
