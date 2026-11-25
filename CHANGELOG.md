@@ -13,7 +13,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
-- MCP tools/list now returns tools sorted by name - placeholder
+- MCP server: tools/list now returns tools sorted by name (ordinal, case-insensitive), so clients see a stable, predictable tool order - #417
 ### Deprecated
 ### Removed
 ### Deployment Changes
