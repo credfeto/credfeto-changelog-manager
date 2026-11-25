@@ -13,6 +13,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 ### Changed
+- MCP tools/list now returns tools sorted by name - placeholder
 ### Deprecated
 ### Removed
 ### Deployment Changes
