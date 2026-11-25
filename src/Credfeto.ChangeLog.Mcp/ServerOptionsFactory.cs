@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -22,7 +24,12 @@ public static class ServerOptionsFactory
     {
         McpServerPrimitiveCollection<McpServerTool> toolCollection = [];
 
-        foreach (McpServerTool tool in tools)
+        foreach (
+            McpServerTool tool in tools.OrderBy(
+                keySelector: tool => tool.ProtocolTool.Name,
+                comparer: StringComparer.OrdinalIgnoreCase
+            )
+        )
         {
             toolCollection.Add(tool);
         }
