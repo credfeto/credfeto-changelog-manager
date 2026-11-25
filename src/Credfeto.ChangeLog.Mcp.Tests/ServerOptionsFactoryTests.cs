@@ -29,17 +29,38 @@ public sealed class ServerOptionsFactoryTests : ToolTestBase
             comparisonType: StringComparison.Ordinal
         );
         Assert.Equal(
-            expected:
-            [
-                "changelog_add",
-                "changelog_check_insert",
-                "changelog_create_release",
-                "changelog_extract",
-                "changelog_lint",
-                "changelog_remove",
-                "changelog_unreleased",
-            ],
-            actual: options.ToolCollection?.Select(tool => tool.ProtocolTool.Name).Order(StringComparer.Ordinal),
+            expected: ToolNamesInOrder,
+            actual: options.ToolCollection?.Select(tool => tool.ProtocolTool.Name),
+            comparer: StringComparer.Ordinal
+        );
+    }
+
+    [Fact]
+    public void ToolsAreListedInNameOrderWhateverOrderTheyAreRegistered()
+    {
+        using ServiceProvider services = this.BuildServices();
+
+        McpServerOptions options = ServerOptionsFactory.Create(services.GetServices<McpServerTool>().Reverse());
+
+        Assert.Equal(
+            expected: ToolNamesInOrder,
+            actual: options.ToolCollection?.Select(tool => tool.ProtocolTool.Name),
+            comparer: StringComparer.Ordinal
+        );
+    }
+
+    [Fact]
+    public void ToolNamesAreSortedIgnoringCase()
+    {
+        McpServerOptions options = ServerOptionsFactory.Create([
+            new NamedTool("b_tool"),
+            new NamedTool("C_tool"),
+            new NamedTool("A_tool"),
+        ]);
+
+        Assert.Equal(
+            expected: ["A_tool", "b_tool", "C_tool"],
+            actual: options.ToolCollection?.Select(tool => tool.ProtocolTool.Name),
             comparer: StringComparer.Ordinal
         );
     }

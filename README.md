@@ -249,12 +249,12 @@ If there is no such folder, the server still starts, but every tool returns an e
 | Tool                       | Description                                                                         |
 |----------------------------|-------------------------------------------------------------------------------------|
 | `changelog_add`            | Adds an entry to a section of the [Unreleased] section.                             |
+| `changelog_check_insert`   | Checks that all changes since a branch are only in the [Unreleased] section.        |
+| `changelog_create_release` | Moves the [Unreleased] changes into a new release, optionally with a pending date.  |
+| `changelog_extract`        | Returns the release notes for a version as text.                                    |
+| `changelog_lint`           | Validates the changelog format and can optionally fix the problems it finds.        |
 | `changelog_remove`         | Removes an entry from a section of the [Unreleased] section.                        |
 | `changelog_unreleased`     | Returns the content of the [Unreleased] section.                                    |
-| `changelog_extract`        | Returns the release notes for a version as text.                                    |
-| `changelog_create_release` | Moves the [Unreleased] changes into a new release, optionally with a pending date.  |
-| `changelog_check_insert`   | Checks that all changes since a branch are only in the [Unreleased] section.        |
-| `changelog_lint`           | Validates the changelog format and can optionally fix the problems it finds.        |
 
 Notes:
 
