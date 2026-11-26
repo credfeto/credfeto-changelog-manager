@@ -778,6 +778,36 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
         Assert.False(result, userMessage: "Expected false when the release section was modified: " + checkedPath);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ParentFolderIsAppliedAfterFollowingALinkAsync(bool throughLink)
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+        string repositoryFolder = Path.Combine(this.TempFolder, "repository");
+
+        (_, string originBranchName) = await CreateRepoWithReleaseSectionEditAsync(
+            repositoryFolder: repositoryFolder,
+            cancellationToken: cancellationToken
+        );
+
+        // elsewhere/link/../CHANGELOG.md reads as elsewhere/CHANGELOG.md, which does not exist, but the OS follows
+        // the link into repository/docs first, so the ".." lands on the repository's changelog
+        string docs = Path.Combine(repositoryFolder, "docs");
+        Directory.CreateDirectory(docs);
+        string folder = throughLink ? this.LinkFromElsewhere(docs) : docs;
+        string checkedPath = Path.Combine(folder, "..", "CHANGELOG.md");
+
+        bool result = await this._checker.ChangeLogModifiedInReleaseSectionAsync(
+            changeLogFileName: checkedPath,
+            originBranchName: originBranchName,
+            language: this._language,
+            cancellationToken: cancellationToken
+        );
+
+        Assert.False(result, userMessage: "Expected false when the release section was modified: " + checkedPath);
+    }
+
     [Fact]
     public async Task ChangeLogOutsideTheRepositoryWorkingFolderIsRejectedAsync()
     {
@@ -821,6 +851,16 @@ public sealed class ChangeLogCheckerTests : LoggingFolderCleanupTestBase, IDispo
             path: link,
             pathToTarget: relativeLinkTarget ? Path.GetFileName(repositoryFolder) : repositoryFolder
         );
+
+        return link;
+    }
+
+    private string LinkFromElsewhere(string target)
+    {
+        string elsewhere = Path.Combine(this.TempFolder, "elsewhere");
+        Directory.CreateDirectory(elsewhere);
+        string link = Path.Combine(elsewhere, "link");
+        Directory.CreateSymbolicLink(path: link, pathToTarget: target);
 
         return link;
     }

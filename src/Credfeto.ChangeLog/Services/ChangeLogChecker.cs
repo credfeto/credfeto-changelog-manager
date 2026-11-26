@@ -242,14 +242,15 @@ public sealed class ChangeLogChecker : IChangeLogChecker
 
     private static string GetFullChangeLogFilePath(string changeLogFileName)
     {
-        FileInfo changeLog = new(changeLogFileName);
+        // FileInfo would collapse ".." as text, which names a different file when the ".." follows a link
+        string fullPath = PhysicalPath.Resolve(changeLogFileName);
 
-        if (!changeLog.Exists)
+        if (!File.Exists(fullPath))
         {
             return Throws.CouldNotFindChangeLog(changeLogFileName);
         }
 
-        return changeLog.FullName;
+        return fullPath;
     }
 
     private static string GetChangeLogDirectory(string changeLogFileName)

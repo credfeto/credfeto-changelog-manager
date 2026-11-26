@@ -32,8 +32,8 @@ public sealed class ChangeLogPathResolver
     }
 
     // The detector is built from the same normalised root the resolver checks against, so the two cannot disagree.
-    // The root is kept as given, so a changelog named through the same path, including a linked root, compares
-    // equal to it.
+    // The root is kept in its physical form, and a changelog named through the same path, including a linked root, is
+    // resolved physically too, so the two still compare equal.
     public static ChangeLogPathResolver FromRepositoryRoot(string repositoryRoot)
     {
         string root = Normalise(repositoryRoot);
@@ -45,7 +45,7 @@ public sealed class ChangeLogPathResolver
     {
         string repositoryRoot = this.RequireRepositoryRoot();
         string candidate = changeLog ?? this.Detect();
-        string fullPath = Path.GetFullPath(Path.Combine(path1: this._workingDirectory, path2: candidate));
+        string fullPath = PhysicalPath.Resolve(Path.Combine(path1: this._workingDirectory, path2: candidate));
 
         // The tools write to the file they are given, so a caller must not be able to reach
         // anything other than a changelog inside the repository the server works on.
@@ -126,9 +126,10 @@ public sealed class ChangeLogPathResolver
         return null;
     }
 
-    // Without a trailing separator the root compares equal to the folder names Path.GetDirectoryName returns
+    // Without a trailing separator the root compares equal to the folder names Path.GetDirectoryName returns. The root
+    // is physical, like every path Resolve checks against it, so a ".." after a link names the folder the OS would.
     private static string Normalise(string folder)
     {
-        return Path.TrimEndingDirectorySeparator(Path.GetFullPath(folder));
+        return Path.TrimEndingDirectorySeparator(PhysicalPath.Resolve(folder));
     }
 }
