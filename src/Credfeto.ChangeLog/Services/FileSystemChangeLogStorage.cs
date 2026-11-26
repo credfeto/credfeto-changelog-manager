@@ -1,7 +1,9 @@
+using System;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.ChangeLog.Extensions;
 using Credfeto.ChangeLog.Models;
 
 namespace Credfeto.ChangeLog.Services;
@@ -49,11 +51,35 @@ public sealed class FileSystemChangeLogStorage : IChangeLogStorage
             cancellationToken: cancellationToken
         );
 
+        string lineEnding = await DetectExistingLineEndingAsync(
+            changeLogFileName: changeLogFileName,
+            cancellationToken: cancellationToken
+        );
+
         await File.WriteAllTextAsync(
             path: changeLogFileName,
-            contents: content,
+            contents: content.WithLineEnding(lineEnding),
             encoding: Encoding.UTF8,
             cancellationToken: cancellationToken
         );
+    }
+
+    private static async ValueTask<string> DetectExistingLineEndingAsync(
+        string changeLogFileName,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!File.Exists(changeLogFileName))
+        {
+            return Environment.NewLine;
+        }
+
+        string existing = await File.ReadAllTextAsync(
+            path: changeLogFileName,
+            encoding: Encoding.UTF8,
+            cancellationToken: cancellationToken
+        );
+
+        return existing.DetectLineEnding();
     }
 }
