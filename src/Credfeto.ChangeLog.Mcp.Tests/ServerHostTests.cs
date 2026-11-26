@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.ChangeLog.Mcp.Tests.Streams;
@@ -33,8 +36,58 @@ public sealed class ServerHostTests : ToolTestBase
 
         """;
 
+    private const string LISTING_SESSION = """
+        {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
+        {"jsonrpc":"2.0","method":"notifications/initialized"}
+        {"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
+
+        """;
+
     public ServerHostTests(ITestOutputHelper output)
         : base(output) { }
+
+    [Fact]
+    public async Task ToolsAreListedInNameOrderAsync()
+    {
+        await using ScriptedInputStream input = new(script: LISTING_SESSION, waitAtEnd: true);
+        await using CapturingOutputStream output = new(CALL_RESPONSE_MARKER);
+
+        await using StringWriter error = new(CultureInfo.InvariantCulture);
+
+        int exitCode = await ServerHost.RunAsync(
+            workingDirectory: this.RepositoryFolder,
+            repositoryRoot: null,
+            error: error,
+            input: input,
+            output: output,
+            stopRequested: output.MarkerWritten
+        );
+
+        Assert.Equal(expected: 0, actual: exitCode);
+        Assert.Equal(
+            expected: ToolNamesInOrder,
+            actual: ListedToolNames(output.Text),
+            comparer: StringComparer.Ordinal
+        );
+    }
+
+    private static IReadOnlyList<string> ListedToolNames(string responses)
+    {
+        string response = responses
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Single(line => line.Contains(value: CALL_RESPONSE_MARKER, comparisonType: StringComparison.Ordinal));
+
+        using JsonDocument document = JsonDocument.Parse(response);
+
+        return
+        [
+            .. document
+                .RootElement.GetProperty("result")
+                .GetProperty("tools")
+                .EnumerateArray()
+                .Select(tool => tool.GetProperty("name").GetString() ?? string.Empty),
+        ];
+    }
 
     [Fact]
     public async Task ServerEndsWhenInputClosesAsync()

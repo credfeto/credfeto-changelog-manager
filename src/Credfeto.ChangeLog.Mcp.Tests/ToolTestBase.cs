@@ -21,6 +21,17 @@ public abstract class ToolTestBase : LoggingFolderCleanupTestBase
 {
     protected const string CHANGELOG = "CHANGELOG.md";
 
+    protected static readonly IReadOnlyList<string> ToolNamesInOrder =
+    [
+        "changelog_add",
+        "changelog_check_insert",
+        "changelog_create_release",
+        "changelog_extract",
+        "changelog_lint",
+        "changelog_remove",
+        "changelog_unreleased",
+    ];
+
     protected ToolTestBase(ITestOutputHelper output)
         : base(output)
     {
