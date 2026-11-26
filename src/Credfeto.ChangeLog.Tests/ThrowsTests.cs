@@ -32,4 +32,27 @@ public sealed class ThrowsTests : TestBase
             actual: exception.Message
         );
     }
+
+    [Fact]
+    public void NoGitRepositoryFoundThrowsGitRepositoryNotFoundException()
+    {
+        GitRepositoryNotFoundException exception = Assert.Throws<GitRepositoryNotFoundException>(() =>
+            Throws.NoGitRepositoryFound("/somewhere")
+        );
+
+        Assert.Equal(expected: "No git repository found at or above \"/somewhere\"", actual: exception.Message);
+    }
+
+    [Fact]
+    public void BareRepositoryNotSupportedThrowsGitRepositoryNotFoundException()
+    {
+        GitRepositoryNotFoundException exception = Assert.Throws<GitRepositoryNotFoundException>(() =>
+            Throws.BareRepositoryNotSupported("/somewhere/bare.git/")
+        );
+
+        Assert.Equal(
+            expected: "Bare repositories are not supported: \"/somewhere/bare.git/\"",
+            actual: exception.Message
+        );
+    }
 }

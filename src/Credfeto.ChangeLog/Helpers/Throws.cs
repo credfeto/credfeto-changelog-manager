@@ -35,6 +35,18 @@ public static class Throws
     }
 
     [DoesNotReturn]
+    public static Repository NoGitRepositoryFound(string folder)
+    {
+        throw new GitRepositoryNotFoundException($"No git repository found at or above \"{folder}\"");
+    }
+
+    [DoesNotReturn]
+    public static Repository BareRepositoryNotSupported(string folder)
+    {
+        throw new GitRepositoryNotFoundException($"Bare repositories are not supported: \"{folder}\"");
+    }
+
+    [DoesNotReturn]
     public static (string Version, string Date, bool IsYanked) MalformedVersionHeader(string line)
     {
         throw new InvalidChangeLogException($"Malformed version header (missing closing bracket): {line}");
