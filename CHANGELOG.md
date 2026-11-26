@@ -13,6 +13,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Added
 ### Fixed
 - Apply parent folder segments after following symbolic links when resolving changelog paths (#422)
+- Preserve the changelog's existing line endings when writing it - placeholder
 ### Changed
 - MCP server: tools/list now returns tools sorted by name (ordinal, case-insensitive), so clients see a stable, predictable tool order - #417
 ### Deprecated
