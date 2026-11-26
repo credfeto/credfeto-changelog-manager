@@ -1,4 +1,5 @@
 using System.IO;
+using Credfeto.ChangeLog.Helpers;
 using Credfeto.ChangeLog.Mcp.Exceptions;
 using Credfeto.ChangeLog.Mcp.Paths;
 using Xunit;
@@ -80,7 +81,7 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void RepositoryRootReachedThroughALinkIsKeptAsGivenAndAcceptsAChangeLogNamedThroughIt(bool relativeTarget)
+    public void RepositoryRootReachedThroughALinkIsKeptPhysicallyAndAcceptsAChangeLogNamedThroughIt(bool relativeTarget)
     {
         string root = this.CreateNestedRoot();
         string link = Path.Combine(path1: this.TempFolder, path2: "linked");
@@ -88,12 +89,35 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
             path: link,
             pathToTarget: relativeTarget ? Path.Combine(path1: "repo", path2: "nested") : root
         );
-        string changeLog = Path.Combine(path1: link, path2: CHANGELOG);
 
         ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(link);
 
-        Assert.Equal(expected: link, actual: resolver.RepositoryRoot);
-        Assert.Equal(expected: changeLog, actual: resolver.Resolve(changeLog));
+        Assert.Equal(expected: PhysicalPath.Resolve(root), actual: resolver.RepositoryRoot);
+        Assert.Equal(
+            expected: Path.Combine(path1: PhysicalPath.Resolve(root), path2: CHANGELOG),
+            actual: resolver.Resolve(Path.Combine(path1: link, path2: CHANGELOG))
+        );
+    }
+
+    [Fact]
+    public void RepositoryRootWithAParentFolderAfterALinkIsTheFolderTheLinkTargetLeadsTo()
+    {
+        // linked/../repo/nested is physically elsewhere/repo/nested, not the TempFolder/repo/nested the text suggests
+        string elsewhere = Path.Combine(path1: this.TempFolder, path2: "elsewhere");
+        string physicalRoot = Path.Combine(path1: elsewhere, path2: "repo", path3: "nested");
+        Directory.CreateDirectory(physicalRoot);
+        Directory.CreateDirectory(Path.Combine(path1: elsewhere, path2: "inner"));
+        string link = Path.Combine(path1: this.TempFolder, path2: "linked");
+        Directory.CreateSymbolicLink(path: link, pathToTarget: Path.Combine(path1: elsewhere, path2: "inner"));
+        string configuredRoot = Path.Combine(path1: link, path2: "..", path3: "repo", path4: "nested");
+
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(configuredRoot);
+
+        Assert.Equal(expected: PhysicalPath.Resolve(physicalRoot), actual: resolver.RepositoryRoot);
+        Assert.Equal(
+            expected: Path.Combine(path1: PhysicalPath.Resolve(physicalRoot), path2: CHANGELOG),
+            actual: resolver.Resolve(Path.Combine(path1: configuredRoot, path2: CHANGELOG))
+        );
     }
 
     [Theory]
@@ -146,6 +170,36 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
         ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root);
 
         Assert.Throws<ChangeLogPathException>(() => resolver.Resolve("linked/CHANGELOG.md"));
+    }
+
+    [Fact]
+    public void ParentFolderAfterALinkLeavingTheRepositoryRootIsRejected()
+    {
+        // linked/../CHANGELOG.md reads as root/CHANGELOG.md, but the OS follows the link first and lands in outside
+        string root = this.CreateNestedRoot();
+        string inner = Path.Combine(path1: this.TempFolder, path2: "outside", path3: "inner");
+        Directory.CreateDirectory(inner);
+        Directory.CreateSymbolicLink(path: Path.Combine(path1: root, path2: "linked"), pathToTarget: inner);
+
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root);
+
+        Assert.Throws<ChangeLogPathException>(() =>
+            resolver.Resolve(Path.Combine(path1: "linked", path2: "..", path3: CHANGELOG))
+        );
+    }
+
+    [Fact]
+    public void ParentFolderWithoutALinkResolvesWithinTheRepositoryRoot()
+    {
+        string root = this.CreateNestedRoot();
+        Directory.CreateDirectory(Path.Combine(path1: root, path2: "docs"));
+
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromRepositoryRoot(root);
+
+        Assert.Equal(
+            expected: Path.Combine(path1: PhysicalPath.Resolve(root), path2: CHANGELOG),
+            actual: resolver.Resolve(Path.Combine(path1: "docs", path2: "..", path3: CHANGELOG))
+        );
     }
 
     [Fact]
