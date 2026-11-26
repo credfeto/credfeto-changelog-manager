@@ -115,6 +115,33 @@ public sealed class ExceptionConstructorTests : TestBase
         Assert.Same(expected: inner, actual: ex.InnerException);
     }
 
+    // ─── GitRepositoryNotFoundException ───────────────────────────────────────────
+
+    [Fact]
+    public void GitRepositoryNotFoundExceptionDefaultConstructorHasDefaultMessage()
+    {
+        GitRepositoryNotFoundException ex = new();
+        Assert.Equal(expected: "Could not find a usable git repository.", actual: ex.Message);
+    }
+
+    [Fact]
+    public void GitRepositoryNotFoundExceptionWithMessageStoresMessage()
+    {
+        const string message = "Custom repository not found message";
+        GitRepositoryNotFoundException ex = new(message);
+        Assert.Equal(expected: message, actual: ex.Message);
+    }
+
+    [Fact]
+    public void GitRepositoryNotFoundExceptionWithMessageAndInnerExceptionStoresBoth()
+    {
+        const string message = "Custom repository not found message";
+        InvalidOperationException inner = new("inner");
+        GitRepositoryNotFoundException ex = new(message, inner);
+        Assert.Equal(expected: message, actual: ex.Message);
+        Assert.Same(expected: inner, actual: ex.InnerException);
+    }
+
     // ─── ReleaseTooOldException ───────────────────────────────────────────────────
 
     [Fact]

@@ -104,6 +104,7 @@ public abstract class ChangeLogTool : McpServerTool
                 or MergeBaseNotFoundException
                 or ReleaseAlreadyExistsException
                 or ReleaseTooOldException
+                or GitRepositoryNotFoundException
                 or ArgumentException
                 or IOException
                 or UnauthorizedAccessException
