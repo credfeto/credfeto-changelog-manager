@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Mcp.Models;
 using Credfeto.ChangeLog.Models;
 
@@ -17,7 +19,10 @@ public sealed class ChangeLogLintTool : ChangeLogTool
             context: context,
             name: "changelog_lint",
             title: "Lint changelog",
-            description: "Checks the changelog for formatting problems, optionally fixing them first.",
+            description: string.Create(
+                provider: CultureInfo.InvariantCulture,
+                $"Checks the changelog for formatting problems and for entries longer than {ChangeLogLimits.MaxEntryLength} characters, optionally fixing the formatting first. Fixing never shortens an entry."
+            ),
             specificSchema: [ToolProperties.Fix],
             readOnly: false
         )
@@ -49,9 +54,8 @@ public sealed class ChangeLogLintTool : ChangeLogTool
             cancellationToken: cancellationToken
         );
 
-        return JsonResult.Create(
-            changeLog: target.RelativePath,
-            writeProperties: writer => WriteLintResult(writer: writer, fix: fix, errors: errors)
+        return JsonResult.Create(changeLog: target.RelativePath, writeProperties: writer =>
+            WriteLintResult(writer: writer, fix: fix, errors: errors)
         );
     }
 

@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Mcp.Models;
 
 namespace Credfeto.ChangeLog.Mcp.Tools;
@@ -13,7 +15,11 @@ public sealed class ChangeLogAddTool : ChangeLogEntryTool
             context: context,
             name: "changelog_add",
             title: "Add changelog entry",
-            description: "Adds an entry to a section of the [Unreleased] section of the changelog. Adding an entry that is already present changes nothing."
+            description: string.Create(
+                provider: CultureInfo.InvariantCulture,
+                $"Adds an entry to a section of the [Unreleased] section of the changelog. The entry must be one line, at most {ChangeLogLimits.MaxEntryLength} characters: a longer one is rejected and the file is left unchanged. Adding an entry that is already present changes nothing."
+            ),
+            message: ToolProperties.AddMessage
         )
     {
         this._updater = updater;

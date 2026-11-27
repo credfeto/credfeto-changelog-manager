@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Xunit;
@@ -61,5 +62,45 @@ public sealed class ChangeLogLintToolTests : ToolTestBase
 
         Assert.True(condition: Property(json: text, name: "fixed").GetBoolean(), userMessage: text);
         Assert.True(condition: Property(json: text, name: "valid").GetBoolean(), userMessage: text);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task AnEntryOverTheLimitIsReportedAndNeverShortenedAsync(bool fix)
+    {
+        string entry = "- " + new string('a', count: 101);
+        int lineNumber = await this.WriteChangeLogWithAddedEntryAsync(entry);
+
+        string text = await this.CallSuccessfullyAsync(name: "changelog_lint", arguments: [Flag("fix", value: fix)]);
+
+        Assert.False(condition: Property(json: text, name: "valid").GetBoolean(), userMessage: text);
+        JsonElement error = Assert.Single(Property(json: text, name: "errors").EnumerateArray());
+        Assert.Equal(expected: lineNumber, actual: error.GetProperty("lineNumber").GetInt32());
+        Assert.Contains(
+            expectedSubstring: "101 characters",
+            actualString: error.GetProperty("message").GetString(),
+            comparisonType: StringComparison.Ordinal
+        );
+        Assert.Contains(
+            expectedSubstring: entry,
+            actualString: await this.ReadChangeLogAsync(),
+            comparisonType: StringComparison.Ordinal
+        );
+    }
+
+    // Puts the entry straight under the template's '### Added' heading and returns its line number
+    private async Task<int> WriteChangeLogWithAddedEntryAsync(string entry)
+    {
+        await this.CreateChangeLogAsync(this.ChangeLogPath);
+        string[] lines = (await this.ReadChangeLogAsync()).ReplaceLineEndings("\n").Split('\n');
+        int heading = Array.FindIndex(array: lines, match: line =>
+            StringComparer.Ordinal.Equals(x: line, y: "### Added")
+        );
+        await this.WriteChangeLogAsync(
+            string.Join(separator: '\n', [.. lines[..(heading + 1)], entry, .. lines[(heading + 1)..]])
+        );
+
+        return heading + 2;
     }
 }

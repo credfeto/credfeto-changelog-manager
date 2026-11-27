@@ -1,3 +1,6 @@
+using System.Globalization;
+using Credfeto.ChangeLog.Constants;
+
 namespace Credfeto.ChangeLog.Mcp.Tools;
 
 public static class ToolProperties
@@ -21,6 +24,15 @@ public static class ToolProperties
     public static readonly SchemaProperty Message = new(
         Name: "message",
         Description: "The text of the entry.",
+        Required: true
+    );
+
+    public static readonly SchemaProperty AddMessage = new(
+        Name: "message",
+        Description: string.Create(
+            provider: CultureInfo.InvariantCulture,
+            $"The text of the entry: one line, at most {ChangeLogLimits.MaxEntryLength} characters. A longer entry is rejected."
+        ),
         Required: true
     );
 

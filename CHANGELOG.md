@@ -11,6 +11,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ## [Unreleased]
 ### Security
 ### Added
+- Changelog entries over 100 characters are rejected by --add and changelog_add, and fail --lint
 ### Fixed
 ### Changed
 ### Deprecated

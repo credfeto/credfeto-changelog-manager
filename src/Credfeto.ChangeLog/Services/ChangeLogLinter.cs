@@ -4,7 +4,9 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Extensions;
+using Credfeto.ChangeLog.Helpers;
 using Credfeto.ChangeLog.Models;
 using ZLinq;
 
@@ -41,7 +43,57 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         CheckVersionHeaders(releases: document.Releases, errors: errors);
         CheckReleaseDates(releases: document.Releases, errors: errors, language: language);
         CheckBlankLinesBeforeReleaseHeadings(releases: document.Releases, errors: errors);
+        CheckEntryLengths(document: document, errors: errors);
         return errors;
+    }
+
+    // Applies to every section, released or not: --fix never shortens an entry, since rewording
+    // one needs a human or an agent, so an over-long entry keeps failing until it is reworded.
+    private static void CheckEntryLengths(ChangeLogDocument document, List<LintError> errors)
+    {
+        if (document.Unreleased is not null)
+        {
+            CheckSectionEntryLengths(sections: document.Unreleased.Sections, errors: errors);
+        }
+
+        foreach (ChangeLogRelease release in document.Releases)
+        {
+            CheckSectionEntryLengths(sections: release.Sections, errors: errors);
+        }
+    }
+
+    private static void CheckSectionEntryLengths(in ImmutableArray<ChangeLogSection> sections, List<LintError> errors)
+    {
+        foreach (ChangeLogSection section in sections)
+        {
+            CheckEntryLengths(section: section, errors: errors);
+        }
+    }
+
+    // A section's entries are every line after its heading, blank ones included, so an entry's
+    // line number follows from its index.
+    private static void CheckEntryLengths(ChangeLogSection section, List<LintError> errors)
+    {
+        for (int i = 0; i < section.Entries.Length; i++)
+        {
+            int length = EntryLength.OfLine(section.Entries[i]);
+
+            if (EntryLength.IsTooLong(length))
+            {
+                errors.Add(EntryTooLongError(lineNumber: section.LineNumber + 1 + i, section: section, length: length));
+            }
+        }
+    }
+
+    private static LintError EntryTooLongError(int lineNumber, ChangeLogSection section, int length)
+    {
+        return new(
+            LineNumber: lineNumber,
+            Message: string.Create(
+                provider: CultureInfo.InvariantCulture,
+                $"Entry in '### {section.Name}' is {length} characters long; the limit is {ChangeLogLimits.MaxEntryLength} characters"
+            )
+        );
     }
 
     private static void CheckUnreleased(ChangeLogDocument document, List<LintError> errors, ChangeLogLanguage language)

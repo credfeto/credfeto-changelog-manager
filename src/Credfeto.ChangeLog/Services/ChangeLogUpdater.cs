@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Exceptions;
 using Credfeto.ChangeLog.Extensions;
+using Credfeto.ChangeLog.Helpers;
 using Credfeto.ChangeLog.Models;
 using ZLinq;
 
@@ -54,6 +55,9 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
         CancellationToken cancellationToken
     )
     {
+        // Checked before the file is loaded (or created), so a rejected entry leaves the file untouched
+        EnsureEntryWithinLimit(message);
+
         ChangeLogDocument document = await this.LoadOrCreateAsync(
             changeLogFileName: changeLogFileName,
             language: language,
@@ -151,6 +155,8 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
 
     public static ChangeLogDocument AddEntry(ChangeLogDocument document, string type, string message)
     {
+        EnsureEntryWithinLimit(message);
+
         ChangeLogUnreleased unreleased = RequireUnreleased(document);
         ChangeLogSection section = RequireSection(unreleased: unreleased, type: type);
         string entry = "- " + message;
@@ -162,6 +168,16 @@ public sealed class ChangeLogUpdater : IChangeLogUpdater
 
         ChangeLogSection updated = InsertEntry(section: section, entry: entry);
         return ReplaceSection(document: document, unreleased: unreleased, updated: updated);
+    }
+
+    private static void EnsureEntryWithinLimit(string message)
+    {
+        int length = EntryLength.OfMessage(message);
+
+        if (EntryLength.IsTooLong(length))
+        {
+            Throws.EntryTooLong(length);
+        }
     }
 
     public static ChangeLogDocument RemoveEntry(ChangeLogDocument document, string type, string message)

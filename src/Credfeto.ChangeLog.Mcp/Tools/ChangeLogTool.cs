@@ -98,6 +98,7 @@ public abstract class ChangeLogTool : McpServerTool
         return exception
             is ToolArgumentException
                 or ChangeLogPathException
+                or ChangeLogEntryTooLongException
                 or BranchMissingException
                 or EmptyChangeLogException
                 or InvalidChangeLogException
