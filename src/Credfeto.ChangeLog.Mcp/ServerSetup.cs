@@ -9,7 +9,7 @@ public static class ServerSetup
 {
     public static IServiceCollection AddChangeLogMcpServer(
         this IServiceCollection services,
-        string workingDirectory,
+        string? workingDirectory,
         string? repositoryRoot
     )
     {
@@ -29,7 +29,7 @@ public static class ServerSetup
 
     private static IServiceCollection AddChangeLogPaths(
         this IServiceCollection services,
-        string workingDirectory,
+        string? workingDirectory,
         string? repositoryRoot
     )
     {

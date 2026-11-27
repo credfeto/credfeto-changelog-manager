@@ -257,7 +257,7 @@ public sealed class ChangeLogChecker : IChangeLogChecker
     {
         string? path = Path.GetDirectoryName(changeLogFileName);
 
-        return path ?? Directory.GetCurrentDirectory();
+        return path ?? StartFolder.Read();
     }
 
     private static string FindChangeLogPositionInRepo(Repository repo, string changeLogFileName)

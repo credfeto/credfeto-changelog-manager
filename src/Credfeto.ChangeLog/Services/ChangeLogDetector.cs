@@ -20,9 +20,12 @@ public sealed class ChangeLogDetector : IChangeLogDetector
 
     public bool TryFindChangeLog([NotNullWhen(true)] out string? changeLogFileName)
     {
+        // Read outside the try so a deleted start folder is reported as such, not as a missing changelog
+        string startFolder = StartFolder.Read();
+
         try
         {
-            using (Repository repository = GitRepository.OpenRepository(Environment.CurrentDirectory))
+            using (Repository repository = GitRepository.OpenRepository(startFolder))
             {
                 return TryFindChangeLogInRepository(repository: repository, changeLogFileName: out changeLogFileName);
             }

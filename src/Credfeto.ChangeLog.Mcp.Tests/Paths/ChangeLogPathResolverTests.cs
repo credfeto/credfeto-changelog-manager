@@ -66,6 +66,26 @@ public sealed class ChangeLogPathResolverTests : ToolTestBase
     }
 
     [Theory]
+    [InlineData(null)]
+    [InlineData("CHANGELOG.md")]
+    public void DeletedStartFolderHasNoRootAndRefusesEveryChangeLog(string? changeLog)
+    {
+        ChangeLogPathResolver resolver = ChangeLogPathResolver.FromWorkingDirectory(
+            workingDirectory: null,
+            detector: new FixedChangeLogDetector(Path.Combine(path1: this.RepositoryFolder, path2: CHANGELOG))
+        );
+
+        Assert.Null(resolver.RepositoryRoot);
+        ChangeLogPathException exception = Assert.Throws<ChangeLogPathException>(() => resolver.Resolve(changeLog));
+        Assert.Equal(
+            expected: "No repository found: the folder the server was started in no longer exists and "
+                + RepositoryRootOption.EnvironmentVariable
+                + " is not set",
+            actual: exception.Message
+        );
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public void RepositoryRootIsUsedWithoutSearchingUpwardsOrATrailingSeparator(bool trailingSeparator)
