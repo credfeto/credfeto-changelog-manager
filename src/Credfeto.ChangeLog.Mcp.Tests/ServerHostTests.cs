@@ -11,6 +11,8 @@ using Xunit;
 
 namespace Credfeto.ChangeLog.Mcp.Tests;
 
+// The console and the process environment are shared by every test in the run
+[Collection(SerialEnvironment.Name)]
 public sealed class ServerHostTests : ToolTestBase
 {
     private const string CALL_RESPONSE_MARKER = "\"id\":2";
@@ -107,6 +109,21 @@ public sealed class ServerHostTests : ToolTestBase
         );
 
         Assert.Equal(expected: 0, actual: exitCode);
+    }
+
+    [Fact]
+    public async Task ServerOwningStreamsRestoresConsoleOutWhenItEndsAsync()
+    {
+        TextWriter originalOut = Console.Out;
+        using RepositoryRootEnvironmentScope environment = new(null);
+
+        await using ScriptedInputStream input = new(script: string.Empty, waitAtEnd: false);
+        await using CapturingOutputStream output = new(CALL_RESPONSE_MARKER);
+
+        int exitCode = await ServerHost.RunAsync(input: input, output: output);
+
+        Assert.Equal(expected: 0, actual: exitCode);
+        Assert.Same(expected: originalOut, actual: Console.Out);
     }
 
     [Fact]
