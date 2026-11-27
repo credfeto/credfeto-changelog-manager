@@ -16,6 +16,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 - Preserve the changelog's existing line endings when writing it - placeholder
 - Clear error when no git repository is found or the repository is bare (#424)
 - A clear error is reported when the folder the command-line tool or MCP server was started in has been deleted, instead of a raw exception (#425)
+- ServerHost no longer redirects console output for the whole process; Console.Out is restored when RunAsync finishes - #426
 ### Changed
 - MCP server: tools/list now returns tools sorted by name (ordinal, case-insensitive), so clients see a stable, predictable tool order - #417
 ### Deprecated
