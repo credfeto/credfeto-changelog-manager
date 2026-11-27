@@ -12,12 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
-- Apply parent folder segments after following symbolic links when resolving changelog paths (#422)
-- Preserve the changelog's existing line endings when writing it - placeholder
-- Clear error when no git repository is found or the repository is bare (#424)
-- A clear error is reported when the folder the command-line tool or MCP server was started in has been deleted, instead of a raw exception (#425)
 ### Changed
-- MCP server: tools/list now returns tools sorted by name (ordinal, case-insensitive), so clients see a stable, predictable tool order - #417
 ### Deprecated
 ### Removed
 ### Deployment Changes
@@ -25,6 +20,15 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 <!--
 Releases that have at least been deployed to staging, BUT NOT necessarily released to live.  Changes should be moved from [Unreleased] into here as they are merged into the appropriate release branch
 -->
+
+## [1.10.220] - 2026-11-27
+### Fixed
+- Apply parent folder segments after following symbolic links when resolving changelog paths (#422)
+- Preserve the changelog's existing line endings when writing it - placeholder
+- Clear error when no git repository is found or the repository is bare (#424)
+- A clear error is reported when the folder the command-line tool or MCP server was started in has been deleted, instead of a raw exception (#425)
+### Changed
+- MCP server: tools/list now returns tools sorted by name (ordinal, case-insensitive), so clients see a stable, predictable tool order - #417
 
 ## [1.10.219] - 2026-11-23
 ### Security
