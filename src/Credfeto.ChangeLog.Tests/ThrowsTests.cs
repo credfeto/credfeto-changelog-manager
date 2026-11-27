@@ -44,6 +44,14 @@ public sealed class ThrowsTests : TestBase
     }
 
     [Fact]
+    public void StartFolderMissingThrowsStartFolderMissingException()
+    {
+        StartFolderMissingException exception = Assert.Throws<StartFolderMissingException>(Throws.StartFolderMissing);
+
+        Assert.Equal(expected: "The folder this was started in no longer exists", actual: exception.Message);
+    }
+
+    [Fact]
     public void BareRepositoryNotSupportedThrowsGitRepositoryNotFoundException()
     {
         GitRepositoryNotFoundException exception = Assert.Throws<GitRepositoryNotFoundException>(() =>

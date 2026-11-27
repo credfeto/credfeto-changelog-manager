@@ -47,6 +47,12 @@ public static class Throws
     }
 
     [DoesNotReturn]
+    public static string StartFolderMissing()
+    {
+        throw new StartFolderMissingException();
+    }
+
+    [DoesNotReturn]
     public static (string Version, string Date, bool IsYanked) MalformedVersionHeader(string line)
     {
         throw new InvalidChangeLogException($"Malformed version header (missing closing bracket): {line}");

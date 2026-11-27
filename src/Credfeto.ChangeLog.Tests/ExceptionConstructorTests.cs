@@ -142,6 +142,33 @@ public sealed class ExceptionConstructorTests : TestBase
         Assert.Same(expected: inner, actual: ex.InnerException);
     }
 
+    // ─── StartFolderMissingException ──────────────────────────────────────────────
+
+    [Fact]
+    public void StartFolderMissingExceptionDefaultConstructorHasDefaultMessage()
+    {
+        StartFolderMissingException ex = new();
+        Assert.Equal(expected: "The folder this was started in no longer exists", actual: ex.Message);
+    }
+
+    [Fact]
+    public void StartFolderMissingExceptionWithMessageStoresMessage()
+    {
+        const string message = "Custom start folder missing message";
+        StartFolderMissingException ex = new(message);
+        Assert.Equal(expected: message, actual: ex.Message);
+    }
+
+    [Fact]
+    public void StartFolderMissingExceptionWithMessageAndInnerExceptionStoresBoth()
+    {
+        const string message = "Custom start folder missing message";
+        InvalidOperationException inner = new("inner");
+        StartFolderMissingException ex = new(message, inner);
+        Assert.Equal(expected: message, actual: ex.Message);
+        Assert.Same(expected: inner, actual: ex.InnerException);
+    }
+
     // ─── ReleaseTooOldException ───────────────────────────────────────────────────
 
     [Fact]

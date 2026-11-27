@@ -16,7 +16,7 @@ public static class PhysicalPath
     public static string Resolve(string path)
     {
         ReadOnlySpan<char> root = Path.GetPathRoot(path.AsSpan());
-        string start = root.IsEmpty ? Directory.GetCurrentDirectory() : Path.GetFullPath(root.ToString());
+        string start = root.IsEmpty ? StartFolder.Read() : Path.GetFullPath(root.ToString());
         string resolved = Path.GetPathRoot(start.AsSpan()).ToString();
 
         Stack<string> pending = new();

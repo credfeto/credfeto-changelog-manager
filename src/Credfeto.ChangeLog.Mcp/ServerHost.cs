@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Credfeto.ChangeLog.Helpers;
 using Credfeto.ChangeLog.Mcp.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -23,7 +24,7 @@ public static class ServerHost
         await using Stream ownedOutput = output;
 
         return await RunAsync(
-            workingDirectory: Environment.CurrentDirectory,
+            workingDirectory: StartFolder.TryRead(),
             repositoryRoot: RepositoryRootOption.Read(),
             error: Console.Error,
             input: ownedInput,
@@ -33,7 +34,7 @@ public static class ServerHost
     }
 
     public static async Task<int> RunAsync(
-        string workingDirectory,
+        string? workingDirectory,
         string? repositoryRoot,
         TextWriter error,
         Stream input,
@@ -65,7 +66,7 @@ public static class ServerHost
     }
 
     private static async Task<int> ServeAsync(
-        string workingDirectory,
+        string? workingDirectory,
         string? repositoryRoot,
         Stream input,
         Stream output,

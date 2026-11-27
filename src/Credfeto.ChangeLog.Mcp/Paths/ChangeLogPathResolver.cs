@@ -11,9 +11,11 @@ public sealed class ChangeLogPathResolver
     private const string GIT_FOLDER_NAME = ".git";
 
     private readonly IChangeLogDetector _detector;
-    private readonly string _workingDirectory;
 
-    private ChangeLogPathResolver(string workingDirectory, string? repositoryRoot, IChangeLogDetector detector)
+    // Null when the folder the server was started in no longer exists; there is then no repository root either
+    private readonly string? _workingDirectory;
+
+    private ChangeLogPathResolver(string? workingDirectory, string? repositoryRoot, IChangeLogDetector detector)
     {
         this._workingDirectory = workingDirectory;
         this.RepositoryRoot = repositoryRoot;
@@ -24,8 +26,13 @@ public sealed class ChangeLogPathResolver
     // back to working on whatever folder the server happened to be started in.
     public string? RepositoryRoot { get; }
 
-    public static ChangeLogPathResolver FromWorkingDirectory(string workingDirectory, IChangeLogDetector detector)
+    public static ChangeLogPathResolver FromWorkingDirectory(string? workingDirectory, IChangeLogDetector detector)
     {
+        if (workingDirectory is null)
+        {
+            return new(workingDirectory: null, repositoryRoot: null, detector: detector);
+        }
+
         string folder = Normalise(workingDirectory);
 
         return new(workingDirectory: folder, repositoryRoot: FindRepositoryRoot(folder), detector: detector);
@@ -45,7 +52,9 @@ public sealed class ChangeLogPathResolver
     {
         string repositoryRoot = this.RequireRepositoryRoot();
         string candidate = changeLog ?? this.Detect();
-        string fullPath = PhysicalPath.Resolve(Path.Combine(path1: this._workingDirectory, path2: candidate));
+        string fullPath = PhysicalPath.Resolve(
+            Path.Combine(path1: this._workingDirectory ?? repositoryRoot, path2: candidate)
+        );
 
         // The tools write to the file they are given, so a caller must not be able to reach
         // anything other than a changelog inside the repository the server works on.
@@ -72,12 +81,19 @@ public sealed class ChangeLogPathResolver
     {
         return this.RepositoryRoot
             ?? throw new ChangeLogPathException(
-                "No repository found: \""
-                    + this._workingDirectory
-                    + "\" is not inside a git repository and "
+                "No repository found: "
+                    + this.DescribeWorkingDirectory()
+                    + " and "
                     + RepositoryRootOption.EnvironmentVariable
                     + " is not set"
             );
+    }
+
+    private string DescribeWorkingDirectory()
+    {
+        return this._workingDirectory is null
+            ? "the folder the server was started in no longer exists"
+            : "\"" + this._workingDirectory + "\" is not inside a git repository";
     }
 
     private string Detect()
