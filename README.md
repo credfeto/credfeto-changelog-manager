@@ -65,6 +65,8 @@ dotnet changelog --changelog CHANGELOG.md --extract RELEASE_NOTES.md --version 1
 
 Note the value of the `--add` parameter matches exactly the heading section in the [Unreleased] section.  It will not create/update a new section if it that section does not exist.
 
+The message must be one line, at most 100 characters, not counting surrounding whitespace. A longer message is rejected with an error giving its length, and the changelog is left unchanged.
+
 ```shell
 dotnet changelog --changelog CHANGELOG.md --add Added --message "Change description"
 ```
@@ -169,6 +171,7 @@ Notes:
 
 - `--lint` exits with a non-zero exit code if any errors are found.
 - `--fix` rewrites the changelog to correct ordering and missing sections in `[Unreleased]`; it then re-lints to confirm the file is valid.
+- Any entry, in any section, longer than 100 characters (not counting the leading "- " bullet or surrounding whitespace) is an error, reported with its line number and length. `--fix` never shortens an entry, so reword it by hand.
 
 ### Check insert position of changes are all in [Unreleased] section
 
@@ -248,7 +251,7 @@ If there is no such folder, the server still starts, but every tool returns an e
 
 | Tool                       | Description                                                                         |
 |----------------------------|-------------------------------------------------------------------------------------|
-| `changelog_add`            | Adds an entry to a section of the [Unreleased] section.                             |
+| `changelog_add`            | Adds a one-line entry, at most 100 characters, to a section of [Unreleased].        |
 | `changelog_check_insert`   | Checks that all changes since a branch are only in the [Unreleased] section.        |
 | `changelog_create_release` | Moves the [Unreleased] changes into a new release, optionally with a pending date.  |
 | `changelog_extract`        | Returns the release notes for a version as text.                                    |

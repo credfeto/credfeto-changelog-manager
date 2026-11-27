@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Credfeto.ChangeLog.Cmd.Exceptions;
+using Credfeto.ChangeLog.Exceptions;
 using Credfeto.ChangeLog.Models;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -529,7 +530,7 @@ public static class Program
 
             return SUCCESS;
         }
-        catch (InvalidOptionsException exception)
+        catch (Exception exception) when (exception is InvalidOptionsException or ChangeLogEntryTooLongException)
         {
             Console.WriteLine($"ERROR: {exception.Message}");
 

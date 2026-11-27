@@ -13,7 +13,8 @@ public sealed class ChangeLogRemoveTool : ChangeLogEntryTool
             context: context,
             name: "changelog_remove",
             title: "Remove changelog entries",
-            description: "Removes every entry starting with the message from a section of the [Unreleased] section of the changelog."
+            description: "Removes every entry starting with the message from a section of the [Unreleased] section of the changelog.",
+            message: ToolProperties.Message
         )
     {
         this._updater = updater;

@@ -1,5 +1,8 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using ModelContextProtocol.Protocol;
 using Xunit;
 
 namespace Credfeto.ChangeLog.Mcp.Tests.Tools;
@@ -90,5 +93,68 @@ public sealed class ChangeLogEntryToolTests : ToolTestBase
 
         Assert.Equal(expected: "Missing required parameter message", actual: text);
         Assert.Equal(expected: before, actual: await this.ReadChangeLogAsync());
+    }
+
+    [Fact]
+    public async Task AddAnEntryOfExactlyTheLimitSucceedsAsync()
+    {
+        string message = new('a', count: 100);
+
+        await this.AddEntryAsync(type: "Added", message: message);
+
+        string content = await this.ReadChangeLogAsync();
+        Assert.Contains(
+            expectedSubstring: "- " + message,
+            actualString: content,
+            comparisonType: StringComparison.Ordinal
+        );
+    }
+
+    [Fact]
+    public async Task AddAnEntryOverTheLimitIsAnErrorAndLeavesTheFileUnchangedAsync()
+    {
+        await this.CreateChangeLogAsync(this.ChangeLogPath);
+        string before = await this.ReadChangeLogAsync();
+
+        string text = await this.CallFailingAsync(
+            name: "changelog_add",
+            arguments: [Text("type", "Added"), Text("message", new('a', count: 101))]
+        );
+
+        Assert.Contains(
+            expectedSubstring: "101 characters",
+            actualString: text,
+            comparisonType: StringComparison.Ordinal
+        );
+        Assert.Contains(
+            expectedSubstring: "limit is 100 characters",
+            actualString: text,
+            comparisonType: StringComparison.Ordinal
+        );
+        Assert.Equal(expected: before, actual: await this.ReadChangeLogAsync());
+    }
+
+    [Fact]
+    public void AddDescriptionsStateTheLimit()
+    {
+        using ServiceProvider services = this.BuildServices();
+
+        Tool add = GetTool(services: services, name: "changelog_add").ProtocolTool;
+        string? messageDescription = add
+            .InputSchema.GetProperty("properties")
+            .GetProperty("message")
+            .GetProperty("description")
+            .GetString();
+
+        Assert.Contains(
+            expectedSubstring: "one line, at most 100 characters",
+            actualString: add.Description,
+            comparisonType: StringComparison.Ordinal
+        );
+        Assert.Contains(
+            expectedSubstring: "one line, at most 100 characters",
+            actualString: messageDescription,
+            comparisonType: StringComparison.Ordinal
+        );
     }
 }

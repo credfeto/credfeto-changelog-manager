@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Frozen;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using Credfeto.ChangeLog.Cmd.Exceptions;
+using Credfeto.ChangeLog.Constants;
 
 namespace Credfeto.ChangeLog.Cmd;
 
@@ -55,7 +57,10 @@ public static class OptionsParser
             longName: "message",
             shortName: 'm',
             isCommand: false,
-            helpText: "The message to add",
+            helpText: string.Create(
+                provider: CultureInfo.InvariantCulture,
+                $"The message to add or remove. An added message must be one line, at most {ChangeLogLimits.MaxEntryLength} characters"
+            ),
             apply: static (o, v) => o with { Message = v }
         ),
         Value(
@@ -114,12 +119,11 @@ public static class OptionsParser
             helpText: "Verify the tool's dependencies load, without touching any file, then exit",
             apply: static o => o with { SelfTest = true }
         ),
-        Switch(
-            longName: "help",
-            shortName: null,
-            isCommand: false,
-            helpText: "Display this help",
-            apply: static o => o with { ShowHelp = true }
+        Switch(longName: "help", shortName: null, isCommand: false, helpText: "Display this help", apply: static o =>
+            o with
+            {
+                ShowHelp = true,
+            }
         ),
     ];
 

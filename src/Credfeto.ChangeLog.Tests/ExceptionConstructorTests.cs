@@ -195,4 +195,31 @@ public sealed class ExceptionConstructorTests : TestBase
         Assert.Equal(expected: message, actual: ex.Message);
         Assert.Same(expected: inner, actual: ex.InnerException);
     }
+
+    // ─── ChangeLogEntryTooLongException ───────────────────────────────────────────
+
+    [Fact]
+    public void ChangeLogEntryTooLongExceptionDefaultConstructorHasDefaultMessage()
+    {
+        ChangeLogEntryTooLongException ex = new();
+        Assert.Equal(expected: "Changelog entry is too long.", actual: ex.Message);
+    }
+
+    [Fact]
+    public void ChangeLogEntryTooLongExceptionWithMessageStoresMessage()
+    {
+        const string message = "Custom entry too long message";
+        ChangeLogEntryTooLongException ex = new(message);
+        Assert.Equal(expected: message, actual: ex.Message);
+    }
+
+    [Fact]
+    public void ChangeLogEntryTooLongExceptionWithMessageAndInnerExceptionStoresBoth()
+    {
+        const string message = "Custom entry too long message";
+        InvalidOperationException inner = new("inner");
+        ChangeLogEntryTooLongException ex = new(message, inner);
+        Assert.Equal(expected: message, actual: ex.Message);
+        Assert.Same(expected: inner, actual: ex.InnerException);
+    }
 }

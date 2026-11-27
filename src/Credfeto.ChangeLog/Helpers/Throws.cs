@@ -1,4 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using Credfeto.ChangeLog.Constants;
 using Credfeto.ChangeLog.Exceptions;
 using LibGit2Sharp;
 
@@ -56,5 +58,16 @@ public static class Throws
     public static (string Version, string Date, bool IsYanked) MalformedVersionHeader(string line)
     {
         throw new InvalidChangeLogException($"Malformed version header (missing closing bracket): {line}");
+    }
+
+    [DoesNotReturn]
+    public static void EntryTooLong(int length)
+    {
+        throw new ChangeLogEntryTooLongException(
+            string.Create(
+                provider: CultureInfo.InvariantCulture,
+                $"Changelog entry is {length} characters long, but the limit is {ChangeLogLimits.MaxEntryLength} characters. Reword it as one line of at most {ChangeLogLimits.MaxEntryLength} characters."
+            )
+        );
     }
 }
