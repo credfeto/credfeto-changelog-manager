@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+- ServerHost no longer redirects console output for the whole process; Console.Out is restored when RunAsync finishes - #426
 ### Changed
 ### Deprecated
 ### Removed
