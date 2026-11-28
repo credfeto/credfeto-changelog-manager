@@ -14,7 +14,7 @@ public sealed class ChangeLogLinterEntryLengthTests : TestBase
     private const string UNRELEASED_ENTRY = "{unreleased}";
     private const string RELEASED_ENTRY = "{released}";
 
-    // The [Unreleased] entry is on line 6 and the released entry on line 15.
+    // The [Unreleased] entry is on line 6.
     private const string CHANGE_LOG_TEMPLATE = """
         # Changelog
 
@@ -36,7 +36,6 @@ public sealed class ChangeLogLinterEntryLengthTests : TestBase
         """;
 
     private const int UNRELEASED_LINE = 6;
-    private const int RELEASED_LINE = 15;
 
     private static readonly ChangeLogLanguage Language = new ChangeLogLanguageFactory().Get(
         ChangeLogLanguageFactory.English
@@ -102,12 +101,16 @@ public sealed class ChangeLogLinterEntryLengthTests : TestBase
         Assert.Empty(errors);
     }
 
-    [Fact]
-    public static async Task ReleasedEntryOverTheLimitFailsAsync()
+    [Theory]
+    [InlineData(101)]
+    [InlineData(500)]
+    public static async Task ReleasedEntryOverTheLimitPassesAsync(int length)
     {
-        IReadOnlyList<LintError> errors = await LintAsync(ChangeLog(unreleased: "- New feature", released: Entry(101)));
+        IReadOnlyList<LintError> errors = await LintAsync(
+            ChangeLog(unreleased: "- New feature", released: Entry(length))
+        );
 
-        AssertEntryTooLong(error: Assert.Single(errors), lineNumber: RELEASED_LINE, length: 101);
+        Assert.Empty(errors);
     }
 
     [Fact]
@@ -121,14 +124,24 @@ public sealed class ChangeLogLinterEntryLengthTests : TestBase
     }
 
     [Fact]
-    public static async Task EveryOverLongEntryIsReportedAsync()
+    public static async Task OnlyTheUnreleasedOverLongEntryIsReportedAsync()
     {
         IReadOnlyList<LintError> errors = await LintAsync(ChangeLog(unreleased: Entry(101), released: Entry(150)));
+
+        AssertEntryTooLong(error: Assert.Single(errors), lineNumber: UNRELEASED_LINE, length: 101);
+    }
+
+    [Fact]
+    public static async Task EveryOverLongUnreleasedEntryIsReportedAsync()
+    {
+        IReadOnlyList<LintError> errors = await LintAsync(
+            ChangeLog(unreleased: Entry(101) + "\n" + Entry(150), released: "- Initial release")
+        );
 
         Assert.Collection(
             errors,
             first => AssertEntryTooLong(error: first, lineNumber: UNRELEASED_LINE, length: 101),
-            second => AssertEntryTooLong(error: second, lineNumber: RELEASED_LINE, length: 150)
+            second => AssertEntryTooLong(error: second, lineNumber: UNRELEASED_LINE + 1, length: 150)
         );
     }
 
@@ -154,6 +167,10 @@ public sealed class ChangeLogLinterEntryLengthTests : TestBase
             actualString: serialised,
             comparisonType: StringComparison.Ordinal
         );
-        Assert.Equal(expected: 2, actual: errors.Count);
+        Assert.Contains(
+            expectedSubstring: "is 101 characters long",
+            actualString: Assert.Single(errors).Message,
+            comparisonType: StringComparison.Ordinal
+        );
     }
 }

@@ -89,6 +89,34 @@ public sealed class ChangeLogLintToolTests : ToolTestBase
         );
     }
 
+    [Fact]
+    public async Task AnEntryOverTheLimitInAReleasedSectionPassesAsync()
+    {
+        await this.WriteChangeLogWithReleasedEntryAsync("- " + new string('a', count: 150));
+
+        string text = await this.CallSuccessfullyAsync(name: "changelog_lint", arguments: [Flag("fix", value: false)]);
+
+        Assert.True(condition: Property(json: text, name: "valid").GetBoolean(), userMessage: text);
+        Assert.Equal(expected: 0, actual: Property(json: text, name: "errors").GetArrayLength());
+    }
+
+    // Adds a released version holding the entry just above the template's first release heading
+    private async Task WriteChangeLogWithReleasedEntryAsync(string entry)
+    {
+        await this.CreateChangeLogAsync(this.ChangeLogPath);
+        string[] lines = (await this.ReadChangeLogAsync()).ReplaceLineEndings("\n").Split('\n');
+        int heading = Array.FindIndex(array: lines, match: line =>
+            line.StartsWith(value: "## [0.0.0]", comparisonType: StringComparison.Ordinal)
+        );
+        Assert.True(condition: heading > 0, userMessage: "No release heading in the template");
+        await this.WriteChangeLogAsync(
+            string.Join(
+                separator: '\n',
+                [.. lines[..heading], "## [1.0.0] - 2024-01-01", "### Added", entry, "", .. lines[heading..]]
+            )
+        );
+    }
+
     // Puts the entry straight under the template's '### Added' heading and returns its line number
     private async Task<int> WriteChangeLogWithAddedEntryAsync(string entry)
     {

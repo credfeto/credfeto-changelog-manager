@@ -21,7 +21,7 @@ public sealed class ChangeLogLintTool : ChangeLogTool
             title: "Lint changelog",
             description: string.Create(
                 provider: CultureInfo.InvariantCulture,
-                $"Checks the changelog for formatting problems and for entries longer than {ChangeLogLimits.MaxEntryLength} characters, optionally fixing the formatting first. Fixing never shortens an entry."
+                $"Checks the changelog for formatting problems and for entries in the [Unreleased] section longer than {ChangeLogLimits.MaxEntryLength} characters (released sections are not length-checked), optionally fixing the formatting first. Fixing never shortens an entry."
             ),
             specificSchema: [ToolProperties.Fix],
             readOnly: false

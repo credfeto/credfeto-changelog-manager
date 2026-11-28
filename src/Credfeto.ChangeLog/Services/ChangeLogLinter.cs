@@ -47,18 +47,15 @@ public sealed class ChangeLogLinter : IChangeLogLinter
         return errors;
     }
 
-    // Applies to every section, released or not: --fix never shortens an entry, since rewording
-    // one needs a human or an agent, so an over-long entry keeps failing until it is reworded.
+    // Applies to the [Unreleased] section only. Released sections are history: rewording them would
+    // fail --check-insert, so they keep whatever length they shipped with. --fix never shortens an
+    // entry, since rewording one needs a human or an agent, so an over-long unreleased entry keeps
+    // failing until it is reworded.
     private static void CheckEntryLengths(ChangeLogDocument document, List<LintError> errors)
     {
         if (document.Unreleased is not null)
         {
             CheckSectionEntryLengths(sections: document.Unreleased.Sections, errors: errors);
-        }
-
-        foreach (ChangeLogRelease release in document.Releases)
-        {
-            CheckSectionEntryLengths(sections: release.Sections, errors: errors);
         }
     }
 

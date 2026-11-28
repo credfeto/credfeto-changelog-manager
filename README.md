@@ -171,7 +171,8 @@ Notes:
 
 - `--lint` exits with a non-zero exit code if any errors are found.
 - `--fix` rewrites the changelog to correct ordering and missing sections in `[Unreleased]`; it then re-lints to confirm the file is valid.
-- Any entry, in any section, longer than 100 characters (not counting the leading "- " bullet or surrounding whitespace) is an error, reported with its line number and length. `--fix` never shortens an entry, so reword it by hand.
+- Any entry in the `[Unreleased]` section longer than 100 characters (not counting the leading "- " bullet or surrounding whitespace) is an error, reported with its line number and length. `--fix` never shortens an entry, so reword it by hand.
+- Entries in released sections are not length-checked: they are history, and editing them would fail the insert-position check.
 
 ### Check insert position of changes are all in [Unreleased] section
 

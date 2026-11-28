@@ -115,8 +115,10 @@ public sealed class ProgramEntryLengthTests : TestBase
     [Theory]
     [InlineData(100, 100, 0)]
     [InlineData(101, 100, 1)]
-    [InlineData(100, 101, 1)]
-    public static async Task Main_Lint_FailsOnlyWhenAnEntryIsOverTheLimitAsync(
+    [InlineData(100, 101, 0)]
+    [InlineData(100, 500, 0)]
+    [InlineData(101, 150, 1)]
+    public static async Task Main_Lint_FailsOnlyWhenAnUnreleasedEntryIsOverTheLimitAsync(
         int unreleasedLength,
         int releasedLength,
         int expectedResult
