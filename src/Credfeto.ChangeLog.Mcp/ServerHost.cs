@@ -16,21 +16,30 @@ public static class ServerHost
 
     public static async Task<int> RunAsync(Stream input, Stream output)
     {
-        // Stdout carries the protocol; anything the library writes to the console must not corrupt it
+        // Stdout carries the protocol; anything the library writes to the console must not corrupt it.
+        // The redirect only lasts for the lifetime of this call.
+        TextWriter originalOut = Console.Out;
         Console.SetOut(Console.Error);
 
-        using ShutdownSignal shutdown = new();
-        await using Stream ownedInput = input;
-        await using Stream ownedOutput = output;
+        try
+        {
+            using ShutdownSignal shutdown = new();
+            await using Stream ownedInput = input;
+            await using Stream ownedOutput = output;
 
-        return await RunAsync(
-            workingDirectory: StartFolder.TryRead(),
-            repositoryRoot: RepositoryRootOption.Read(),
-            error: Console.Error,
-            input: ownedInput,
-            output: ownedOutput,
-            stopRequested: shutdown.Requested
-        );
+            return await RunAsync(
+                workingDirectory: StartFolder.TryRead(),
+                repositoryRoot: RepositoryRootOption.Read(),
+                error: Console.Error,
+                input: ownedInput,
+                output: ownedOutput,
+                stopRequested: shutdown.Requested
+            );
+        }
+        finally
+        {
+            Console.SetOut(originalOut);
+        }
     }
 
     public static async Task<int> RunAsync(

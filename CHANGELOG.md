@@ -12,6 +12,7 @@ Please ADD ALL Changes to the UNRELEASED SECTION and not a specific release
 ### Security
 ### Added
 ### Fixed
+- ServerHost now restores Console.Out when RunAsync finishes - #426
 ### Changed
 ### Deprecated
 ### Removed
